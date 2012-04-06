@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class CompilableNode : AstNode
     {
-        public virtual void Compile(List<String> assembly, Scope scope) { throw new NotImplementedException(); }
+        public virtual void Compile(List<String> assembly, Scope scope, Register target) { throw new NotImplementedException(); }
 
         private static char[] hexDigits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
         public static String htoa(int x)

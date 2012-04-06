@@ -57,7 +57,7 @@ namespace DCPUCIDE
 
             try
             {
-                root.Compile(assembly, scope);
+                root.Compile(assembly, scope, DCPUC.Register.DISCARD);
                 assembly.Add("BRK ;Non-standard");
                 foreach (var pendingFunction in scope.pendingFunctions)
                     pendingFunction.CompileFunction(assembly);

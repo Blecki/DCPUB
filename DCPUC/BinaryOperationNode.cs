@@ -33,10 +33,10 @@ namespace DCPUC
             }
         }
 
-        public override void Compile(List<String> assembly, Scope scope) 
+        public override void Compile(List<String> assembly, Scope scope, Register target) 
         {
-            (ChildNodes[1] as CompilableNode).Compile(assembly, scope);
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope);
+            (ChildNodes[1] as CompilableNode).Compile(assembly, scope, Register.STACK);
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
 
             if (AsString == "==")
             {

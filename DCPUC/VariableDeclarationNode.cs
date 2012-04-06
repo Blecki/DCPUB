@@ -16,14 +16,14 @@ namespace DCPUC
             AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void Compile(List<string> assembly, Scope scope)
+        public override void Compile(List<string> assembly, Scope scope, Register target)
         {
             var newVariable = new Variable();
             newVariable.name = AsString;
             newVariable.scope = scope;
             newVariable.stackOffset = scope.stackDepth;
 
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope);
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
             scope.variables.Add(newVariable);
             scope.stackDepth += 1;
 

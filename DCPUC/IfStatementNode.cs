@@ -17,9 +17,9 @@ namespace DCPUC
             this.AsString = "If";
         }
 
-        public override void Compile(List<string> assembly, Scope scope)
+        public override void Compile(List<string> assembly, Scope scope, Register target)
         {
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope);
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
             var hasElseBlock = ChildNodes.Count == 3;
             var elseBranchLabel = hasElseBlock ? Scope.GetLabel() + "ELSE" : "";
             var endLabel = Scope.GetLabel() + "END";
@@ -27,14 +27,14 @@ namespace DCPUC
             assembly.Add("SET PC, " + (hasElseBlock ? elseBranchLabel : endLabel));
             scope.stackDepth -= 1;
             var blockScope = BeginBlock(scope);
-            (ChildNodes[1] as CompilableNode).Compile(assembly, blockScope);
+            (ChildNodes[1] as CompilableNode).Compile(assembly, blockScope, Register.DISCARD);
             EndBlock(assembly, blockScope);
             if (hasElseBlock)
             {
                 assembly.Add("SET PC, " + endLabel);
                 assembly.Add(":" + elseBranchLabel);
                 var elseScope = BeginBlock(scope);
-                (ChildNodes[2] as CompilableNode).Compile(assembly, elseScope);
+                (ChildNodes[2] as CompilableNode).Compile(assembly, elseScope, Register.DISCARD);
                 EndBlock(assembly, elseScope);
             }
             assembly.Add(":" + endLabel);

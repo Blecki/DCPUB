@@ -16,7 +16,7 @@ namespace DCPUC
                 AsString += child.FindTokenAndGetText();
         }
 
-        public override void Compile(List<String> assembly, Scope scope) 
+        public override void Compile(List<String> assembly, Scope scope, Register target) 
         {
             if (AsString.StartsWith("0x"))
             {

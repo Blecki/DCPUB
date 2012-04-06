@@ -14,7 +14,7 @@ namespace DCPUC
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override void Compile(List<string> assembly, Scope scope)
+        public override void Compile(List<string> assembly, Scope scope, Register target)
         {
             var variable = scope.FindVariable(AsString);
             if (variable == null) throw new CompileError("Could not find variable " + AsString);

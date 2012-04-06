@@ -25,13 +25,13 @@ namespace DCPUC
             return null;
         }
 
-        public override void Compile(List<string> assembly, Scope scope)
+        public override void Compile(List<string> assembly, Scope scope, Register target)
         {
             var func = findFunction(this, AsString);
             if (func == null) throw new CompileError("Can't find function - " + AsString);
             if (func.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments - " + AsString);
             foreach (var child in ChildNodes)
-                (child as CompilableNode).Compile(assembly, scope);
+                (child as CompilableNode).Compile(assembly, scope, Register.STACK);
             assembly.Add("JSR " + func.label);
             assembly.Add("SET PUSH, A");
         }

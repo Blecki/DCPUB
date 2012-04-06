@@ -15,9 +15,9 @@ namespace DCPUC
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override void Compile(List<string> assembly, Scope scope)
+        public override void Compile(List<string> assembly, Scope scope, Register target)
         {
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope);
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
             assembly.Add("SET A, POP");
             scope.stackDepth -= 1;
             scope.activeFunction.CompileReturn(assembly);

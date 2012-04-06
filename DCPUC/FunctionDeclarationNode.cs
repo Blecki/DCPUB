@@ -34,7 +34,7 @@ namespace DCPUC
             localScope.activeFunction = this;
         }
 
-        public override void Compile(List<string> assembly, Scope scope)
+        public override void Compile(List<string> assembly, Scope scope, Register target)
         {
             scope.pendingFunctions.Add(this);
         }
@@ -43,7 +43,7 @@ namespace DCPUC
         {
             assembly.Add(":" + label);
             localScope.stackDepth += 1; //account for return address
-            (ChildNodes[0] as CompilableNode).Compile(assembly, localScope);
+            (ChildNodes[0] as CompilableNode).Compile(assembly, localScope, Register.DISCARD);
             CompileReturn(assembly);
             //Should leave the return value, if any, in A.
             foreach (var function in localScope.pendingFunctions)
