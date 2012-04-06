@@ -1,0 +1,18 @@
+A high level overview of DCPUC
+
+program = *(statement)
+statement = variable declaration | function declaration | if | assignment | function call | block
+variable declaration = var identifier
+function declaration = function identifier(comma-separated parameter list) { statements }
+if = if (expression) statement
+assignment = expression = expression
+function call = identifier(parameters)
+block = { statements }
+
+Like C, all statements are terminated with ';'.
+Execution begins at the first statement in the file (skipping function declarations).
+Variables have no type and are declared with a 'var' statement.
+Variables must be initialized (Note: Not implemented. As of writing this, variables can not be initialized when declared.)
+In conditionals, 0 = false, anything else = true. So far, only == and != are supported.
+All functions return a value. If a function does not have a return statement, then whatever is left at the top of the stack when it returns will be assumed to be the return value. This might corrupt the stack.
+The unary * operator 'dereferences' whatever it is applied to. It will return the value at the value of it's operand. It is the same as the [] syntax in the DCPU-16 spec, or a pointer in C. It can also be assigned to. For example, var video = 0x8000; *video = 72; will write the character 'H' to address 0x8000, the first word of video memory.
