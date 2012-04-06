@@ -33,6 +33,7 @@ namespace DCPUC
                 (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope);
                 assembly.Add("SET A, POP");
                 assembly.Add("SET [A], POP");
+                scope.stackDepth -= 2;
             }
         }
     }

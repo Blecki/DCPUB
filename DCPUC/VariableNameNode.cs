@@ -18,8 +18,13 @@ namespace DCPUC
         {
             var variable = scope.FindVariable(AsString);
             if (variable == null) throw new CompileError("Could not find variable " + AsString);
-            assembly.Add("SET A, SP");
-            assembly.Add("SET PUSH, [" + hex(scope.stackDepth - variable.stackOffset) + "+A]");
+            if (scope.stackDepth - variable.stackOffset > 0)
+            {
+                assembly.Add("SET A, SP");
+                assembly.Add("SET PUSH, [" + hex(scope.stackDepth - variable.stackOffset) + "+A]");
+            }
+            else
+                assembly.Add("SET PUSH, PEEK");
             scope.stackDepth += 1;
         }
     }

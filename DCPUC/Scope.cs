@@ -23,6 +23,7 @@ namespace DCPUC
 
 
         internal Scope parent = null;
+        internal int parentDepth = 0;
         internal List<Variable> variables = new List<Variable>();
         internal int stackDepth = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
@@ -32,6 +33,7 @@ namespace DCPUC
         {
             child.parent = this;
             child.stackDepth = stackDepth;
+            child.parentDepth = stackDepth;
             child.activeFunction = activeFunction;
             return child;
         }

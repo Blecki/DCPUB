@@ -31,14 +31,12 @@ namespace DCPUC
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "==" | "!=";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
-            //var variableDeclarationAssignment = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var statement = new NonTerminal("Statement");
             var statementList = new NonTerminal("Statement List", typeof(BlockNode));
-            //var functionBody = new NonTerminal("Function Body");
             var assignment = new NonTerminal("Assignment", typeof(AssignmentNode));
             var ifStatement = new NonTerminal("If", typeof(IfStatementNode));
             var block = new NonTerminal("Block");
-            //var ifElseStatement = new NonTerminal("IfElse", typeof(IfStatementNode));
+            var ifElseStatement = new NonTerminal("IfElse", typeof(IfStatementNode));
             var parameterList = new NonTerminal("Parameter List");
             var functionDeclaration = new NonTerminal("Function Declaration", typeof(FunctionDeclarationNode));
             var parameterDeclaration = new NonTerminal("Parameter Declaration");
@@ -55,40 +53,25 @@ namespace DCPUC
 
             numberLiteral.Rule = integerLiteral;
             expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier | dereference | functionCall;
-               // | identifier | indexAssignment | assignment | indexOperation |
-               // functionCallEx;
             assignment.Rule = (identifier | dereference) + "=" + expression;
-            //indexAssignment.Rule = expression + "[" + parameterList + "]" + "=" + expression;
             binaryOperation.Rule = expression + @operator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
-            variableDeclaration.Rule = ToTerm("var") + identifier;
-            //variableDeclarationAssignment.Rule = ToTerm("var") + identifier + "=" + expression;
+            variableDeclaration.Rule = ToTerm("var") + identifier + "=" + expression;
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
-                | (assignment + ";") | ifStatement | block | functionDeclaration | (functionCall + ";") | (returnStatement + ";");
-            //    | (variableDeclarationAssignment + ";")
-            //    | functionDeclaration 
-            //    | (assignment + ";") | (indexAssignment + ";")
-            //    | block | ifStatement | ifElseStatement | (functionCallEx + ";")
-            //    | (returnStatement + ";");
+                | (assignment + ";") | ifStatement | ifElseStatement | block | functionDeclaration | (functionCall + ";")
+                | (returnStatement + ";");
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             inlineASM.Rule = ToTerm("asm") + "{" + new FreeTextLiteral("inline asm", "}") + "}";
-            //functionBody.Rule = block;
             ifStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement;
-            //ifElseStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement + this.PreferShiftHere() + "else" + statement;
+            ifElseStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement + this.PreferShiftHere() + "else" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = identifier + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier;
             parameterListDeclaration.Rule = MakeStarRule(parameterListDeclaration, ToTerm(","), parameterDeclaration);
             functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" + block;
             returnStatement.Rule = ToTerm("return") + expression;
-            //indexOperation.Rule = expression + "[" + parameterList + "]";
-            //inlineArgument.Rule = numberLiteral;
-            //inlineArgumentList.Rule = MakeStarRule(inlineArgumentList, inlineArgument);
-            //inlineInstruction.Rule = identifier + inlineArgumentList + ";";
-            //inlineInstructionList.Rule = MakeStarRule(inlineInstructionList, inlineInstruction);
-            //inlineBlock.Rule = ToTerm("inline") + "{" + inlineInstructionList + "}";
 
             this.Root = statementList;
 

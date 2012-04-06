@@ -12,9 +12,7 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Name", treeNode.ChildNodes[1]);
-            //if (treeNode.ChildNodes.Count == 4)
-            //    AddChild("Value", treeNode.ChildNodes[3]);
+            AddChild("Value", treeNode.ChildNodes[3]);
             AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
@@ -25,9 +23,8 @@ namespace DCPUC
             newVariable.scope = scope;
             newVariable.stackOffset = scope.stackDepth;
 
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope);
             scope.variables.Add(newVariable);
-
-            assembly.Add("SUB SP, 0x0001");
             scope.stackDepth += 1;
 
         }

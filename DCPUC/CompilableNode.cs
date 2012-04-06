@@ -33,7 +33,8 @@ namespace DCPUC
 
         public static void EndBlock(List<String> assembly, Scope scope)
         {
-            assembly.Add("ADD SP, " + hex(scope.stackDepth));
+            if (scope.stackDepth - scope.parentDepth > 0) 
+                assembly.Add("ADD SP, " + hex(scope.stackDepth - scope.parentDepth) + " ;End block");
         }
     }
 }
