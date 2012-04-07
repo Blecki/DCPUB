@@ -16,17 +16,17 @@ namespace DCPUC
                 AsString += child.FindTokenAndGetText();
         }
 
-        public override void Compile(List<String> assembly, Scope scope, Register target) 
+        public override void Compile(Assembly assembly, Scope scope, Register target) 
         {
             if (AsString.StartsWith("0x"))
             {
                 var hexPart = AsString.Substring(2).ToUpper();
                 while (hexPart.Length < 4) hexPart = "0" + hexPart;
-                assembly.Add("SET PUSH, 0x" + hexPart);
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x" + hexPart, "Literal");
             }
             else
-                assembly.Add("SET PUSH, " + hex(AsString));
-            scope.stackDepth += 1;
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(AsString), "Literal");
+            if (target == Register.STACK) scope.stackDepth += 1;
         }
     }
 

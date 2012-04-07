@@ -33,30 +33,52 @@ namespace DCPUC
             }
         }
 
-        public override void Compile(List<String> assembly, Scope scope, Register target) 
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            (ChildNodes[1] as CompilableNode).Compile(assembly, scope, Register.STACK);
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
+            //Evaluate in reverse in case both need to go on the stack
+            var secondTarget = scope.FindFreeRegister();
+            if (Scope.IsRegister((Register)secondTarget)) scope.UseRegister(secondTarget);
+            (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondTarget);
+                        
 
-            if (AsString == "==")
+            if (AsString == "==" || AsString == "!=")
             {
-                assembly.Add("SET A, 0x0");
-                assembly.Add("IFE POP, POP");
-                assembly.Add("SET A, 0x1");
+                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
+                if (target == Register.STACK)
+                {
+                    assembly.Add("SET", "A", "0x0", "Equality onto stack");
+                    assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
+                    assembly.Add("SET", "A", "0x1");
+                    assembly.Add("SET", "PUSH", "A");
+                    //scope.stackDepth += 1;
+                   
+                }
+                else
+                {
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x0",  "Equality into register");
+                    assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x1");
+                }
             }
-            else if (AsString == "!=")
-            {
-                assembly.Add("SET A, 0x0");
-                assembly.Add("IFN POP, POP");
-                assembly.Add("SET A, 0x1");
-            }
+            
             else
             {
-                assembly.Add("SET A, POP");
-                assembly.Add(opcodes[AsString] + " A, POP");
+                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
+                if (target == Register.STACK)
+                {
+                    assembly.Add("SET", "A", "POP", "Binary operation onto stack");
+                    assembly.Add(opcodes[AsString], "A", Scope.GetRegisterLabelSecond(secondTarget));
+                    assembly.Add("SET", "PUSH", "A");
+                }
+                else
+                {
+                    assembly.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond(secondTarget), "Binary operation into register");
+                }
             }
-            assembly.Add("SET PUSH, A");
-            scope.stackDepth -= 1;
+            if (secondTarget == (int)Register.STACK)
+                scope.stackDepth -= 1;
+            else
+                scope.FreeRegister(secondTarget);
         }
     }
 

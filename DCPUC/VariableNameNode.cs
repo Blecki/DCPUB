@@ -14,18 +14,18 @@ namespace DCPUC
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             var variable = scope.FindVariable(AsString);
             if (variable == null) throw new CompileError("Could not find variable " + AsString);
-            if (scope.stackDepth - variable.stackOffset > 0)
+            if (scope.stackDepth - variable.stackOffset > 1)
             {
-                assembly.Add("SET A, SP");
-                assembly.Add("SET PUSH, [" + hex(scope.stackDepth - variable.stackOffset) + "+A]");
+                assembly.Add("SET", "A", "SP");
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+A]", "Fetching variable");
             }
             else
-                assembly.Add("SET PUSH, PEEK");
-            scope.stackDepth += 1;
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
+            if (target == Register.STACK) scope.stackDepth += 1;
         }
     }
 

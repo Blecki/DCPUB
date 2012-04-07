@@ -14,12 +14,12 @@ namespace DCPUC
             AddChild("Expression", treeNode.ChildNodes[1]);
             
         }
-       
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
-            assembly.Add("SET A, POP");
-            assembly.Add("SET PUSH, [A]");
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
+            assembly.Add("SET", "A", Scope.GetRegisterLabelSecond((int)target));
+            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[A]");
         }
     }
 

@@ -34,29 +34,31 @@ namespace DCPUC
             localScope.activeFunction = this;
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             scope.pendingFunctions.Add(this);
         }
 
-        public void CompileFunction(List<string> assembly)
+        public void CompileFunction(Assembly assembly)
         {
-            assembly.Add(":" + label);
+            assembly.Add(":" + label, "", "");
+            assembly.Barrier();
             localScope.stackDepth += 1; //account for return address
             (ChildNodes[0] as CompilableNode).Compile(assembly, localScope, Register.DISCARD);
             CompileReturn(assembly);
+            assembly.Barrier();
             //Should leave the return value, if any, in A.
             foreach (var function in localScope.pendingFunctions)
                 function.CompileFunction(assembly);
         }
 
-        internal void CompileReturn(List<string> assembly)
+        internal void CompileReturn(Assembly assembly)
         {
             if (localScope.stackDepth - parameterCount > 1)
-                assembly.Add("ADD SP, " + hex(localScope.stackDepth - parameterCount - 1));
-            assembly.Add("SET B, POP");
-            if (parameterCount > 0) assembly.Add("ADD SP, " + hex(parameterCount));
-            assembly.Add("SET PC, B");
+                assembly.Add("ADD", "SP", hex(localScope.stackDepth - parameterCount - 1));
+            assembly.Add("SET", "B", "POP", "Get return value");
+            if (parameterCount > 0) assembly.Add("ADD", "SP", hex(parameterCount), "Remove parameters");
+            assembly.Add("SET", "PC", "B", "Return");
         }
     }
 }

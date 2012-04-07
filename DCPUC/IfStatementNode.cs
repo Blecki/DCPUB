@@ -17,27 +17,34 @@ namespace DCPUC
             this.AsString = "If";
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
+            var condTarget = scope.FindFreeRegister();
+            if (Scope.IsRegister((Register)condTarget)) scope.UseRegister(condTarget);
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)condTarget);
             var hasElseBlock = ChildNodes.Count == 3;
             var elseBranchLabel = hasElseBlock ? Scope.GetLabel() + "ELSE" : "";
             var endLabel = Scope.GetLabel() + "END";
-            assembly.Add("IFE POP, 0x0");
-            assembly.Add("SET PC, " + (hasElseBlock ? elseBranchLabel : endLabel));
+            assembly.Add("IFE", Scope.GetRegisterLabelSecond(condTarget), "0x0", "If");
+            if (Scope.IsRegister((Register)condTarget)) scope.FreeRegister(condTarget);
+            assembly.Add("SET", "PC", (hasElseBlock ? elseBranchLabel : endLabel));
             scope.stackDepth -= 1;
             var blockScope = BeginBlock(scope);
+            assembly.Barrier();
             (ChildNodes[1] as CompilableNode).Compile(assembly, blockScope, Register.DISCARD);
+            assembly.Barrier();
             EndBlock(assembly, blockScope);
             if (hasElseBlock)
             {
-                assembly.Add("SET PC, " + endLabel);
-                assembly.Add(":" + elseBranchLabel);
+                assembly.Add("SET", "PC", endLabel);
+                assembly.Add(":" + elseBranchLabel, "", "");
                 var elseScope = BeginBlock(scope);
+                assembly.Barrier();
                 (ChildNodes[2] as CompilableNode).Compile(assembly, elseScope, Register.DISCARD);
+                assembly.Barrier();
                 EndBlock(assembly, elseScope);
             }
-            assembly.Add(":" + endLabel);
+            assembly.Add(":" + endLabel, "", "");
         }
 
     }

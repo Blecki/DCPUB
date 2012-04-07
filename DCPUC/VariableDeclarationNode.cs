@@ -16,7 +16,7 @@ namespace DCPUC
             AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             var newVariable = new Variable();
             newVariable.name = AsString;

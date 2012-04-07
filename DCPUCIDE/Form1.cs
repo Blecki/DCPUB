@@ -52,13 +52,13 @@ namespace DCPUCIDE
             }
 
             var root = program.Root.AstNode as DCPUC.CompilableNode; //Irony.Interpreter.Ast.AstNode;
-            var assembly = new List<String>();
+            var assembly = new DCPUC.Assembly();
             var scope = new DCPUC.Scope();
 
             try
             {
                 root.Compile(assembly, scope, DCPUC.Register.DISCARD);
-                assembly.Add("BRK ;Non-standard");
+                assembly.Add("BRK", "", "", "Non-standard");
                 foreach (var pendingFunction in scope.pendingFunctions)
                     pendingFunction.CompileFunction(assembly);
             }
@@ -68,8 +68,8 @@ namespace DCPUCIDE
                 return;
             }
 
-            foreach (var str in assembly)
-                outputBox.AppendText(str + "\r\n");
+            foreach (var str in assembly.instructions)
+                outputBox.AppendText(str.ToString() + "\r\n");
 
         }
     }

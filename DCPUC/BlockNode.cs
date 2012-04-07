@@ -15,10 +15,13 @@ namespace DCPUC
                 AddChild("Statement", f);
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             foreach (var child in ChildNodes)
+            {
+                assembly.Barrier();
                 (child as CompilableNode).Compile(assembly, scope, Register.DISCARD);
+            }
 
 
         }

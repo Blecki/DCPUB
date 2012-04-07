@@ -47,7 +47,7 @@ namespace DCPUC
         internal int stackDepth = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         internal FunctionDeclarationNode activeFunction = null;
-        internal RegisterState[] registers = new RegisterState[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        internal RegisterState[] registers = new RegisterState[] { RegisterState.Used, 0, 0, 0, 0, 0, 0, 0 };
 
         internal Scope Push(Scope child)
         {
@@ -70,12 +70,34 @@ namespace DCPUC
         internal int FindFreeRegister()
         {
             for (int i = 0; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
-            return -1;
+            return (int)Register.STACK;
         }
 
-        internal string GetRegisterLabel(int r) { return ((Register)r).ToString(); }
+        internal static string GetRegisterLabelFirst(int r) { if (r == (int)Register.STACK) return "PUSH"; else return ((Register)r).ToString(); }
+        internal static string GetRegisterLabelSecond(int r) { if (r == (int)Register.STACK) return "POP"; else return ((Register)r).ToString(); }
         internal void FreeRegister(int r) { registers[r] = RegisterState.Free; }
         internal void UseRegister(int r) { registers[r] = RegisterState.Used; }
-        internal bool IsRegister(Register r) { return (int)(r) <= 7; }
+        internal static bool IsRegister(Register r) { return (int)(r) <= 7; }
+
+        internal RegisterState[] SaveRegisterState()
+        {
+            var r = new RegisterState[8];
+            for (int i = 0; i < 8; ++i) r[i] = registers[i];
+            return r;
+        }
+
+        internal void RestoreRegisterState(RegisterState[] state)
+        {
+            registers = state;
+        }
+
+        internal int FindAndUseFreeRegister()
+        {
+            var r = FindFreeRegister();
+            if (IsRegister((Register)r)) UseRegister(r);
+            return r;
+        }
+
+        internal void FreeMaybeRegister(int r) { if (IsRegister((Register)r)) FreeRegister(r); }
     }
 }

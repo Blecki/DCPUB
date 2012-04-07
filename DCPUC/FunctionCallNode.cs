@@ -25,15 +25,39 @@ namespace DCPUC
             return null;
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             var func = findFunction(this, AsString);
             if (func == null) throw new CompileError("Can't find function - " + AsString);
             if (func.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments - " + AsString);
+            //Marshall registers
+            var startingRegisterState = scope.SaveRegisterState();
+            for (int i = 1; i < 8; ++i)
+                if (startingRegisterState[i] == RegisterState.Used)
+                {
+                    assembly.Add("SET", "PUSH", Scope.GetRegisterLabelSecond(i), "Saving register");
+                    scope.FreeRegister(i);
+                    scope.stackDepth += 1;
+                }
             foreach (var child in ChildNodes)
                 (child as CompilableNode).Compile(assembly, scope, Register.STACK);
-            assembly.Add("JSR " + func.label);
-            assembly.Add("SET PUSH, A");
+            assembly.Add("JSR", func.label, "", "Calling function");
+            scope.stackDepth -= func.parameterCount; //Pushed parameters onto the stack, REMEMBER?
+            //unmarshall registers
+            for (int i = 7; i > 0; --i)
+                if (startingRegisterState[i] == RegisterState.Used)
+                {
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst(i), "POP", "Restoring register");
+                    scope.UseRegister(i);
+                    scope.stackDepth -= 1;
+                }
+            if (target == Register.A) return;
+            else if (Scope.IsRegister(target)) assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "A");
+            else if (target == Register.STACK)
+            {
+                assembly.Add("SET", "PUSH", "A", "Put return value on stack");
+                scope.stackDepth += 1;
+            }
         }
 
         

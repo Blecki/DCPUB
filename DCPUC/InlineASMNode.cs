@@ -14,11 +14,12 @@ namespace DCPUC
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void Compile(List<string> assembly, Scope scope, Register target)
+        public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             var lines = AsString.Split(new String[2]{"\n", "\r"}, StringSplitOptions.RemoveEmptyEntries);
+            assembly.Barrier();
             foreach (var str in lines)
-                assembly.Add(str);
+                assembly.Add(str + " ;", "", "");
         }
     }
 

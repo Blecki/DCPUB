@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class CompilableNode : AstNode
     {
-        public virtual void Compile(List<String> assembly, Scope scope, Register target) { throw new NotImplementedException(); }
+        public virtual void Compile(Assembly assembly, Scope scope, Register target) { throw new NotImplementedException(); }
 
         private static char[] hexDigits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
         public static String htoa(int x)
@@ -31,10 +31,10 @@ namespace DCPUC
             return scope.Push(new Scope());
         }
 
-        public static void EndBlock(List<String> assembly, Scope scope)
+        public static void EndBlock(Assembly assembly, Scope scope)
         {
             if (scope.stackDepth - scope.parentDepth > 0) 
-                assembly.Add("ADD SP, " + hex(scope.stackDepth - scope.parentDepth) + " ;End block");
+                assembly.Add("ADD", "SP", hex(scope.stackDepth - scope.parentDepth), "End block");
         }
     }
 }
