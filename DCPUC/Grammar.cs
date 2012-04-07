@@ -28,7 +28,9 @@ namespace DCPUC
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
-            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "==" | "!=";
+            var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
+            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^";
+            var comparisonOperator = ToTerm("==") | "!=";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
             var statement = new NonTerminal("Statement");
@@ -42,19 +44,14 @@ namespace DCPUC
             var parameterDeclaration = new NonTerminal("Parameter Declaration");
             var parameterListDeclaration = new NonTerminal("Parameter Declaration List");
             var returnStatement = new NonTerminal("Return", typeof(ReturnStatementNode));
-            //var indexOperation = new NonTerminal("Index Operation", typeof(IndexOperationNode));
-            //var indexAssignment = new NonTerminal("Index Assignment", typeof(IndexAssignmentNode));
-            //var inlineArgument = new NonTerminal("Inline Argument", typeof(InlineArgumentNode));
-            //var inlineArgumentList = new NonTerminal("Inline Argument List");
-            //var inlineInstruction = new NonTerminal("Inline Instruction", typeof(InlineInstructionNode));
-            //var inlineInstructionList = new NonTerminal("Inline Instruction List");
-            //var inlineBlock = new NonTerminal("Inline Block", typeof(InlineBlockNode));
             var functionCall = new NonTerminal("Function Call", typeof(FunctionCallNode));
 
             numberLiteral.Rule = integerLiteral;
-            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier | dereference | functionCall;
+            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier 
+                | dereference | functionCall | comparison;
             assignment.Rule = (identifier | dereference) + "=" + expression;
             binaryOperation.Rule = expression + @operator + expression;
+            comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule = ToTerm("var") + identifier + "=" + expression;
             dereference.Rule = ToTerm("*") + expression;

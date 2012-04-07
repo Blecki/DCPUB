@@ -19,16 +19,33 @@ namespace DCPUC
 
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            var condTarget = scope.FindFreeRegister();
-            if (Scope.IsRegister((Register)condTarget)) scope.UseRegister(condTarget);
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)condTarget);
             var hasElseBlock = ChildNodes.Count == 3;
             var elseBranchLabel = hasElseBlock ? Scope.GetLabel() + "ELSE" : "";
             var endLabel = Scope.GetLabel() + "END";
-            assembly.Add("IFE", Scope.GetRegisterLabelSecond(condTarget), "0x0", "If");
-            if (Scope.IsRegister((Register)condTarget)) scope.FreeRegister(condTarget);
-            assembly.Add("SET", "PC", (hasElseBlock ? elseBranchLabel : endLabel));
-            scope.stackDepth -= 1;
+
+            if (ChildNodes[0] is ComparisonNode) //Emit more effecient code for plain comparisons
+            {
+                var rightTarget = scope.FindAndUseFreeRegister();
+                var leftTarget = scope.FindAndUseFreeRegister();
+                (ChildNodes[0].ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)rightTarget);
+                (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)leftTarget);
+                var condType = ChildNodes[0].AsString;
+                assembly.Add((condType == "==" ? "IFN" : "IFE"),
+                    Scope.GetRegisterLabelSecond(leftTarget), Scope.GetRegisterLabelSecond(rightTarget), "Plain conditional");
+                scope.FreeMaybeRegister(leftTarget);
+                scope.FreeMaybeRegister(rightTarget);
+
+            }
+            else
+            {
+                var condTarget = scope.FindAndUseFreeRegister();
+                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)condTarget);
+                assembly.Add("IFE", Scope.GetRegisterLabelSecond(condTarget), "0x0", "If from expression");
+                scope.FreeMaybeRegister(condTarget);
+                scope.stackDepth -= 1;
+            }
+
+            assembly.Add("SET", "PC", (hasElseBlock ? elseBranchLabel : endLabel), "Jump to else clause or end");
             var blockScope = BeginBlock(scope);
             assembly.Barrier();
             (ChildNodes[1] as CompilableNode).Compile(assembly, blockScope, Register.DISCARD);
