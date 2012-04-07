@@ -15,7 +15,7 @@ function fib(n)
 
 var a = fib(6);
 
-The 'correct' output is 
+For reference
 
 SET PUSH, 0x0006
 JSR LABEL0_fib

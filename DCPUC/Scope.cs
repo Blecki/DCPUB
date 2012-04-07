@@ -11,6 +11,7 @@ namespace DCPUC
         public String name;
         public Scope scope;
         public int stackOffset;
+        public Register location;
     }
 
     public enum Register
@@ -41,13 +42,15 @@ namespace DCPUC
             return "LABEL" + nextLabelID++;
         }
 
+        internal const string TempRegister = "J";
+
         internal Scope parent = null;
         internal int parentDepth = 0;
         internal List<Variable> variables = new List<Variable>();
         internal int stackDepth = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         internal FunctionDeclarationNode activeFunction = null;
-        internal RegisterState[] registers = new RegisterState[] { RegisterState.Used, 0, 0, 0, 0, 0, 0, 0 };
+        internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
 
         internal Scope Push(Scope child)
         {

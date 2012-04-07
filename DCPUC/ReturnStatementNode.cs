@@ -19,7 +19,7 @@ namespace DCPUC
         {
             var reg = scope.FindAndUseFreeRegister();
             (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)reg);
-            assembly.Add("SET", "A", Scope.GetRegisterLabelSecond(reg));
+            if (reg != (int)Register.A) assembly.Add("SET", "A", Scope.GetRegisterLabelSecond(reg));
             scope.FreeMaybeRegister(reg);
             if (reg == (int)Register.STACK) scope.stackDepth -= 1;
             scope.activeFunction.CompileReturn(assembly);

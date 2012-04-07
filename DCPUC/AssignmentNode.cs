@@ -23,16 +23,16 @@ namespace DCPUC
                 if (variable == null) throw new CompileError("Could not find variable " + ChildNodes[0].AsString);
 
                 (ChildNodes[1] as CompilableNode).Compile(assembly, scope, Register.STACK);
-                assembly.Add("SET", "A", "SP");
-                assembly.Add("SET", "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+A]", "POP");
+                assembly.Add("SET", Scope.TempRegister, "SP");
+                assembly.Add("SET", "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "POP");
                 scope.stackDepth -= 1;
             }
             else if (ChildNodes[0] is DereferenceNode)
             {
                 (ChildNodes[1] as CompilableNode).Compile(assembly, scope, Register.STACK);
                 (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
-                assembly.Add("SET", "A", "POP");
-                assembly.Add("SET", "[A]", "POP");
+                assembly.Add("SET", Scope.TempRegister, "POP");
+                assembly.Add("SET", "[" + Scope.TempRegister + "]", "POP");
                 scope.stackDepth -= 2;
             }
         }

@@ -18,13 +18,21 @@ namespace DCPUC
         {
             var variable = scope.FindVariable(AsString);
             if (variable == null) throw new CompileError("Could not find variable " + AsString);
-            if (scope.stackDepth - variable.stackOffset > 1)
+            if (variable.location == Register.STACK)
             {
-                assembly.Add("SET", "A", "SP");
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+A]", "Fetching variable");
+                if (scope.stackDepth - variable.stackOffset > 1)
+                {
+                    assembly.Add("SET", Scope.TempRegister, "SP");
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                }
+                else
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
             }
             else
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
+            {
+                if (target == variable.location) return;
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location), "Fetching variable");
+            }
             if (target == Register.STACK) scope.stackDepth += 1;
         }
     }

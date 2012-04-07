@@ -18,8 +18,8 @@ namespace DCPUC
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
-            assembly.Add("SET", "A", Scope.GetRegisterLabelSecond((int)target));
-            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[A]");
+            assembly.Add("SET", Scope.TempRegister, Scope.GetRegisterLabelSecond((int)target));
+            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "["+Scope.TempRegister+"]");
         }
     }
 

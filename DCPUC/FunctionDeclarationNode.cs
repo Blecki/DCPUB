@@ -11,22 +11,35 @@ namespace DCPUC
         public Scope localScope = new Scope();
         public String label;
         public int parameterCount = 0;
+        //public List<Variable> parameters = new List<Variable>();
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AddChild("Block", treeNode.ChildNodes[3]);
 
-            foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
+            var parameters = treeNode.ChildNodes[2].ChildNodes;
+
+            for (int i = 0; i < parameters.Count; ++i)
             {
                 var variable = new Variable();
                 variable.scope = localScope;
-                variable.name = parameter.ChildNodes[0].FindTokenAndGetText();
-                variable.stackOffset = localScope.stackDepth;
+                variable.name = parameters[i].ChildNodes[0].FindTokenAndGetText();
                 localScope.variables.Add(variable);
-                localScope.stackDepth += 1;
+
+                if (i < 3)
+                {
+                    variable.location = (Register)i;
+                    localScope.UseRegister(i);
+                }
+                else
+                {
+                    variable.location = Register.STACK;
+                    variable.stackOffset = localScope.stackDepth;
+                    localScope.stackDepth += 1;
+                }
+
                 parameterCount += 1;
-                
             }
 
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
@@ -55,10 +68,8 @@ namespace DCPUC
         internal void CompileReturn(Assembly assembly)
         {
             if (localScope.stackDepth - parameterCount > 1)
-                assembly.Add("ADD", "SP", hex(localScope.stackDepth - parameterCount - 1));
-            assembly.Add("SET", "B", "POP", "Get return value");
-            if (parameterCount > 0) assembly.Add("ADD", "SP", hex(parameterCount), "Remove parameters");
-            assembly.Add("SET", "PC", "B", "Return");
+                assembly.Add("ADD", "SP", hex(localScope.stackDepth - parameterCount - 1), "Cleanup stack"); 
+            assembly.Add("SET", "PC", "POP", "Return");
         }
     }
 }

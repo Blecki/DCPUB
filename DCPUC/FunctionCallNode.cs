@@ -25,6 +25,13 @@ namespace DCPUC
             return null;
         }
 
+        private static void PushRegister(Assembly assembly, Scope scope, Register r)
+        {
+            assembly.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)r), "Saving register");
+            scope.FreeRegister(0);
+            scope.stackDepth += 1;
+        }
+
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             var func = findFunction(this, AsString);
@@ -32,33 +39,68 @@ namespace DCPUC
             if (func.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments - " + AsString);
             //Marshall registers
             var startingRegisterState = scope.SaveRegisterState();
-            for (int i = 1; i < 8; ++i)
+
+            for (int i = 0; i < 3; ++i)
+            {
                 if (startingRegisterState[i] == RegisterState.Used)
                 {
-                    assembly.Add("SET", "PUSH", Scope.GetRegisterLabelSecond(i), "Saving register");
-                    scope.FreeRegister(i);
-                    scope.stackDepth += 1;
+                    PushRegister(assembly, scope, (Register)i);
+                    if (scope.activeFunction != null && scope.activeFunction.parameterCount > i)
+                    {
+                        scope.activeFunction.localScope.variables[i].location = Register.STACK;
+                        scope.activeFunction.localScope.variables[i].stackOffset = scope.stackDepth - 1;
+                    }
                 }
-            foreach (var child in ChildNodes)
-                (child as CompilableNode).Compile(assembly, scope, Register.STACK);
+                if (func.parameterCount > i)
+                {
+                    scope.UseRegister(i);
+                    (ChildNodes[i] as CompilableNode).Compile(assembly, scope, (Register)i);
+                }
+            }
+
+            for (int i = 3; i < 7; ++i)
+                if (startingRegisterState[i] == RegisterState.Used)
+                    PushRegister(assembly, scope, (Register)i);
+
+            if (func.parameterCount > 3)
+                for (int i = 3; i < func.parameterCount; ++i)
+                    (ChildNodes[i] as CompilableNode).Compile(assembly, scope, Register.STACK);
+
             assembly.Add("JSR", func.label, "", "Calling function");
-            scope.stackDepth -= func.parameterCount; //Pushed parameters onto the stack, REMEMBER?
-            //unmarshall registers
-            for (int i = 7; i > 0; --i)
+
+            if (func.parameterCount > 3) //Need to remove parameters from stack
+            {
+                assembly.Add("ADD", "SP", hex(func.parameterCount - 3), "Remove parameters");
+                scope.stackDepth -= (func.parameterCount - 3);
+            }
+
+            if (scope.activeFunction != null)
+                for (int i = 0; i < 3 && i < scope.activeFunction.parameterCount; ++i)
+                    scope.activeFunction.localScope.variables[i].location = (Register)i;
+
+            var saveA = startingRegisterState[0] == RegisterState.Used;
+            if (saveA) assembly.Add("SET", Scope.TempRegister, "A", "Save return value from being overwritten by stored register");
+
+            for (int i = 6; i >= 0; --i)
+            {
                 if (startingRegisterState[i] == RegisterState.Used)
                 {
                     assembly.Add("SET", Scope.GetRegisterLabelFirst(i), "POP", "Restoring register");
                     scope.UseRegister(i);
                     scope.stackDepth -= 1;
                 }
-            if (target == Register.A) return;
-            else if (Scope.IsRegister(target)) assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "A");
+            }
+
+            if (target == Register.A && !saveA) return;
+            else if (Scope.IsRegister(target)) assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), saveA ? Scope.TempRegister : "A");
             else if (target == Register.STACK)
             {
-                assembly.Add("SET", "PUSH", "A", "Put return value on stack");
+                assembly.Add("SET", "PUSH", saveA ? Scope.TempRegister : "A", "Put return value on stack");
                 scope.stackDepth += 1;
             }
         }
+
+        
 
         
     }

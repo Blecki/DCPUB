@@ -1,0 +1,9 @@
+* Sample Programs
+* While loop
+* Optimize binary operation when target is Stack
+* Peephole optimizations
+* Comparison Operators
+* Standardize Calling Convention
+* Pass first three arguments to function in registers A, B, C
+* Use J as scratch space register
+* Optimize constant expressions

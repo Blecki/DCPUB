@@ -33,34 +33,34 @@ namespace DCPUC
             instruction.b = b;
             instruction.comment = comment;
 
-            if (barrierFlag)
-            {
-                barrierFlag = false;
+            //if (barrierFlag)
+            //{
+            //    barrierFlag = false;
                 instructions.Add(instruction);
-            }
-            else
-            {
-                bool ignore = false;
-                if (instructions.Count > 0)
-                {
-                    var lastIns = instructions[instructions.Count - 1];
-                    if (lastIns.ins == "SET" && instruction.ins == "SET" && instruction.b == "POP")
-                    {
-                        if (lastIns.a == "PUSH")
-                        {
-                            lastIns.a = instruction.a;
-                            ignore = true;
-                        }
-                    }
-                    else if (lastIns.ins == "SET" && instruction.ins == "SET" 
-                        && instruction.b == lastIns.a && instruction.b != "PUSH")
-                    {
-                        lastIns.a = instruction.a;
-                        ignore = true;
-                    }
-                }
-                if (!ignore) instructions.Add(instruction);
-            }
+            //}
+            //else
+            //{
+            //    bool ignore = false;
+            //    if (instructions.Count > 0)
+            //    {
+            //        var lastIns = instructions[instructions.Count - 1];
+            //        if (lastIns.ins == "SET" && instruction.ins == "SET" && instruction.b == "POP")
+            //        {
+            //            if (lastIns.a == "PUSH")
+            //            {
+            //                lastIns.a = instruction.a;
+            //                ignore = true;
+            //            }
+            //        }
+            //        else if (lastIns.ins == "SET" && instruction.ins == "SET" 
+            //            && instruction.b == lastIns.a && instruction.b != "PUSH")
+            //        {
+            //            lastIns.a = instruction.a;
+            //            ignore = true;
+            //        }
+            //    }
+            //    if (!ignore) instructions.Add(instruction);
+            //}
 
         }
 

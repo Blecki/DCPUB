@@ -39,42 +39,20 @@ namespace DCPUC
             var secondTarget = scope.FindFreeRegister();
             if (Scope.IsRegister((Register)secondTarget)) scope.UseRegister(secondTarget);
             (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondTarget);
-                        
 
-            if (AsString == "==" || AsString == "!=")
+
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
+            if (target == Register.STACK)
             {
-                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
-                if (target == Register.STACK)
-                {
-                    assembly.Add("SET", "A", "0x0", "Equality onto stack");
-                    assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
-                    assembly.Add("SET", "A", "0x1");
-                    assembly.Add("SET", "PUSH", "A");
-                    //scope.stackDepth += 1;
-                   
-                }
-                else
-                {
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x0",  "Equality into register");
-                    assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x1");
-                }
+                assembly.Add("SET", Scope.TempRegister, "POP", "Binary operation onto stack");
+                assembly.Add(opcodes[AsString], Scope.TempRegister, Scope.GetRegisterLabelSecond(secondTarget));
+                assembly.Add("SET", "PUSH", Scope.TempRegister);
             }
-            
             else
             {
-                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
-                if (target == Register.STACK)
-                {
-                    assembly.Add("SET", "A", "POP", "Binary operation onto stack");
-                    assembly.Add(opcodes[AsString], "A", Scope.GetRegisterLabelSecond(secondTarget));
-                    assembly.Add("SET", "PUSH", "A");
-                }
-                else
-                {
-                    assembly.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond(secondTarget), "Binary operation into register");
-                }
+                assembly.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond(secondTarget), "Binary operation into register");
             }
+
             if (secondTarget == (int)Register.STACK)
                 scope.stackDepth -= 1;
             else

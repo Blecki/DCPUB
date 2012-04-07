@@ -30,10 +30,10 @@ namespace DCPUC
                 (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
                 if (target == Register.STACK)
                 {
-                    assembly.Add("SET", "A", "0x0", "Equality onto stack");
+                    assembly.Add("SET", Scope.TempRegister, "0x0", "Equality onto stack");
                     assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
-                    assembly.Add("SET", "A", "0x1");
-                    assembly.Add("SET", "PUSH", "A");
+                    assembly.Add("SET", Scope.TempRegister, "0x1");
+                    assembly.Add("SET", "PUSH", Scope.TempRegister);
                 }
                 else
                 {

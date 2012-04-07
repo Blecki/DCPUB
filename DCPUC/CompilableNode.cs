@@ -9,6 +9,8 @@ namespace DCPUC
     public class CompilableNode : AstNode
     {
         public virtual void Compile(Assembly assembly, Scope scope, Register target) { throw new NotImplementedException(); }
+        public virtual bool IsConstant() { return false; }
+        public virtual UInt16 GetConstantValue() { return 0; }
 
         private static char[] hexDigits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
         public static String htoa(int x)
