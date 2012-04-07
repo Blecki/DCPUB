@@ -1,0 +1,132 @@
+For this test program
+
+function fib(n) 
+{
+   if (n == 0) return 0;
+   if (n == 1) return 1;
+   return fib(n-1) + fib(n-2);
+}
+
+var a = fib(6);
+
+The old version generated this assembly
+
+SET PUSH, 0x0006
+JSR LABEL0_fib
+SET PUSH, A
+BRK ;Non-standard
+:LABEL0_fib
+SET PUSH, 0x0000
+SET A, SP
+SET PUSH, [0x0003+A]
+SET A, 0x0
+IFE POP, POP
+SET A, 0x1
+SET PUSH, A
+IFE POP, 0x0
+SET PC, LABEL1END
+SET PUSH, 0x0000
+SET A, POP
+SET B, POP
+ADD SP, 0x0001
+SET PC, B
+:LABEL1END
+SET PUSH, 0x0001
+SET A, SP
+SET PUSH, [0x0003+A]
+SET A, 0x0
+IFE POP, POP
+SET A, 0x1
+SET PUSH, A
+IFE POP, 0x0
+SET PC, LABEL2END
+SET PUSH, 0x0001
+SET A, POP
+SET B, POP
+ADD SP, 0x0001
+SET PC, B
+:LABEL2END
+SET PUSH, 0x0002
+SET A, SP
+SET PUSH, [0x0003+A]
+SET A, POP
+SUB A, POP
+SET PUSH, A
+JSR LABEL0_fib
+SET PUSH, A
+SET PUSH, 0x0001
+SET A, SP
+SET PUSH, [0x0004+A]
+SET A, POP
+SUB A, POP
+SET PUSH, A
+JSR LABEL0_fib
+SET PUSH, A
+SET A, POP
+ADD A, POP
+SET PUSH, A
+SET A, POP
+SET B, POP
+ADD SP, 0x0001
+SET PC, B
+SET B, POP
+ADD SP, 0x0001
+SET PC, B
+
+The new version generates
+
+SET PUSH, 0x0006 ;Literal
+JSR LABEL0_fib ;Calling function
+SET PUSH, A ;Put return value on stack
+BRK ;Non-standard
+:LABEL0_fib
+SET B, 0x0000 ;Literal
+SET A, SP
+SET C, [0x0001+A] ;Fetching variable
+IFN C, B ;Plain conditional
+SET PC, LABEL1END ;Jump to else clause or end
+SET A, 0x0000 ;Literal
+SET B, POP ;Get return value
+ADD SP, 0x0001 ;Remove parameters
+SET PC, B ;Return
+:LABEL1END
+SET B, 0x0001 ;Literal
+SET A, SP
+SET C, [0x0001+A] ;Fetching variable
+IFN C, B ;Plain conditional
+SET PC, LABEL2END ;Jump to else clause or end
+SET A, 0x0001 ;Literal
+SET B, POP ;Get return value
+ADD SP, 0x0001 ;Remove parameters
+SET PC, B ;Return
+:LABEL2END
+SET PUSH, B ;Saving register
+SET PUSH, C ;Saving register
+SET B, 0x0002 ;Literal
+SET A, SP
+SET A, [0x0003+A] ;Fetching variable
+SUB A, B
+SET PUSH, A
+JSR LABEL0_fib ;Calling function
+SET C, POP ;Restoring register
+SET B, POP ;Restoring register
+SET C, A
+SET PUSH, B ;Saving register
+SET PUSH, C ;Saving register
+SET B, 0x0001 ;Literal
+SET A, SP
+SET A, [0x0003+A] ;Fetching variable
+SUB A, B
+SET PUSH, A
+JSR LABEL0_fib ;Calling function
+SET C, POP ;Restoring register
+SET B, POP ;Restoring register
+SET B, A
+ADD B, C ;Binary operation into register
+SET A, B
+SET B, POP ;Get return value
+ADD SP, 0x0001 ;Remove parameters
+SET PC, B ;Return
+SET B, POP ;Get return value
+ADD SP, 0x0001 ;Remove parameters
+SET PC, B ;Return
