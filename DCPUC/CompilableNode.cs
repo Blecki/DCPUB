@@ -12,7 +12,7 @@ namespace DCPUC
         public virtual bool IsConstant() { return false; }
         public virtual UInt16 GetConstantValue() { return 0; }
 
-        private static char[] hexDigits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        private static string hexDigits = "0123456789ABCDEF";
         public static String htoa(int x)
         {
             var s = "";
@@ -23,6 +23,18 @@ namespace DCPUC
             }
             while (s.Length < 4) s = '0' + s;
             return s;
+        }
+        public static ushort atoh(string s)
+        {
+            ushort h = 0;
+            s = s.ToUpper();
+            for (int i = 0; i < s.Length; ++i)
+            {
+                ushort d = (ushort)hexDigits.IndexOf(s[i]);
+                h += d;
+                d <<= 4;
+            }
+            return h;
         }
 
         public static String hex(int x) { return "0x" + htoa(x); }

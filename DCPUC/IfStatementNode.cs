@@ -25,16 +25,35 @@ namespace DCPUC
 
             if (ChildNodes[0] is ComparisonNode) //Emit more effecient code for plain comparisons
             {
-                var rightTarget = scope.FindAndUseFreeRegister();
-                var leftTarget = scope.FindAndUseFreeRegister();
-                (ChildNodes[0].ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)rightTarget);
-                (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)leftTarget);
-                var condType = ChildNodes[0].AsString;
-                assembly.Add((condType == "==" ? "IFN" : "IFE"),
-                    Scope.GetRegisterLabelSecond(leftTarget), Scope.GetRegisterLabelSecond(rightTarget), "Plain conditional");
+                var rightConstant = (ChildNodes[0].ChildNodes[1] as CompilableNode).IsConstant();
+                var leftConstant = (ChildNodes[0].ChildNodes[0] as CompilableNode).IsConstant();
+                string left, right;
+                int rightTarget = (int)Register.STACK;
+                int leftTarget = (int)Register.STACK;
+
+                if (rightConstant)
+                    right = hex((ChildNodes[0].ChildNodes[1] as CompilableNode).GetConstantValue());
+                else
+                {
+                    rightTarget = scope.FindAndUseFreeRegister();
+                    (ChildNodes[0].ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)rightTarget);
+                    right = Scope.GetRegisterLabelSecond(rightTarget);
+                }
+
+                if (leftConstant)
+                    left = hex((ChildNodes[0].ChildNodes[0] as CompilableNode).GetConstantValue());
+                else
+                {
+                    leftTarget = scope.FindAndUseFreeRegister();
+                    (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)leftTarget);
+                    left = Scope.GetRegisterLabelSecond(leftTarget);
+                }
+
                 scope.FreeMaybeRegister(leftTarget);
                 scope.FreeMaybeRegister(rightTarget);
 
+                var condType = ChildNodes[0].AsString;
+                assembly.Add((condType == "==" ? "IFN" : "IFE"), left, right, "Plain conditional");
             }
             else
             {

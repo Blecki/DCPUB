@@ -22,10 +22,11 @@ namespace DCPUC
             newVariable.name = AsString;
             newVariable.scope = scope;
             newVariable.stackOffset = scope.stackDepth;
+            newVariable.location = Register.STACK;
 
             (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
             scope.variables.Add(newVariable);
-            scope.stackDepth += 1;
+            //scope.stackDepth += 1;
 
         }
     }

@@ -16,6 +16,19 @@ namespace DCPUC
                 AsString += child.FindTokenAndGetText();
         }
 
+        public override bool IsConstant()
+        {
+            return true;
+        }
+
+        public override ushort GetConstantValue()
+        {
+            if (AsString.StartsWith("0x"))
+                return atoh(AsString.Substring(2));
+            else
+                return Convert.ToUInt16(AsString);
+        }
+
         public override void Compile(Assembly assembly, Scope scope, Register target) 
         {
             if (AsString.StartsWith("0x"))

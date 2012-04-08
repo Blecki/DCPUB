@@ -14,16 +14,19 @@ namespace DCPUC
 
         public override string ToString()
         {
-            if (ins[0] == ':' || ins == "BRK") return ins + (String.IsNullOrEmpty(comment) ? "" : (" ;" + comment));
-            else if (ins == "JSR") return ins + " " + a + (String.IsNullOrEmpty(comment) ? "" : (" ;" + comment));
-            else return ins + " " + a + ", " + b + (String.IsNullOrEmpty(comment) ? "" : (" ;" + comment));
+            if (String.IsNullOrEmpty(a)) return ins;
+            else if (String.IsNullOrEmpty(b)) return ins + " " + a;
+            else return ins + " " + a + ", " + b;
+            //if (ins[0] == ':' || ins == "BRK") return ins;// + (String.IsNullOrEmpty(comment) ? "" : (" ;" + comment));
+            //else if (ins == "JSR") return ins + " " + a;// + (String.IsNullOrEmpty(comment) ? "" : (" ;" + comment));
+            //else return ins + " " + a + ", " + b;// +(String.IsNullOrEmpty(comment) ? "" : (" ;" + comment));
         }
     }
 
     public class Assembly
     {
         public List<Instruction> instructions = new List<Instruction>();
-        public bool barrierFlag = false;
+        public int _barrier = 0;
 
         public void Add(string ins, string a, string b, string comment = null)
         {
@@ -33,38 +36,56 @@ namespace DCPUC
             instruction.b = b;
             instruction.comment = comment;
 
-            //if (barrierFlag)
-            //{
-            //    barrierFlag = false;
-                instructions.Add(instruction);
-            //}
-            //else
-            //{
-            //    bool ignore = false;
-            //    if (instructions.Count > 0)
-            //    {
-            //        var lastIns = instructions[instructions.Count - 1];
-            //        if (lastIns.ins == "SET" && instruction.ins == "SET" && instruction.b == "POP")
-            //        {
-            //            if (lastIns.a == "PUSH")
-            //            {
-            //                lastIns.a = instruction.a;
-            //                ignore = true;
-            //            }
-            //        }
-            //        else if (lastIns.ins == "SET" && instruction.ins == "SET" 
-            //            && instruction.b == lastIns.a && instruction.b != "PUSH")
-            //        {
-            //            lastIns.a = instruction.a;
-            //            ignore = true;
-            //        }
-            //    }
-            //    if (!ignore) instructions.Add(instruction);
-            //}
+            if (instructions.Count > _barrier)
+            {
+                bool ignore = false;
+                var lastIns = instructions[instructions.Count - 1];
 
+                    //SET A, POP
+                    //SET PUSH, A
+                if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.b == "POP" && instruction.a == "PUSH" && instruction.b == lastIns.a)
+                {
+                    instructions.RemoveAt(instructions.Count - 1);
+                    ignore = true;
+                }
+                    //SET A, !POP
+                    //SET !PUSH, A
+                else if (lastIns.ins == "SET" && lastIns.a == instruction.b && lastIns.b != "POP" && instruction.a != "PUSH")
+                {
+                    lastIns.a = instruction.a;
+                    ignore = true;
+                } 
+                    //SET PUSH, A
+                    //SET A, POP
+                else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.b == instruction.a && lastIns.a == "PUSH" && instruction.b == "pop")
+                {
+                    instructions.RemoveAt(instructions.Count - 1);
+                    ignore = true;
+                }
+                    //SET PUSH, A
+                    //SET A, PEEK
+                else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.b == instruction.a && lastIns.a == "PUSH" && instruction.b == "PEEK")
+                {
+                    ignore = true;
+                }
+                    //SET A, ?
+                    //IFN ?, A
+                else if (lastIns.ins == "SET" && instruction.ins == "IFN" && lastIns.a == instruction.a)
+                {
+                    lastIns.ins = "IFN";
+                    lastIns.a = lastIns.b;
+                    lastIns.b = instruction.b;
+                    ignore = true;
+                }
+
+                if (!ignore) instructions.Add(instruction);
+            }
+            else
+                instructions.Add(instruction);
+            
         }
 
-        public void Barrier() { barrierFlag = true; }
+        public void Barrier() { _barrier = instructions.Count; }
 
         
     }

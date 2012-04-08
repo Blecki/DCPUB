@@ -54,21 +54,22 @@ namespace DCPUC
 
         public void CompileFunction(Assembly assembly)
         {
+            var lScope = localScope.Push(new Scope());
             assembly.Add(":" + label, "", "");
             assembly.Barrier();
-            localScope.stackDepth += 1; //account for return address
-            (ChildNodes[0] as CompilableNode).Compile(assembly, localScope, Register.DISCARD);
-            CompileReturn(assembly);
+            lScope.stackDepth += 1; //account for return address
+            (ChildNodes[0] as CompilableNode).Compile(assembly, lScope, Register.DISCARD);
+            CompileReturn(assembly, lScope);
             assembly.Barrier();
             //Should leave the return value, if any, in A.
-            foreach (var function in localScope.pendingFunctions)
+            foreach (var function in lScope.pendingFunctions)
                 function.CompileFunction(assembly);
         }
 
-        internal void CompileReturn(Assembly assembly)
+        internal void CompileReturn(Assembly assembly, Scope lScope)
         {
-            if (localScope.stackDepth - parameterCount > 1)
-                assembly.Add("ADD", "SP", hex(localScope.stackDepth - parameterCount - 1), "Cleanup stack"); 
+            if (lScope.stackDepth - localScope.stackDepth > 1)
+                assembly.Add("ADD", "SP", hex(lScope.stackDepth - localScope.stackDepth - 1), "Cleanup stack"); 
             assembly.Add("SET", "PC", "POP", "Return");
         }
     }

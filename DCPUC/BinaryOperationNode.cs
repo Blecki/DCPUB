@@ -33,30 +33,73 @@ namespace DCPUC
             }
         }
 
+        public override bool IsConstant()
+        {
+            return (ChildNodes[0] as CompilableNode).IsConstant() && (ChildNodes[1] as CompilableNode).IsConstant();
+        }
+
+        public override ushort GetConstantValue()
+        {
+            var a = (ChildNodes[0] as CompilableNode).GetConstantValue();
+            var b = (ChildNodes[1] as CompilableNode).GetConstantValue();
+
+            if (AsString == "+") return (ushort)(a + b);
+            if (AsString == "-") return (ushort)(a - b);
+            if (AsString == "*") return (ushort)(a * b);
+            if (AsString == "/") return (ushort)(a / b);
+            if (AsString == "%") return (ushort)(a % b);
+            if (AsString == "<<") return (ushort)(a << b);
+            if (AsString == ">>") return (ushort)(a >> b);
+            if (AsString == "&") return (ushort)(a & b);
+            if (AsString == "|") return (ushort)(a | b);
+            if (AsString == "^") return (ushort)(a ^ b);
+            return 0;
+        }
+
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            //Evaluate in reverse in case both need to go on the stack
-            var secondTarget = scope.FindFreeRegister();
-            if (Scope.IsRegister((Register)secondTarget)) scope.UseRegister(secondTarget);
-            (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondTarget);
+            int secondTarget = (int)Register.STACK;
 
+            var secondConstant = (ChildNodes[1] as CompilableNode).IsConstant();
+            var firstConstant = (ChildNodes[0] as CompilableNode).IsConstant();
 
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
+            if (firstConstant && secondConstant)
+            {
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(GetConstantValue()));
+                if (target == Register.STACK) scope.stackDepth += 1;
+                return;
+            }
+
+            if (!secondConstant)
+            {
+                secondTarget = scope.FindAndUseFreeRegister();
+                (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondTarget);
+            }
+
+            if (!firstConstant)
+                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
+
             if (target == Register.STACK)
             {
-                assembly.Add("SET", Scope.TempRegister, "POP", "Binary operation onto stack");
-                assembly.Add(opcodes[AsString], Scope.TempRegister, Scope.GetRegisterLabelSecond(secondTarget));
+                assembly.Add("SET", Scope.TempRegister,
+                     firstConstant ? hex((ChildNodes[0] as CompilableNode).GetConstantValue()) : "POP");
+                assembly.Add(opcodes[AsString], Scope.TempRegister,
+                    secondConstant ? hex((ChildNodes[1] as CompilableNode).GetConstantValue()) : Scope.GetRegisterLabelSecond(secondTarget));
                 assembly.Add("SET", "PUSH", Scope.TempRegister);
             }
             else
             {
-                assembly.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond(secondTarget), "Binary operation into register");
+                if (firstConstant)
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex((ChildNodes[0] as CompilableNode).GetConstantValue()));
+                assembly.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)target),
+                    secondConstant ? hex((ChildNodes[1] as CompilableNode).GetConstantValue()) : Scope.GetRegisterLabelSecond(secondTarget));
             }
+             
 
             if (secondTarget == (int)Register.STACK)
                 scope.stackDepth -= 1;
             else
-                scope.FreeRegister(secondTarget);
+                scope.FreeMaybeRegister(secondTarget);
         }
     }
 
