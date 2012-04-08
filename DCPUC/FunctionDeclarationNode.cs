@@ -11,6 +11,7 @@ namespace DCPUC
         public Scope localScope = new Scope();
         public String label;
         public int parameterCount = 0;
+        public int references = 0;
         //public List<Variable> parameters = new List<Variable>();
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -52,7 +53,7 @@ namespace DCPUC
             scope.pendingFunctions.Add(this);
         }
 
-        public void CompileFunction(Assembly assembly)
+        public virtual void CompileFunction(Assembly assembly)
         {
             var lScope = localScope.Push(new Scope());
             assembly.Add(":" + label, "", "");

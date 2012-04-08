@@ -44,11 +44,55 @@ namespace DCPUC
             }
             else if (ChildNodes[0] is DereferenceNode)
             {
-                (ChildNodes[1] as CompilableNode).Compile(assembly, scope, Register.STACK);
-                (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
-                assembly.Add("SET", Scope.TempRegister, "POP");
-                assembly.Add("SET", "[" + Scope.TempRegister + "]", "POP");
-                scope.stackDepth -= 2;
+                bool firstConstant = false;
+                int firstRegister = (int)Register.STACK;
+
+                if ((ChildNodes[0].ChildNodes[0] as CompilableNode).IsConstant())
+                    firstConstant = true;
+                else
+                {
+                    firstRegister = scope.FindAndUseFreeRegister();
+                    (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)firstRegister);
+                }
+
+                var secondRegister = scope.FindAndUseFreeRegister();
+                (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondRegister);
+
+                if (firstConstant)
+                {
+                    assembly.Add("SET", "[" + hex((ChildNodes[0].ChildNodes[0] as CompilableNode).GetConstantValue()) + "]",
+                        Scope.GetRegisterLabelSecond(secondRegister));
+                    if (secondRegister == (int)Register.STACK)
+                        scope.stackDepth -= 1;
+                    else
+                        scope.FreeMaybeRegister(secondRegister);
+                }
+                else
+                {
+                    if (firstRegister == (int)Register.STACK && secondRegister == (int)Register.STACK)
+                    {
+                        assembly.Add("SET", Scope.TempRegister, "POP");
+                        assembly.Add("SET", "[" + Scope.TempRegister + "]", "POP");
+                        scope.stackDepth -= 2;
+                    }
+                    else if (secondRegister == (int)Register.STACK)
+                    {
+                        assembly.Add("SET", "[" + Scope.GetRegisterLabelFirst(firstRegister) + "]", "POP");
+                        scope.stackDepth -= 1;
+                        scope.FreeMaybeRegister(firstRegister);
+                        return;
+                    }
+                    else if (firstRegister == (int)Register.STACK)
+                    {
+                        throw new CompileError("Impossible situation entered");
+                    }
+                    else
+                    {
+                        assembly.Add("SET", "[" + Scope.GetRegisterLabelFirst(firstRegister) + "]", Scope.GetRegisterLabelSecond(secondRegister));
+                        scope.FreeMaybeRegister(firstRegister);
+                        scope.FreeMaybeRegister(secondRegister);
+                    }
+                }
             }
         }
     }

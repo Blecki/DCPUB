@@ -57,6 +57,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ComparisonNode.cs" />
+    <Compile Include="DataLiteralNode.cs" />
+    <Compile Include="LibraryFunctionNode.cs" />
     <Compile Include="FunctionCallNode.cs" />
     <Compile Include="FunctionDeclarationNode.cs" />
     <Compile Include="DereferenceNode.cs" />

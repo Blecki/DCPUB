@@ -37,6 +37,8 @@ namespace DCPUC
             var func = findFunction(this, AsString);
             if (func == null) throw new CompileError("Can't find function - " + AsString);
             if (func.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments - " + AsString);
+            func.references += 1;
+
             //Marshall registers
             var startingRegisterState = scope.SaveRegisterState();
 
@@ -79,7 +81,7 @@ namespace DCPUC
                     scope.activeFunction.localScope.variables[i].location = (Register)i;
 
             var saveA = startingRegisterState[0] == RegisterState.Used;
-            if (saveA) assembly.Add("SET", Scope.TempRegister, "A", "Save return value from being overwritten by stored register");
+            if (saveA && target != Register.DISCARD) assembly.Add("SET", Scope.TempRegister, "A", "Save return value from being overwritten by stored register");
 
             for (int i = 6; i >= 0; --i)
             {

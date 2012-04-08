@@ -51,9 +51,13 @@ namespace DCPUCIDE
                 return;
             }
 
+            DCPUC.Scope.Reset();
             var root = program.Root.AstNode as DCPUC.CompilableNode; //Irony.Interpreter.Ast.AstNode;
             var assembly = new DCPUC.Assembly();
             var scope = new DCPUC.Scope();
+
+            var library = new List<String>(System.IO.File.ReadAllLines("libdcpuc.txt"));
+            root.InsertLibrary(library);
 
             try
             {
@@ -61,6 +65,17 @@ namespace DCPUCIDE
                 assembly.Add("BRK", "", "", "Non-standard");
                 foreach (var pendingFunction in scope.pendingFunctions)
                     pendingFunction.CompileFunction(assembly);
+                foreach (var dataItem in DCPUC.Scope.dataElements)
+                {
+                    assembly.Add(":" + dataItem.Item1, "", "");
+                    var datString = "";
+                    foreach (var item in dataItem.Item2)
+                    {
+                        datString += DCPUC.CompilableNode.hex(item);
+                        datString += ", ";
+                    }
+                    assembly.Add("DAT", datString.Substring(0, datString.Length - 2), "");
+                }
             }
             catch (DCPUC.CompileError c)
             {

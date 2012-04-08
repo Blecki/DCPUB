@@ -22,15 +22,19 @@ namespace DCPUC
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             identifier.AstNodeType = typeof(VariableNameNode);
 
+            var stringLiteral = new StringLiteral("string", "\"");
+           
+
             var inlineASM = new NonTerminal("inline", typeof(InlineASMNode));
 
             var numberLiteral = new NonTerminal("Number", typeof(NumberLiteralNode));
+            var dataLiteral = new NonTerminal("Data", typeof(DataLiteralNode));
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
             var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^";
-            var comparisonOperator = ToTerm("==") | "!=";
+            var comparisonOperator = ToTerm("==") | "!=" | ">";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
             var statement = new NonTerminal("Statement");
@@ -47,13 +51,14 @@ namespace DCPUC
             var functionCall = new NonTerminal("Function Call", typeof(FunctionCallNode));
 
             numberLiteral.Rule = integerLiteral;
-            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier 
-                | dereference | functionCall | comparison;
+            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral));
+            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
+                | dereference | functionCall | dataLiteral;
             assignment.Rule = (identifier | dereference) + "=" + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
-            variableDeclaration.Rule = ToTerm("var") + identifier + "=" + expression;
+            variableDeclaration.Rule = ToTerm("var") + identifier + "=" + (expression | dataLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | block | functionDeclaration | (functionCall + ";")
@@ -61,7 +66,7 @@ namespace DCPUC
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             inlineASM.Rule = ToTerm("asm") + "{" + new FreeTextLiteral("inline asm", "}") + "}";
-            ifStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement;
+            ifStatement.Rule = ToTerm("if") + "(" + (expression | comparison) + ")" + statement;
             ifElseStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement + this.PreferShiftHere() + "else" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = identifier + "(" + parameterList + ")";

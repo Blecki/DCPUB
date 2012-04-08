@@ -96,7 +96,7 @@ namespace DCPUC
             }
              
 
-            if (secondTarget == (int)Register.STACK)
+            if (secondTarget == (int)Register.STACK && !secondConstant)
                 scope.stackDepth -= 1;
             else
                 scope.FreeMaybeRegister(secondTarget);

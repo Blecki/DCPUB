@@ -34,6 +34,7 @@ namespace DCPUC
         Used = 1
     }
 
+
     public class Scope
     {
         private static int nextLabelID = 0;
@@ -51,6 +52,12 @@ namespace DCPUC
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         internal FunctionDeclarationNode activeFunction = null;
         internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
+
+        public static void Reset()
+        {
+            nextLabelID = 0;
+            dataElements.Clear();
+        }
 
         internal Scope Push(Scope child)
         {
@@ -102,5 +109,11 @@ namespace DCPUC
         }
 
         internal void FreeMaybeRegister(int r) { if (IsRegister((Register)r)) FreeRegister(r); }
+
+        public static List<Tuple<string, List<ushort>>> dataElements = new List<Tuple<string, List<ushort>>>();
+        public static void AddData(string label, List<ushort> data)
+        {
+            dataElements.Add(new Tuple<string, List<ushort>>(label, data));
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Value", treeNode.ChildNodes[3]);
+            AddChild("Value", treeNode.ChildNodes[3].FirstChild);
             AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 

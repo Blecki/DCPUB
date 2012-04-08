@@ -17,9 +17,28 @@ namespace DCPUC
 
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, target);
-            assembly.Add("SET", Scope.TempRegister, Scope.GetRegisterLabelSecond((int)target));
-            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "["+Scope.TempRegister+"]");
+            var destRegister = target == Register.STACK ? scope.FindAndUseFreeRegister() : (int)target;
+            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)destRegister);
+            if (target == Register.STACK)
+            {
+                if (destRegister == (int)Register.STACK)
+                    assembly.Add("SET", "PEEK", "[PEEK]");
+                else
+                {
+                    assembly.Add("SET", "PUSH", "[" + Scope.GetRegisterLabelSecond(destRegister) + "]");
+                    scope.stackDepth += 1;
+                    scope.FreeMaybeRegister(destRegister);
+                }
+            }
+            else
+            {
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Scope.GetRegisterLabelSecond(destRegister) + "]");
+                if (destRegister == (int)Register.STACK)
+                    scope.stackDepth -= 1;
+                else if (destRegister != (int)target)
+                    scope.FreeMaybeRegister(destRegister);
+            }
+
         }
     }
 

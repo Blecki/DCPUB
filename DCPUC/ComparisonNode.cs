@@ -20,6 +20,7 @@ namespace DCPUC
 
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
+            throw new CompileError("Comparisons in general expressions are not implemented");
             //Evaluate in reverse in case both need to go on the stack
             var secondTarget = scope.FindFreeRegister();
             if (Scope.IsRegister((Register)secondTarget)) scope.UseRegister(secondTarget);

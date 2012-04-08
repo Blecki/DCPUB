@@ -36,6 +36,9 @@ namespace DCPUC
             instruction.b = b;
             instruction.comment = comment;
 
+            //instructions.Add(instruction);
+            //return;
+
             if (instructions.Count > _barrier)
             {
                 bool ignore = false;
@@ -50,7 +53,7 @@ namespace DCPUC
                 }
                     //SET A, !POP
                     //SET !PUSH, A
-                else if (lastIns.ins == "SET" && lastIns.a == instruction.b && lastIns.b != "POP" && instruction.a != "PUSH")
+                else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.a == instruction.b && lastIns.b != "POP" && instruction.a != "PUSH")
                 {
                     lastIns.a = instruction.a;
                     ignore = true;
@@ -68,13 +71,13 @@ namespace DCPUC
                 {
                     ignore = true;
                 }
-                    //SET A, ?
-                    //IFN ?, A
-                else if (lastIns.ins == "SET" && instruction.ins == "IFN" && lastIns.a == instruction.a)
+                    //SET A, ?             -> IFN|IFE|IFG ?, A
+                    //IFN|IFE|IFG ?, A
+                else if (lastIns.ins == "SET" && (instruction.ins == "IFN" || instruction.ins == "IFE" || instruction.ins == "IFG")
+                    && lastIns.a == instruction.b)
                 {
-                    lastIns.ins = "IFN";
-                    lastIns.a = lastIns.b;
-                    lastIns.b = instruction.b;
+                    lastIns.ins = instruction.ins;
+                    lastIns.a = instruction.a;
                     ignore = true;
                 }
 

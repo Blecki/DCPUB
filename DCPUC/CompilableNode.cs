@@ -10,7 +10,7 @@ namespace DCPUC
     {
         public virtual void Compile(Assembly assembly, Scope scope, Register target) { throw new NotImplementedException(); }
         public virtual bool IsConstant() { return false; }
-        public virtual UInt16 GetConstantValue() { return 0; }
+        public virtual ushort GetConstantValue() { return 0; }
 
         private static string hexDigits = "0123456789ABCDEF";
         public static String htoa(int x)
@@ -49,6 +49,35 @@ namespace DCPUC
         {
             if (scope.stackDepth - scope.parentDepth > 0) 
                 assembly.Add("ADD", "SP", hex(scope.stackDepth - scope.parentDepth), "End block");
+        }
+
+        public void InsertLibrary(List<string> library)
+        {
+            for (int i = 0; i < library.Count; ++i)
+            {
+                if (library[i].StartsWith(";DCPUC FUNCTION"))
+                {
+                    //Parse function..
+                    var funcHeader = library[i].Split(' ');
+                    List<String> funcCode = new List<string>();
+                    while (i < library.Count && !library[i].StartsWith(";DCPUC ENDFUNCTION"))
+                    {
+                        funcCode.Add(library[i]);
+                        ++i;
+                    }
+                    if (i < library.Count)
+                    {
+                        funcCode.Add(library[i]);
+                        ++i;
+                    }
+                    var funcNode = new LibraryFunctionNode();
+                    funcNode.AsString = funcHeader[2];
+                    funcNode.label = funcHeader[3];
+                    funcNode.parameterCount = Convert.ToInt32(funcHeader[4]);
+                    funcNode.code = funcCode;
+                    ChildNodes.Add(funcNode);
+                }
+            }
         }
     }
 }
