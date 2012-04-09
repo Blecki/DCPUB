@@ -41,6 +41,7 @@ namespace DCPUC
             var statementList = new NonTerminal("Statement List", typeof(BlockNode));
             var assignment = new NonTerminal("Assignment", typeof(AssignmentNode));
             var ifStatement = new NonTerminal("If", typeof(IfStatementNode));
+            var whileStatement = new NonTerminal("While", typeof(WhileStatementNode));
             var block = new NonTerminal("Block");
             var ifElseStatement = new NonTerminal("IfElse", typeof(IfStatementNode));
             var parameterList = new NonTerminal("Parameter List");
@@ -61,13 +62,15 @@ namespace DCPUC
             variableDeclaration.Rule = ToTerm("var") + identifier + "=" + (expression | dataLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
-                | (assignment + ";") | ifStatement | ifElseStatement | block | functionDeclaration | (functionCall + ";")
+                | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
+                | functionDeclaration | (functionCall + ";")
                 | (returnStatement + ";");
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             inlineASM.Rule = ToTerm("asm") + "{" + new FreeTextLiteral("inline asm", "}") + "}";
             ifStatement.Rule = ToTerm("if") + "(" + (expression | comparison) + ")" + statement;
             ifElseStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement + this.PreferShiftHere() + "else" + statement;
+            whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = identifier + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier;
