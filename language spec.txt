@@ -1,21 +1,32 @@
 A high level overview of DCPUC
 
-program = *(statement)
-statement = variable declaration | function declaration | if | assignment | function call | block
-variable declaration = var identifier
-function declaration = function identifier(comma-separated parameter list) { statements }
-if = if (expression) statement
-assignment = expression = expression
+program = *(statement | function declaration)
+statement = (variable declaration | function declaration | if | while | assignment | function call | block) + ;
+variable declaration = "var" + identifier + "=" + expression
+function declaration = "function" + identifier(comma-separated parameter list) + "{" + *statement + "}"
+if = if (expression) statement [Optional else statement]
+while = while (expression) statement
+assignment = expression + "=" + expression
 function call = identifier(parameters)
 block = { statements }
+expression = binary operation [+-*/%<<>>&^|] | number literal | data literal | function call
 
 Like C, all statements are terminated with ';'.
 Execution begins at the first statement in the file (skipping function declarations).
 Variables have no type and are declared with a 'var' statement.
 Variables must be initialized
-In conditionals, 0 = false, anything else = true. So far, only == and != are supported.
+In conditionals, 0 = false, anything else = true. So far, only ==, != and > are supported.
 All functions return a value. If a function does not have a return statement, then whatever is left in A when it returns will be assumed to be the return value. 
 The unary * operator 'dereferences' whatever it is applied to. It will return the value at the value of it's operand. It is the same as the [] syntax in the DCPU-16 spec, or a pointer in C. It can also be assigned to. For example, var video = 0x8000; *video = 72; will write the character 'H' to address 0x8000, the first word of video memory.
+
+Data literals are static literals stored in program ram. A chain of strings ("in quotes"), number literals, or [numbers in brackets] separated only by strings is a data literal. Data literals will be placed somewhere in memory, and your code will get the address of the data. In the example var a = "string"; the value of a will be the address at which "string" is stored.
+The [number in brackets] construct is only valid within data literals. [N] will create a literal with N elements, all of which will be initiated to 0.
+
+The DCPUC standard library
+
+itoa(number, pointer) : Converts number to display characters and writes it to *pointer. Returns a pointer to one word past the last write (pointer + strlen(coverted number))
+strlen(pointer) : returns the length of the string pointed to by pointer. Assumes 0 termination.
+strcpy(pointerA, pointerB) : copies string A to string B, until 0 is found in A. Does not copy the 0.
 
 DCPUC Calling Convention
 
