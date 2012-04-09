@@ -1,5 +1,5 @@
 //print the alphabet
-program var a = 0; 
+var a = 0; 
 while (26 > a) 
 { 
 	*(0x8000 + a) = 0x41 + a;
