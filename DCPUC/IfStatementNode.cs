@@ -155,181 +155,63 @@ namespace DCPUC
             throw new CompileError("Impossible situation reached");
         }
 
+        public static void CompileBlock(Assembly assembly, Scope scope, CompilableNode block)
+        {
+            var blockScope = BeginBlock(scope);
+            assembly.Barrier();
+            block.Compile(assembly, blockScope, Register.DISCARD);
+            assembly.Barrier();
+            EndBlock(assembly, blockScope);
+        }
+
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
-            var firstClause = 0;
-            var secondClause = 0;
-            var constantClause = 0;
+            var clauseOrder = CompileConditional(assembly, scope, ChildNodes[0] as CompilableNode);
 
-            if (!(ChildNodes[0] is ComparisonNode))
+            if (clauseOrder == ClauseOrder.ConstantPass)
+                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
+            else if (clauseOrder == ClauseOrder.ConstantFail)
             {
-                var condTarget = scope.FindAndUseFreeRegister();
-                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)condTarget);
-                assembly.Add("IFE", Scope.GetRegisterLabelSecond(condTarget), "0x0", "If from expression");
-                scope.FreeMaybeRegister(condTarget);
-                firstClause = 1;
-                secondClause = 2;
+                if (ChildNodes.Count == 3) CompileBlock(assembly, scope, ChildNodes[2] as CompilableNode);
             }
-            else
-            {
-                var op = ChildNodes[0].AsString;
-                ushort firstConstantValue = 0, secondConstantValue = 0;
-
-                var firstIsConstant = (ChildNodes[0].ChildNodes[0] as CompilableNode).IsConstant();
-                var secondIsConstant = (ChildNodes[0].ChildNodes[1] as CompilableNode).IsConstant();
-
-                int firstRegister = (int)Register.STACK;
-                int secondRegister = (int)Register.STACK;
-
-                if (secondIsConstant)
-                    secondConstantValue = (ChildNodes[0].ChildNodes[1] as CompilableNode).GetConstantValue();
-                else
-                {
-                    secondRegister = scope.FindAndUseFreeRegister();
-                    (ChildNodes[0].ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondRegister);
-                }
-
-                if (firstIsConstant)
-                    firstConstantValue = (ChildNodes[0].ChildNodes[0] as CompilableNode).GetConstantValue();
-                else
-                {
-                    firstRegister = scope.FindAndUseFreeRegister();
-                    (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)firstRegister);
-                }
-
-                if (op == "==")
-                {
-                    firstClause = 2;
-                    secondClause = 1;
-                    if (firstIsConstant && secondIsConstant)
-                    {
-                        if (firstConstantValue == secondConstantValue) { constantClause = 1; goto Emit; }
-                        else { constantClause = 2; goto Emit; }
-                    }
-                    else if (firstIsConstant)
-                    {
-                        assembly.Add("IFE", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, secondRegister);
-                        goto Emit;
-                    }
-                    else if (secondIsConstant)
-                    {
-                        assembly.Add("IFE", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
-                        releaseRegister(scope, firstRegister);
-                        goto Emit;
-                    }
-                    else
-                    {
-                        assembly.Add("IFE", Scope.GetRegisterLabelSecond(firstRegister), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, firstRegister);
-                        releaseRegister(scope, secondRegister);
-                        goto Emit;
-                    }                        
-                }
-                else if (op == "!=")
-                {
-                    firstClause = 2;
-                    secondClause = 1;
-                    if (firstIsConstant && secondIsConstant)
-                    {
-                        if (firstConstantValue != secondConstantValue) { constantClause = 1; goto Emit; }
-                        else { constantClause = 2; goto Emit; }
-                    }
-                    else if (firstIsConstant)
-                    {
-                        assembly.Add("IFN", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, secondRegister);
-                        goto Emit;
-                    }
-                    else if (secondIsConstant)
-                    {
-                        assembly.Add("IFN", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
-                        releaseRegister(scope, firstRegister);
-                        goto Emit;
-                    }
-                    else
-                    {
-                        assembly.Add("IFN", Scope.GetRegisterLabelSecond(firstRegister), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, firstRegister);
-                        releaseRegister(scope, secondRegister);
-                        goto Emit;
-                    }
-                }
-                else if (op == ">")
-                {
-                    firstClause = 2;
-                    secondClause = 1;
-                    if (firstIsConstant && secondIsConstant)
-                    {
-                        if (firstConstantValue > secondConstantValue) { constantClause = 1; goto Emit; }
-                        else { constantClause = 2; goto Emit; }
-                    }
-                    else if (firstIsConstant)
-                    {
-                        assembly.Add("IFG", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, secondRegister);
-                        goto Emit;
-                    }
-                    else if (secondIsConstant)
-                    {
-                        assembly.Add("IFG", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
-                        releaseRegister(scope, firstRegister);
-                        goto Emit;
-                    }
-                    else
-                    {
-                        assembly.Add("IFG", Scope.GetRegisterLabelSecond(firstRegister), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, firstRegister);
-                        releaseRegister(scope, secondRegister);
-                        goto Emit;
-                    }
-                }
-
-            }
-
-            Emit:
-            if (constantClause != 0)
-            {
-                if (constantClause < ChildNodes.Count)
-                {
-                    var blockScope = BeginBlock(scope);
-                    assembly.Barrier();
-                    (ChildNodes[constantClause] as CompilableNode).Compile(assembly, blockScope, Register.DISCARD);
-                    assembly.Barrier();
-                    EndBlock(assembly, blockScope);
-                }
-            }
-            else
+            else if (clauseOrder == ClauseOrder.PassFirst)
             {
                 var elseLabel = Scope.GetLabel() + "ELSE";
                 var endLabel = Scope.GetLabel() + "END";
 
-
-
                 assembly.Add("SET", "PC", elseLabel);
-                if (firstClause != 0 && firstClause < ChildNodes.Count)
-                {
-                    var blockScope = BeginBlock(scope);
-                    assembly.Barrier();
-                    (ChildNodes[firstClause] as CompilableNode).Compile(assembly, blockScope, Register.DISCARD);
-                    assembly.Barrier();
-                    EndBlock(assembly, blockScope);
-                }
-                if (secondClause != 0 && secondClause < ChildNodes.Count)
+                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
+                
+                if (ChildNodes.Count == 3)
                 {
                     assembly.Add("SET", "PC", endLabel);
                     assembly.Add(":" + elseLabel, "", "");
-                    var elseScope = BeginBlock(scope);
-                    assembly.Barrier();
-                    (ChildNodes[secondClause] as CompilableNode).Compile(assembly, elseScope, Register.DISCARD);
-                    assembly.Barrier();
-                    EndBlock(assembly, elseScope);
-                    assembly.Add(":" + endLabel, "", "");
+                    CompileBlock(assembly, scope, ChildNodes[2] as CompilableNode);
+                }
+
+                assembly.Add(":" + endLabel, "", "");
+            }
+            else if (clauseOrder == ClauseOrder.FailFirst)
+            {
+                var elseLabel = Scope.GetLabel() + "ELSE";
+                var endLabel = Scope.GetLabel() + "END";
+                if (ChildNodes.Count == 3)
+                {
+                    assembly.Add("SET", "PC", elseLabel);
+                    CompileBlock(assembly, scope, ChildNodes[2] as CompilableNode);
+                    assembly.Add("SET", "PC", endLabel);
+                    assembly.Add(":" + elseLabel, "", "");
                 }
                 else
+                {
+                    assembly.Add("SET", "PC", elseLabel);
+                    assembly.Add("SET", "PC", endLabel);
                     assembly.Add(":" + elseLabel, "", "");
-            }
+                }
 
+                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
+                assembly.Add(":" + endLabel, "", "");
+            }
 
         }
 
