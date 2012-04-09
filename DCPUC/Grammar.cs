@@ -28,6 +28,7 @@ namespace DCPUC
             var inlineASM = new NonTerminal("inline", typeof(InlineASMNode));
 
             var numberLiteral = new NonTerminal("Number", typeof(NumberLiteralNode));
+            var blockLiteral = new NonTerminal("BlockLiteral", typeof(BlockLiteralNode));
             var dataLiteral = new NonTerminal("Data", typeof(DataLiteralNode));
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
@@ -52,7 +53,8 @@ namespace DCPUC
             var functionCall = new NonTerminal("Function Call", typeof(FunctionCallNode));
 
             numberLiteral.Rule = integerLiteral;
-            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral));
+            blockLiteral.Rule = ToTerm("[") + numberLiteral + "]";
+            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral));
             expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
                 | dereference | functionCall | dataLiteral;
             assignment.Rule = (identifier | dereference) + "=" + expression;

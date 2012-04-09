@@ -67,14 +67,13 @@ namespace DCPUCIDE
                     pendingFunction.CompileFunction(assembly);
                 foreach (var dataItem in DCPUC.Scope.dataElements)
                 {
-                    assembly.Add(":" + dataItem.Item1, "", "");
                     var datString = "";
                     foreach (var item in dataItem.Item2)
                     {
                         datString += DCPUC.CompilableNode.hex(item);
                         datString += ", ";
                     }
-                    assembly.Add("DAT", datString.Substring(0, datString.Length - 2), "");
+                    assembly.Add(":" + dataItem.Item1, "DAT", datString.Substring(0, datString.Length - 2));
                 }
             }
             catch (DCPUC.CompileError c)

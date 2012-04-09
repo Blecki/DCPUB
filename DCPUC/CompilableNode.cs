@@ -30,9 +30,9 @@ namespace DCPUC
             s = s.ToUpper();
             for (int i = 0; i < s.Length; ++i)
             {
+                h <<= 4;
                 ushort d = (ushort)hexDigits.IndexOf(s[i]);
                 h += d;
-                d <<= 4;
             }
             return h;
         }
