@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    class VariableDeclarationNode : CompilableNode
+    public class VariableDeclarationNode : CompilableNode
     {
         string declLabel = "";
 

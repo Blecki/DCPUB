@@ -49,10 +49,10 @@ namespace DCPUC
 
         internal Scope parent = null;
         internal int parentDepth = 0;
-        internal List<Variable> variables = new List<Variable>();
-        internal int stackDepth = 0;
+        public List<Variable> variables = new List<Variable>();
+        public int stackDepth = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
-        internal FunctionDeclarationNode activeFunction = null;
+        public FunctionDeclarationNode activeFunction = null;
         internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
 
         public static void Reset()
@@ -88,7 +88,7 @@ namespace DCPUC
         internal static string GetRegisterLabelFirst(int r) { if (r == (int)Register.STACK) return "PUSH"; else return ((Register)r).ToString(); }
         internal static string GetRegisterLabelSecond(int r) { if (r == (int)Register.STACK) return "POP"; else return ((Register)r).ToString(); }
         internal void FreeRegister(int r) { registers[r] = RegisterState.Free; }
-        internal void UseRegister(int r) { registers[r] = RegisterState.Used; }
+        public void UseRegister(int r) { registers[r] = RegisterState.Used; }
         internal static bool IsRegister(Register r) { return (int)(r) <= 7; }
 
         internal RegisterState[] SaveRegisterState()
