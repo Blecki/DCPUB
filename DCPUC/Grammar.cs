@@ -17,7 +17,7 @@ namespace DCPUC
             var comment = new CommentTerminal("comment", "//", "\n", "\r\n");
             NonGrammarTerminals.Add(comment);
 
-            var integerLiteral = new NumberLiteral("integer", NumberOptions.IntOnly);
+            var integerLiteral = new NumberLiteral("integer", NumberOptions.IntOnly | NumberOptions.AllowSign);
             integerLiteral.AddPrefix("0x", NumberOptions.Hex);
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             identifier.AstNodeType = typeof(VariableNameNode);

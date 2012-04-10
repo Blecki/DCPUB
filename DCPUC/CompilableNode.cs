@@ -14,6 +14,8 @@ namespace DCPUC
         public virtual string GetConstantToken() { return "0x0000"; }
         public virtual bool IsIntegralConstant() { return false; }
 
+        public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
+
         private static string hexDigits = "0123456789ABCDEF";
         public static String htoa(int x)
         {
@@ -39,8 +41,8 @@ namespace DCPUC
             return h;
         }
 
-        public static String hex(int x) { return "0x" + htoa(x); }
-        public static String hex(string x) { return "0x" + htoa(Convert.ToInt16(x)); }
+        public static String hex(int x) { return "0x" + htoa((ushort)x); }
+        public static String hex(string x) { return "0x" + htoa((ushort)Convert.ToInt16(x)); }
 
         public static Scope BeginBlock(Scope scope)
         {

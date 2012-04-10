@@ -1,4 +1,3 @@
 * Sample Programs
-* While loop
-* Optimize binary operation when target is Stack
 * Comparison Operators
+* Fold constants in AST pre-pass
