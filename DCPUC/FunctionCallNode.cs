@@ -16,7 +16,7 @@ namespace DCPUC
                 AddChild("parameter", parameter);
         }
 
-        private static FunctionDeclarationNode findFunction(AstNode node, string name)
+        protected virtual FunctionDeclarationNode findFunction(AstNode node, string name)
         {
             foreach (var child in node.ChildNodes)
                 if (child is FunctionDeclarationNode && (child as FunctionDeclarationNode).AsString == name)
