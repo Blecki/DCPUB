@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    class BranchStatementNode : CompilableNode
+    public class BranchStatementNode : CompilableNode
     {
         private static void releaseRegister(Scope scope, int reg)
         {
