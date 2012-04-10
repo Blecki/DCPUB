@@ -16,74 +16,17 @@ namespace DCPUCIDE
         public Form1()
         {
             InitializeComponent();
-            Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
-            
-        }
-
-        private static String extractLine(String s, int c)
-        {
-            int lc = 0;
-            int p = 0;
-            while (p < s.Length && lc < c)
-            {
-                if (s[p] == '\n') lc++;
-                ++p;
-            }
-
-            int ls = p;
-            while (p < s.Length && s[p] != '\n') ++p;
-
-            return s.Substring(ls, p - ls);
         }
 
         private void compileButton_Click(object sender, EventArgs e)
         {
             outputBox.Clear();
-            var program = Parser.Parse(inputBox.Text);
-            if (program.HasErrors())
-            {
-                foreach (var msg in program.ParserMessages)
-                {
-                    outputBox.AppendText(msg.Level + ": " + msg.Message + " [line:" + msg.Location.Line + " column:" + msg.Location.Column + "]\r\n");
-                    outputBox.AppendText(extractLine(inputBox.Text, msg.Location.Line) + "\r\n");
-                    outputBox.AppendText(new String(' ', msg.Location.Column) + "^\r\n");
-                }
-                return;
-            }
-
-            DCPUC.Scope.Reset();
-            var root = program.Root.AstNode as DCPUC.CompilableNode; //Irony.Interpreter.Ast.AstNode;
             var assembly = new DCPUC.Assembly();
-            var scope = new DCPUC.Scope();
-
-            var library = new List<String>(System.IO.File.ReadAllLines("libdcpuc.txt"));
-            root.InsertLibrary(library);
-
-            try
-            {
-                root.Compile(assembly, scope, DCPUC.Register.DISCARD);
-                assembly.Add("BRK", "", "", "Non-standard");
-                foreach (var pendingFunction in scope.pendingFunctions)
-                    pendingFunction.CompileFunction(assembly);
-                foreach (var dataItem in DCPUC.Scope.dataElements)
-                {
-                    var datString = "";
-                    foreach (var item in dataItem.Item2)
-                    {
-                        datString += DCPUC.CompilableNode.hex(item);
-                        datString += ", ";
-                    }
-                    assembly.Add(":" + dataItem.Item1, "DAT", datString.Substring(0, datString.Length - 2));
-                }
-            }
-            catch (DCPUC.CompileError c)
-            {
-                outputBox.AppendText(c.Message);
-                return;
-            }
+            DCPUC.Scope.CompileRoot(inputBox.Text, assembly, (s) => { outputBox.AppendText(s); });
 
             foreach (var str in assembly.instructions)
                 outputBox.AppendText(str.ToString() + "\r\n");
+
 
         }
     }

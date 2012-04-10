@@ -12,6 +12,7 @@ namespace DCPUC
         public Scope scope;
         public int stackOffset;
         public Register location;
+        public string staticLabel;
     }
 
     public enum Register
@@ -26,6 +27,7 @@ namespace DCPUC
         J = 7,
         STACK = 8,
         DISCARD = 9,
+        STATIC = 10,
     }
 
     public enum RegisterState
@@ -40,7 +42,7 @@ namespace DCPUC
         private static int nextLabelID = 0;
         public static String GetLabel()
         {
-            return "LABEL" + nextLabelID++;
+            return "L" + nextLabelID++;
         }
 
         internal const string TempRegister = "J";
@@ -114,6 +116,76 @@ namespace DCPUC
         public static void AddData(string label, List<ushort> data)
         {
             dataElements.Add(new Tuple<string, List<ushort>>(label, data));
+        }
+
+        private static Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
+            
+        private static String extractLine(String s, int c)
+        {
+            int lc = 0;
+            int p = 0;
+            while (p < s.Length && lc < c)
+            {
+                if (s[p] == '\n') lc++;
+                ++p;
+            }
+
+            int ls = p;
+            while (p < s.Length && s[p] != '\n') ++p;
+
+            return s.Substring(ls, p - ls);
+        }
+        public static void CompileRoot(String code, Assembly assembly, Action<string> onError)
+        {
+            var program = Parser.Parse(code);
+            if (onError == null) onError = (a) => {};
+            if (program.HasErrors())
+            {
+                foreach (var msg in program.ParserMessages)
+                {
+                    onError(msg.Level + ": " + msg.Message + " [line:" + msg.Location.Line + " column:" + msg.Location.Column + "]\r\n");
+                    onError(extractLine(code, msg.Location.Line) + "\r\n");
+                    onError(new String(' ', msg.Location.Column) + "^\r\n");
+                }
+                return;
+            }
+
+            DCPUC.Scope.Reset();
+            var root = program.Root.AstNode as DCPUC.CompilableNode; 
+            var scope = new DCPUC.Scope();
+            var end_of_program = new Variable();
+            end_of_program.location = Register.STATIC;
+            end_of_program.name = "__endofprogram";
+            end_of_program.staticLabel = "ENDOFPROGRAM";
+            scope.variables.Add(end_of_program);
+
+            var library = new List<String>(System.IO.File.ReadAllLines("libdcpuc.txt"));
+            root.InsertLibrary(library);
+
+            try
+            {
+                root.Compile(assembly, scope, DCPUC.Register.DISCARD);
+                assembly.Add("BRK", "", "", "Non-standard");
+                foreach (var pendingFunction in scope.pendingFunctions)
+                    pendingFunction.CompileFunction(assembly, scope);
+                foreach (var dataItem in DCPUC.Scope.dataElements)
+                {
+                    var datString = "";
+                    foreach (var item in dataItem.Item2)
+                    {
+                        datString += DCPUC.CompilableNode.hex(item);
+                        datString += ", ";
+                    }
+                    assembly.Add(":" + dataItem.Item1, "DAT", datString.Substring(0, datString.Length - 2));
+                }
+                assembly.Add(":ENDOFPROGRAM", "", "");
+            }
+            catch (DCPUC.CompileError c)
+            {
+                onError(c.Message);
+                return;
+            }
+
         }
     }
 }

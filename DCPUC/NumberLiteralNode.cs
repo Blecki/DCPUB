@@ -29,6 +29,11 @@ namespace DCPUC
                 return Convert.ToUInt16(AsString);
         }
 
+        public override string GetConstantToken()
+        {
+            return hex(GetConstantValue());
+        }
+
         public override void Compile(Assembly assembly, Scope scope, Register target) 
         {
             if (AsString.StartsWith("0x"))

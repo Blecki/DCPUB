@@ -22,9 +22,8 @@ namespace DCPUC
                 var variable = scope.FindVariable(ChildNodes[0].AsString);
                 if (variable == null) throw new CompileError("Could not find variable " + ChildNodes[0].AsString);
 
-                if (variable.location != Register.STACK)
-                    (ChildNodes[1] as CompilableNode).Compile(assembly, scope, variable.location);
-                else
+
+                if (variable.location == Register.STACK)
                 {
                     var register = scope.FindAndUseFreeRegister();
                     (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
@@ -41,6 +40,17 @@ namespace DCPUC
 
                     if (register == (int)Register.STACK) scope.stackDepth -= 1;
                 }
+                else if (variable.location == Register.STATIC)
+                {
+                     var register = scope.FindAndUseFreeRegister();
+                    (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
+                    scope.FreeMaybeRegister(register);
+                    assembly.Add("SET", "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond(register));
+                    if (register == (int)Register.STACK) scope.stackDepth -= 1;
+                }
+                else
+                    (ChildNodes[1] as CompilableNode).Compile(assembly, scope, variable.location);
+
             }
             else if (ChildNodes[0] is DereferenceNode)
             {

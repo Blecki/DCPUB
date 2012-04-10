@@ -1,0 +1,15 @@
+﻿init_heap(__endofprogram, 0x8000);
+
+static heap_head = 0x0;
+static heap_end = 0x0;
+static heap_free = 0x0;
+
+function init_heap(head, end)
+{
+	heap_head = head;
+	heap_end = end;
+	heap_free = head;
+	*heap_free = 1 << 8;
+	*heap_free = *heap_free + (heap_end - heap_head);
+itoa(*heap_free, 0x8000);
+}

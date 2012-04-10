@@ -10,7 +10,7 @@ namespace DCPUC
     {
         public List<string> code;
 
-        public override void CompileFunction(Assembly assembly)
+        public override void CompileFunction(Assembly assembly, Scope topscope)
         {
             if (references == 0) return;
             foreach (var line in code)

@@ -34,7 +34,7 @@ namespace DCPUC
             var parenExpression = new NonTerminal("Paren Expression");
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
             var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
-            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^";
+            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>";
             var comparisonOperator = ToTerm("==") | "!=" | ">";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
@@ -61,7 +61,7 @@ namespace DCPUC
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
-            variableDeclaration.Rule = ToTerm("var") + identifier + "=" + (expression | dataLiteral);
+            variableDeclaration.Rule = (ToTerm("var") | "static") + identifier + "=" + (expression | dataLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
@@ -91,6 +91,7 @@ namespace DCPUC
             this.RegisterOperators(2, Associativity.Right, "=");
             this.RegisterOperators(3, Associativity.Left, "+", "-");
             this.RegisterOperators(4, Associativity.Left, "*", "/");
+            this.RegisterOperators(5, Associativity.Left, "<<", ">>");
             
             this.RegisterOperators(6, Associativity.Left, "[", "]", "<", ">");
         }

@@ -35,7 +35,7 @@ namespace DCPUC
 
         public override bool IsConstant()
         {
-            return (ChildNodes[0] as CompilableNode).IsConstant() && (ChildNodes[1] as CompilableNode).IsConstant();
+            return (ChildNodes[0] as CompilableNode).IsIntegralConstant() && (ChildNodes[1] as CompilableNode).IsIntegralConstant();
         }
 
         public override ushort GetConstantValue()
@@ -54,6 +54,11 @@ namespace DCPUC
             if (AsString == "|") return (ushort)(a | b);
             if (AsString == "^") return (ushort)(a ^ b);
             return 0;
+        }
+
+        public override string GetConstantToken()
+        {
+            return hex(GetConstantValue());
         }
 
         public override void Compile(Assembly assembly, Scope scope, Register target)

@@ -68,7 +68,7 @@ namespace DCPUC
                     }
                     else if (firstIsConstant)
                     {
-                        assembly.Add("IFE", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
+                        assembly.Add("IFE", (conditionNode.ChildNodes[0] as CompilableNode).GetConstantToken(), Scope.GetRegisterLabelSecond(secondRegister));
                         releaseRegister(scope, secondRegister);
                         return ClauseOrder.FailFirst;
                     }

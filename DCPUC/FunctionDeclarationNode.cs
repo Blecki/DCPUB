@@ -53,8 +53,11 @@ namespace DCPUC
             scope.pendingFunctions.Add(this);
         }
 
-        public virtual void CompileFunction(Assembly assembly)
+        public virtual void CompileFunction(Assembly assembly, Scope topscope)
         {
+            foreach (var variable in topscope.variables)
+                if (variable.location == Register.STATIC)
+                    localScope.variables.Add(variable);
             var lScope = localScope.Push(new Scope());
             assembly.Add(":" + label, "", "");
             assembly.Barrier();
@@ -64,7 +67,7 @@ namespace DCPUC
             assembly.Barrier();
             //Should leave the return value, if any, in A.
             foreach (var function in lScope.pendingFunctions)
-                function.CompileFunction(assembly);
+                function.CompileFunction(assembly, topscope);
         }
 
         internal void CompileReturn(Assembly assembly, Scope lScope)

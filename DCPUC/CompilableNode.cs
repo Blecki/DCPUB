@@ -11,6 +11,8 @@ namespace DCPUC
         public virtual void Compile(Assembly assembly, Scope scope, Register target) { throw new NotImplementedException(); }
         public virtual bool IsConstant() { return false; }
         public virtual ushort GetConstantValue() { return 0; }
+        public virtual string GetConstantToken() { return "0x0000"; }
+        public virtual bool IsIntegralConstant() { return false; }
 
         private static string hexDigits = "0123456789ABCDEF";
         public static String htoa(int x)
