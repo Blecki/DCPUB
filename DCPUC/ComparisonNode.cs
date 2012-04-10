@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    class ComparisonNode : CompilableNode
+    public class ComparisonNode : CompilableNode
     {
         private static Dictionary<String, String> opcodes = null;
 

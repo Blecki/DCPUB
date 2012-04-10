@@ -14,6 +14,11 @@ namespace DCPUC
         public int references = 0;
         //public List<Variable> parameters = new List<Variable>();
 
+        protected void InitCompilableNode(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
+        {
+            base.Init(context, treeNode);
+        }
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);

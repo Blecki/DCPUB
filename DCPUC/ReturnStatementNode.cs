@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    class ReturnStatementNode : CompilableNode
+    public class ReturnStatementNode : CompilableNode
     {
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {

@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    class DataLiteralNode : CompilableNode
+    public class DataLiteralNode : CompilableNode
     {
         List<ushort> data = new List<ushort>();
         string dataLabel;
