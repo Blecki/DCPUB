@@ -21,15 +21,18 @@ namespace DCPUC
             integerLiteral.AddPrefix("0x", NumberOptions.Hex);
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             identifier.AstNodeType = typeof(VariableNameNode);
+            
 
             var stringLiteral = new StringLiteral("string", "\"");
+            var characterLiteral = new StringLiteral("char", "'", StringOptions.IsChar);
            
 
             var inlineASM = new NonTerminal("inline", typeof(InlineASMNode));
 
             var numberLiteral = new NonTerminal("Number", typeof(NumberLiteralNode));
             var blockLiteral = new NonTerminal("BlockLiteral", typeof(BlockLiteralNode));
-            var dataLiteral = new NonTerminal("Data", typeof(DataLiteralNode));
+            var dataLiteral = new NonTerminal("Data");
+            var dataLiteralChain = new NonTerminal("DataChain", typeof(DataLiteralNode));
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
@@ -52,16 +55,17 @@ namespace DCPUC
             var returnStatement = new NonTerminal("Return", typeof(ReturnStatementNode));
             var functionCall = new NonTerminal("Function Call", typeof(FunctionCallNode));
 
-            numberLiteral.Rule = integerLiteral;
-            blockLiteral.Rule = ToTerm("[") + numberLiteral + "]";
-            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral));
-            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
-                | dereference | functionCall | dataLiteral;
+            numberLiteral.Rule = integerLiteral | characterLiteral;
+            blockLiteral.Rule = ToTerm("[") + integerLiteral + "]";
+            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral | characterLiteral));
+            dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
+            expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
+                | dereference | functionCall | dataLiteralChain;
             assignment.Rule = (identifier | dereference) + "=" + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
-            variableDeclaration.Rule = (ToTerm("var") | "static") + identifier + "=" + (expression | dataLiteral);
+            variableDeclaration.Rule = (ToTerm("var") | "static") + identifier + "=" + (expression | dataLiteralChain);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
@@ -71,7 +75,7 @@ namespace DCPUC
             statementList.Rule = MakeStarRule(statementList, statement);
             inlineASM.Rule = ToTerm("asm") + "{" + new FreeTextLiteral("inline asm", "}") + "}";
             ifStatement.Rule = ToTerm("if") + "(" + (expression | comparison) + ")" + statement;
-            ifElseStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement + this.PreferShiftHere() + "else" + statement;
+            ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;
             whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = identifier + "(" + parameterList + ")";

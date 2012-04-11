@@ -13,6 +13,7 @@ namespace DCPUC
         public int stackOffset;
         public Register location;
         public string staticLabel;
+        public bool emitBrackets = true;
     }
 
     public enum Register
@@ -151,23 +152,27 @@ namespace DCPUC
             }
 
             DCPUC.Scope.Reset();
-            var root = program.Root.AstNode as DCPUC.CompilableNode; 
+            var root = program.Root.AstNode as DCPUC.CompilableNode;
+            var newRoot = new FunctionDeclarationNode();
+            newRoot.ChildNodes.Add(root);
             var scope = new DCPUC.Scope();
             var end_of_program = new Variable();
             end_of_program.location = Register.STATIC;
             end_of_program.name = "__endofprogram";
             end_of_program.staticLabel = "ENDOFPROGRAM";
+            end_of_program.emitBrackets = false;
             scope.variables.Add(end_of_program);
 
             var library = new List<String>(System.IO.File.ReadAllLines("libdcpuc.txt"));
-            root.InsertLibrary(library);
+            //root.InsertLibrary(library);
 
             try
             {
-                root.Compile(assembly, scope, DCPUC.Register.DISCARD);
-                assembly.Add("BRK", "", "", "Non-standard");
-                foreach (var pendingFunction in scope.pendingFunctions)
-                    pendingFunction.CompileFunction(assembly, scope);
+                newRoot.CompileFunction(assembly, scope);
+                //root.Compile(assembly, scope, DCPUC.Register.DISCARD);
+                //assembly.Add("BRK", "", "", "Non-standard");
+                //foreach (var pendingFunction in scope.pendingFunctions)
+                //    pendingFunction.CompileFunction(assembly, scope);
                 foreach (var dataItem in DCPUC.Scope.dataElements)
                 {
                     var datString = "";

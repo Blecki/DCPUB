@@ -22,7 +22,8 @@ namespace DCPUC
             if (reg != (int)Register.A) assembly.Add("SET", "A", Scope.GetRegisterLabelSecond(reg));
             scope.FreeMaybeRegister(reg);
             if (reg == (int)Register.STACK) scope.stackDepth -= 1;
-            scope.activeFunction.CompileReturn(assembly, scope);
+            if (scope.activeFunction != null) scope.activeFunction.CompileReturn(assembly, scope);
+            else assembly.Add("BRK", "", "");
         }
     }
 }

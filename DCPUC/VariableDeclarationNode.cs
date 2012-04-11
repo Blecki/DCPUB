@@ -39,9 +39,11 @@ namespace DCPUC
                     newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
                     Scope.AddData(newVariable.staticLabel, new List<ushort>(new ushort[] { (ChildNodes[0] as CompilableNode).GetConstantValue() }));
                 }
-                else
+                else if (ChildNodes[0] is DataLiteralNode)
                 {
-                    throw new CompileError("Statics must be initialized to a constant value");
+                    newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
+                    newVariable.emitBrackets = false;
+                    Scope.AddData(newVariable.staticLabel, (ChildNodes[0] as DataLiteralNode).data);
                 }
             }
 

@@ -12,7 +12,7 @@ namespace DCPUC
 
         public override void CompileFunction(Assembly assembly, Scope topscope)
         {
-            if (references == 0) return;
+            //if (references == 0) return;
             foreach (var line in code)
             {
                 assembly.Barrier();

@@ -42,6 +42,7 @@ namespace DCPUC
                 }
                 else if (variable.location == Register.STATIC)
                 {
+                    if (!variable.emitBrackets) throw new CompileError("Can't assign to data pointers!");
                      var register = scope.FindAndUseFreeRegister();
                     (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
                     scope.FreeMaybeRegister(register);

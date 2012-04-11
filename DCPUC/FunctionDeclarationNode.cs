@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class FunctionDeclarationNode : CompilableNode
     {
-        public Scope localScope = new Scope();
+        public Scope localScope;
         public String label;
         public int parameterCount = 0;
         public int references = 0;
@@ -23,6 +23,8 @@ namespace DCPUC
         {
             base.Init(context, treeNode);
             AddChild("Block", treeNode.ChildNodes[3]);
+
+            localScope = new Scope();
 
             var parameters = treeNode.ChildNodes[2].ChildNodes;
 
@@ -60,15 +62,22 @@ namespace DCPUC
 
         public virtual void CompileFunction(Assembly assembly, Scope topscope)
         {
-            foreach (var variable in topscope.variables)
-                if (variable.location == Register.STATIC)
-                    localScope.variables.Add(variable);
-            var lScope = localScope.Push(new Scope());
-            assembly.Add(":" + label, "", "");
+            Scope lScope;
+            if (localScope != null)
+            {
+                foreach (var variable in topscope.variables)
+                    if (variable.location == Register.STATIC)
+                        localScope.variables.Add(variable);
+                lScope = localScope.Push(new Scope());
+                assembly.Add(":" + label, "", "");
+            }
+            else
+                lScope = topscope;
             assembly.Barrier();
-            lScope.stackDepth += 1; //account for return address
+            if (localScope != null) lScope.stackDepth += 1; //account for return address
             (ChildNodes[0] as CompilableNode).Compile(assembly, lScope, Register.DISCARD);
-            CompileReturn(assembly, lScope);
+            if (localScope != null) CompileReturn(assembly, lScope);
+            else assembly.Add("BRK", "", "");
             assembly.Barrier();
             //Should leave the return value, if any, in A.
             foreach (var function in lScope.pendingFunctions)

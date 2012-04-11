@@ -11,9 +11,18 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Expression", treeNode.ChildNodes[1].FirstChild);
-            AddChild("Block", treeNode.ChildNodes[2]);
-            if (treeNode.ChildNodes.Count == 5) AddChild("Else", treeNode.ChildNodes[4]);
+            if (treeNode.Term.Name == "IfElse")
+            {
+                AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1].FirstChild);
+                AddChild("then", treeNode.ChildNodes[0].ChildNodes[2]);
+                AddChild("ELSE", treeNode.ChildNodes[2]);
+            }
+            else
+            {
+                AddChild("Expression", treeNode.ChildNodes[1].FirstChild);
+                AddChild("Block", treeNode.ChildNodes[2]);
+                if (treeNode.ChildNodes.Count == 5) AddChild("Else", treeNode.ChildNodes[4]);
+            }
             this.AsString = "If";
         }
 

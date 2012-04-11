@@ -18,9 +18,12 @@ namespace DCPUC
         {
             var variable = scope.FindVariable(AsString);
             if (variable == null) throw new CompileError("Could not find variable " + AsString);
+            var eb = variable.emitBrackets;
+            var ob = eb ? "[" : "";
+            var cb = eb ? "]" : "";
             if (variable.location == Register.STATIC)
             {
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), ob + variable.staticLabel + cb);
             }
             else if (variable.location == Register.STACK)
             {

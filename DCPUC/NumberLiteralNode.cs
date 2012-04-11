@@ -8,12 +8,21 @@ namespace DCPUC
 {
     public class NumberLiteralNode : CompilableNode
     {
+        ushort Value = 0;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AsString = "";
             foreach (var child in treeNode.ChildNodes)
                 AsString += child.FindTokenAndGetText();
+
+            if (AsString.StartsWith("0x"))
+                Value = atoh(AsString.Substring(2));
+            else if (AsString.StartsWith("'"))
+                Value = AsString[1];
+            else
+                Value = (ushort)Convert.ToInt16(AsString);
         }
 
         public override bool IsConstant()
@@ -23,10 +32,7 @@ namespace DCPUC
 
         public override ushort GetConstantValue()
         {
-            if (AsString.StartsWith("0x"))
-                return atoh(AsString.Substring(2));
-            else
-                return Convert.ToUInt16(AsString);
+            return Value;
         }
 
         public override string GetConstantToken()
@@ -36,14 +42,7 @@ namespace DCPUC
 
         public override void Compile(Assembly assembly, Scope scope, Register target) 
         {
-            if (AsString.StartsWith("0x"))
-            {
-                var hexPart = AsString.Substring(2).ToUpper();
-                while (hexPart.Length < 4) hexPart = "0" + hexPart;
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x" + hexPart, "Literal");
-            }
-            else
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(AsString), "Literal");
+            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(Value));
             if (target == Register.STACK) scope.stackDepth += 1;
         }
     }

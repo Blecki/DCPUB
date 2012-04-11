@@ -51,3 +51,41 @@ SET PC, strcpy_FUNCTION
 SET A, B;
 SET PC, POP;
 ;DCPUC ENDFUNCTION
+
+;DCPUC FUNCTION abort dcpuc_abort 1 *char
+;Prints the message and aborts program
+:dcpuc_abort
+SET B, 0x8000
+JSR strcpy_FUNCTION
+BRK
+;DCPUC ENDFUNCTION
+
+;DCPUC STATIC
+:DCPUC_MR_HEAPHEAD DAT 0x0
+:DCPUC_MR_HEAPEND DAT 0x0
+:DCPUC_MR_HEAPFREE DAT 0x0
+:DCPUC_MR_OUTOFMEMORYERROR DAT "Fatal Error: out of memory" 0x0
+;DCPUC END
+
+;DCPUC FUNCTION init_mrheap dcpuc_init_mrheap 2 *memstart, *memend
+;Initializes a mark-and-release heap from memstart to memend
+:dcpuc_init_mrheap
+SET [DCPUC_MR_HEAPHEAD], A
+SET [DCPUC_MR_HEAPFREE], A
+SET [DCPUC_MR_HEAPEND], B
+SET PC, POP
+;DCPUC END
+
+;DCPUC FUNCTION mrmalloc dcpuc_mrmalloc 1 length
+;Returns address of free block of size length
+:dcpuc_mrmalloc
+SET C, [DCPUC_MR_HEAPFREE]
+ADD [DCPUC_MR_HEAPFREE], A
+IFG [DCPUC_MR_HEAPEND], [DCPUC_MR_HEAPFREE]
+SET PC, DCPUC_MRMALLOC_0
+SET A, DCPUC_MR_OUTOFMEMORYERROR
+JSR dcpuc_abort ;Never returns
+:DCPUC_MRMALLOC_0
+SET A, C
+SET PC, POP
+;DCPUC END

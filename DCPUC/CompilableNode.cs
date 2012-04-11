@@ -16,6 +16,19 @@ namespace DCPUC
 
         public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
 
+        public virtual AstNode FoldConstants()
+        {
+            var childrenCopy = new AstNodeList();
+            foreach (var child in ChildNodes)
+            {
+                var nChild = (child as CompilableNode).FoldConstants();
+                if (nChild != null) childrenCopy.Add(nChild);
+            }
+            ChildNodes.Clear();
+            ChildNodes.AddRange(childrenCopy);
+            return this;
+        }
+
         private static string hexDigits = "0123456789ABCDEF";
         public static String htoa(int x)
         {
@@ -64,7 +77,7 @@ namespace DCPUC
                     //Parse function..
                     var funcHeader = library[i].Split(' ');
                     List<String> funcCode = new List<string>();
-                    while (i < library.Count && !library[i].StartsWith(";DCPUC ENDFUNCTION"))
+                    while (i < library.Count && !library[i].StartsWith(";DCPUC END"))
                     {
                         funcCode.Add(library[i]);
                         ++i;
@@ -78,6 +91,24 @@ namespace DCPUC
                     funcNode.AsString = funcHeader[2];
                     funcNode.label = funcHeader[3];
                     funcNode.parameterCount = Convert.ToInt32(funcHeader[4]);
+                    funcNode.code = funcCode;
+                    ChildNodes.Add(funcNode);
+                }
+                else if (library[i].StartsWith(";DCPUC STATIC"))
+                {
+                    List<String> funcCode = new List<string>();
+                    while (i < library.Count && !library[i].StartsWith(";DCPUC END"))
+                    {
+                        funcCode.Add(library[i]);
+                        ++i;
+                    }
+                    if (i < library.Count)
+                    {
+                        funcCode.Add(library[i]);
+                        ++i;
+                    }
+                    var funcNode = new LibraryFunctionNode();
+                    funcNode.AsString = "%STATICDATA%";
                     funcNode.code = funcCode;
                     ChildNodes.Add(funcNode);
                 }
