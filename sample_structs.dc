@@ -42,3 +42,20 @@ point[VEC3D:Z] = 3;
 var point2 = &1 2 4; //All the old syntax continues to work
 VEC3D_add(point, point2);
 
+//Proposed equivilant 'typed' syntax
+
+struct VEC3D { X; Y; Z; }
+function VEC3D_add(a:VEC3D, b:VEC3D)
+{
+	a.X = a.X + b.X;
+	a.Y = a.Y + b.Y;
+	a.Z = a.Z + b.Z;
+}
+
+var point:VEC3D = [sizeof(VEC3D)];
+point.X = 1;
+point.Y = 2;
+point.Z = 4;
+
+var point2 = &1 2 4;
+VEC3D_add(point, point2);
