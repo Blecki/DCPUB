@@ -29,6 +29,7 @@ namespace DCPUC
         STACK = 8,
         DISCARD = 9,
         STATIC = 10,
+        CONST = 11,
     }
 
     public enum RegisterState
@@ -113,10 +114,17 @@ namespace DCPUC
 
         internal void FreeMaybeRegister(int r) { if (IsRegister((Register)r)) FreeRegister(r); }
 
-        public static List<Tuple<string, List<ushort>>> dataElements = new List<Tuple<string, List<ushort>>>();
+        public static List<Tuple<string, List<string>>> dataElements = new List<Tuple<string, List<string>>>();
         public static void AddData(string label, List<ushort> data)
         {
-            dataElements.Add(new Tuple<string, List<ushort>>(label, data));
+            var strings = new List<string>();
+            foreach (var item in data) strings.Add(CompilableNode.hex(item));
+            dataElements.Add(new Tuple<string, List<string>>(label, strings));
+        }
+
+        public static void AddData(string label, string data)
+        {
+            dataElements.Add(new Tuple<string, List<string>>(label, new List<String>(new string[] { data })));
         }
 
         private static Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
@@ -136,10 +144,11 @@ namespace DCPUC
 
             return s.Substring(ls, p - ls);
         }
-        public static void CompileRoot(String code, Assembly assembly, Action<string> onError)
+
+        public static FunctionDeclarationNode Parse(String code, Action<string> onError)
         {
             var program = Parser.Parse(code);
-            if (onError == null) onError = (a) => {};
+            if (onError == null) onError = (a) => { };
             if (program.HasErrors())
             {
                 foreach (var msg in program.ParserMessages)
@@ -148,13 +157,19 @@ namespace DCPUC
                     onError(extractLine(code, msg.Location.Line) + "\r\n");
                     onError(new String(' ', msg.Location.Column) + "^\r\n");
                 }
-                return;
+                return null;
             }
 
             DCPUC.Scope.Reset();
             var root = program.Root.AstNode as DCPUC.CompilableNode;
             var newRoot = new FunctionDeclarationNode();
             newRoot.ChildNodes.Add(root);
+            return newRoot;
+        }
+
+        public static void CompileRoot(FunctionDeclarationNode root, Assembly assembly, Action<string> onError)
+        {
+            DCPUC.Scope.Reset();
             var scope = new DCPUC.Scope();
             var end_of_program = new Variable();
             end_of_program.location = Register.STATIC;
@@ -168,17 +183,13 @@ namespace DCPUC
 
             try
             {
-                newRoot.CompileFunction(assembly, scope);
-                //root.Compile(assembly, scope, DCPUC.Register.DISCARD);
-                //assembly.Add("BRK", "", "", "Non-standard");
-                //foreach (var pendingFunction in scope.pendingFunctions)
-                //    pendingFunction.CompileFunction(assembly, scope);
+                root.CompileFunction(assembly, scope);
                 foreach (var dataItem in DCPUC.Scope.dataElements)
                 {
                     var datString = "";
                     foreach (var item in dataItem.Item2)
                     {
-                        datString += DCPUC.CompilableNode.hex(item);
+                        datString += item;
                         datString += ", ";
                     }
                     assembly.Add(":" + dataItem.Item1, "DAT", datString.Substring(0, datString.Length - 2));

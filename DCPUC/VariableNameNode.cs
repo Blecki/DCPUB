@@ -14,16 +14,23 @@ namespace DCPUC
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
+        public override bool IsConstant()
+        {
+            return base.IsConstant();
+        }
+
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             var variable = scope.FindVariable(AsString);
             if (variable == null) throw new CompileError("Could not find variable " + AsString);
-            var eb = variable.emitBrackets;
-            var ob = eb ? "[" : "";
-            var cb = eb ? "]" : "";
-            if (variable.location == Register.STATIC)
+
+            if (variable.location == Register.CONST)
             {
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), ob + variable.staticLabel + cb);
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
+            }
+            else if (variable.location == Register.STATIC)
+            {
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
             }
             else if (variable.location == Register.STACK)
             {

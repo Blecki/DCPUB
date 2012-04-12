@@ -42,12 +42,16 @@ namespace DCPUC
                 }
                 else if (variable.location == Register.STATIC)
                 {
-                    if (!variable.emitBrackets) throw new CompileError("Can't assign to data pointers!");
+                    //if (!variable.emitBrackets) throw new CompileError("Can't assign to data pointers!");
                      var register = scope.FindAndUseFreeRegister();
                     (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
                     scope.FreeMaybeRegister(register);
                     assembly.Add("SET", "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond(register));
                     if (register == (int)Register.STACK) scope.stackDepth -= 1;
+                }
+                else if (variable.location == Register.CONST)
+                {
+                    throw new CompileError("Can't assign to const");
                 }
                 else
                     (ChildNodes[1] as CompilableNode).Compile(assembly, scope, variable.location);

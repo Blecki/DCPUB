@@ -1,3 +1,17 @@
 * Sample Programs
 * Comparison Operators
-* Fold constants in AST pre-pass
+* Struct demonstration using current available tools
+* Struct syntax sugar
+* operator[]
+* Compile options
+* Command line interface
+* Multiple pass compilation
+	- Pass 1: Build symbol tree.
+	- Pass 2: Resolve symbols.
+	- Pass 3: Fold constants and prune.
+	- Pass 4: Emit assembly
+* Support multiple calling conventions
+* Implement callee register protection
+* Function header/footer rather than multiple return points
+* Don't transform strings to bytes
+* 'length of' operator, applies to datalists and stack-allocated arrays (resolves at compile time)

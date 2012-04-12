@@ -65,7 +65,7 @@ namespace DCPUC
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
-            variableDeclaration.Rule = (ToTerm("var") | "static") + identifier + "=" + (expression | dataLiteralChain);
+            variableDeclaration.Rule = (ToTerm("var") | "static" | "const") + identifier + "=" + (expression | dataLiteralChain | blockLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 

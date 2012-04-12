@@ -48,8 +48,8 @@ ADD B, 0x1
 ADD A, 0x1
 SET PC, strcpy_FUNCTION
 :strcpy_LEAVE
-SET A, B;
-SET PC, POP;
+SET A, B
+SET PC, POP
 ;DCPUC ENDFUNCTION
 
 ;DCPUC FUNCTION abort dcpuc_abort 1 *char

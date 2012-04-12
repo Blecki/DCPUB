@@ -13,6 +13,7 @@ namespace DCPUC
         public virtual ushort GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
         public virtual bool IsIntegralConstant() { return false; }
+        public virtual string TreeLabel() { return AsString; }
 
         public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
 

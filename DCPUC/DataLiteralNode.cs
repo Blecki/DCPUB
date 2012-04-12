@@ -29,6 +29,8 @@ namespace DCPUC
                 return Convert.ToUInt16(AsString);
         }
 
+        public List<ushort> MakeData() { var r = new List<ushort>(); for (int i = 0; i < GetConstantValue(); ++i) r.Add(0); return r; }
+
         public override void Compile(Assembly assembly, Scope scope, Register target)
         {
             throw new CompileError("Should never reach this.");
