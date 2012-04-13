@@ -22,7 +22,7 @@ namespace DCPUC
             FailFirst
         }
 
-        public static ClauseOrder CompileConditional(Assembly assembly, Scope scope, CompilableNode conditionNode)
+        public static ClauseOrder CompileConditional(CompileContext assembly, Scope scope, CompilableNode conditionNode)
         {
             if (!(conditionNode is ComparisonNode))
             {
@@ -74,7 +74,7 @@ namespace DCPUC
                     }
                     else if (secondIsConstant)
                     {
-                        assembly.Add("IFE", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
+                        assembly.Add("IFE", Scope.GetRegisterLabelSecond(firstRegister), Hex.hex(secondConstantValue));
                         releaseRegister(scope, firstRegister);
                         return ClauseOrder.FailFirst;
                     }
@@ -95,13 +95,13 @@ namespace DCPUC
                     }
                     else if (firstIsConstant)
                     {
-                        assembly.Add("IFN", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
+                        assembly.Add("IFN", Hex.hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
                         releaseRegister(scope, secondRegister);
                         return ClauseOrder.FailFirst;
                     }
                     else if (secondIsConstant)
                     {
-                        assembly.Add("IFN", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
+                        assembly.Add("IFN", Scope.GetRegisterLabelSecond(firstRegister), Hex.hex(secondConstantValue));
                         releaseRegister(scope, firstRegister);
                         return ClauseOrder.FailFirst;
                     }
@@ -122,13 +122,13 @@ namespace DCPUC
                     }
                     else if (firstIsConstant)
                     {
-                        assembly.Add("IFG", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
+                        assembly.Add("IFG", Hex.hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
                         releaseRegister(scope, secondRegister);
                         return ClauseOrder.FailFirst;
                     }
                     else if (secondIsConstant)
                     {
-                        assembly.Add("IFG", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
+                        assembly.Add("IFG", Scope.GetRegisterLabelSecond(firstRegister), Hex.hex(secondConstantValue));
                         releaseRegister(scope, firstRegister);
                         return ClauseOrder.FailFirst;
                     }
@@ -146,7 +146,7 @@ namespace DCPUC
             throw new CompileError("Impossible situation reached");
         }
 
-        public static void CompileBlock(Assembly assembly, Scope scope, CompilableNode block)
+        public static void CompileBlock(CompileContext assembly, Scope scope, CompilableNode block)
         {
             var blockScope = BeginBlock(scope);
             assembly.Barrier();

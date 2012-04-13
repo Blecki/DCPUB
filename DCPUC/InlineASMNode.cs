@@ -14,7 +14,7 @@ namespace DCPUC
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             var lines = AsString.Split(new String[2]{"\n", "\r"}, StringSplitOptions.RemoveEmptyEntries);
             assembly.Barrier();

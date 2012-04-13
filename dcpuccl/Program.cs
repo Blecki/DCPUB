@@ -9,6 +9,9 @@ namespace DCPUCCL
     {
         static void Main(string[] args)
         {
+            var options = new DCPUC.CompileOptions();
+            DCPUC.CompileOptions.ParseCommandLine(args, options, (s) => { Console.WriteLine(s); });
+            Console.WriteLine("Done.");
         }
     }
 }

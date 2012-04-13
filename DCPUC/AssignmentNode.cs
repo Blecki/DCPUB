@@ -15,7 +15,7 @@ namespace DCPUC
             AddChild("RValue", treeNode.ChildNodes[2]);
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             if (ChildNodes[0] is VariableNameNode)
             {
@@ -32,7 +32,7 @@ namespace DCPUC
                     if (scope.stackDepth - variable.stackOffset > 1)
                     {
                         assembly.Add("SET", Scope.TempRegister, "SP");
-                        assembly.Add("SET", "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]",
+                        assembly.Add("SET", "[" + Hex.hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]",
                             Scope.GetRegisterLabelSecond(register), "Fetching variable");
                     }
                     else
@@ -75,7 +75,7 @@ namespace DCPUC
 
                 if (firstConstant)
                 {
-                    assembly.Add("SET", "[" + hex((ChildNodes[0].ChildNodes[0] as CompilableNode).GetConstantValue()) + "]",
+                    assembly.Add("SET", "[" + Hex.hex((ChildNodes[0].ChildNodes[0] as CompilableNode).GetConstantValue()) + "]",
                         Scope.GetRegisterLabelSecond(secondRegister));
                     if (secondRegister == (int)Register.STACK)
                         scope.stackDepth -= 1;

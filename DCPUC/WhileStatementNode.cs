@@ -16,9 +16,9 @@ namespace DCPUC
             this.AsString = "While";
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
-            var topLabel = Scope.GetLabel() + "BEGIN_WHILE";
+            var topLabel = assembly.GetLabel() + "BEGIN_WHILE";
             assembly.Add(":" + topLabel, "", "");
 
             var clauseOrder = CompileConditional(assembly, scope, ChildNodes[0] as CompilableNode);
@@ -33,7 +33,7 @@ namespace DCPUC
             }
             else if (clauseOrder == ClauseOrder.PassFirst)
             {
-                var endLabel = Scope.GetLabel() + "END";
+                var endLabel = assembly.GetLabel() + "END";
                 assembly.Add("SET", "PC", endLabel);
                 CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
                 assembly.Add("SET", "PC", topLabel);
@@ -41,8 +41,8 @@ namespace DCPUC
             }
             else if (clauseOrder == ClauseOrder.FailFirst)
             {
-                var elseLabel = Scope.GetLabel() + "ELSE";
-                var endLabel = Scope.GetLabel() + "END";
+                var elseLabel = assembly.GetLabel() + "ELSE";
+                var endLabel = assembly.GetLabel() + "END";
                 assembly.Add("SET", "PC", elseLabel);
                 assembly.Add("SET", "PC", endLabel);
                 assembly.Add(":" + elseLabel, "", "");

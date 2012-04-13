@@ -1,6 +1,5 @@
 * Sample Programs
 * Comparison Operators
-* Struct demonstration using current available tools
 * Struct syntax sugar
 * operator[]
 * Compile options
@@ -15,3 +14,4 @@
 * Function header/footer rather than multiple return points
 * Don't transform strings to bytes
 * 'length of' operator, applies to datalists and stack-allocated arrays (resolves at compile time)
+* Don't halt on errors (May not be possible with parser errors)

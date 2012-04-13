@@ -15,7 +15,7 @@ namespace DCPUC
             
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             var destRegister = target == Register.STACK ? scope.FindAndUseFreeRegister() : (int)target;
             (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)destRegister);

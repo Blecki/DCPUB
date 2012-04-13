@@ -8,44 +8,53 @@ namespace DCPUC
 {
     public class VariableNameNode : CompilableNode
     {
+        Variable variable = null;
+        String variableName;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            this.AsString = treeNode.FindTokenAndGetText();
+            variableName = treeNode.FindTokenAndGetText();
         }
 
-        public override bool IsConstant()
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            return base.IsConstant();
+            var scope = enclosingScope;
+            while (variable == null && scope != null)
+            {
+                foreach (var v in scope.variables)
+                    if (v.name == variableName)
+                        variable = v;
+                if (variable == null) scope = scope.parent;
+            }
+
+            if (variable == null) throw new CompileError("Could not find variable " + variableName);
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext context, Scope scope, Register target)
         {
-            var variable = scope.FindVariable(AsString);
-            if (variable == null) throw new CompileError("Could not find variable " + AsString);
-
             if (variable.location == Register.CONST)
             {
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
             }
             else if (variable.location == Register.STATIC)
             {
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
             }
             else if (variable.location == Register.STACK)
             {
                 if (scope.stackDepth - variable.stackOffset > 1)
                 {
-                    assembly.Add("SET", Scope.TempRegister, "SP");
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                    context.Add("SET", Scope.TempRegister, "SP");
+                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "Fetching variable");
                 }
                 else
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
+                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
             }
             else
             {
                 if (target == variable.location) return;
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location), "Fetching variable");
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location), "Fetching variable");
             }
             if (target == Register.STACK) scope.stackDepth += 1;
         }

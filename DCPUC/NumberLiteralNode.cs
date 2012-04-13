@@ -18,7 +18,7 @@ namespace DCPUC
                 AsString += child.FindTokenAndGetText();
 
             if (AsString.StartsWith("0x"))
-                Value = atoh(AsString.Substring(2));
+                Value = Hex.atoh(AsString.Substring(2));
             else if (AsString.StartsWith("'"))
                 Value = AsString[1];
             else
@@ -37,12 +37,12 @@ namespace DCPUC
 
         public override string GetConstantToken()
         {
-            return hex(GetConstantValue());
+            return Hex.hex(GetConstantValue());
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target) 
+        public override void Compile(CompileContext assembly, Scope scope, Register target) 
         {
-            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(Value));
+            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(Value));
             if (target == Register.STACK) scope.stackDepth += 1;
         }
     }

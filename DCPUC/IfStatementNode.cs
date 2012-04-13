@@ -26,7 +26,7 @@ namespace DCPUC
             this.AsString = "If";
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             var clauseOrder = CompileConditional(assembly, scope, ChildNodes[0] as CompilableNode);
 
@@ -38,8 +38,8 @@ namespace DCPUC
             }
             else if (clauseOrder == ClauseOrder.PassFirst)
             {
-                var elseLabel = Scope.GetLabel() + "ELSE";
-                var endLabel = Scope.GetLabel() + "END";
+                var elseLabel = assembly.GetLabel() + "ELSE";
+                var endLabel = assembly.GetLabel() + "END";
 
                 assembly.Add("SET", "PC", elseLabel);
                 CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
@@ -55,8 +55,8 @@ namespace DCPUC
             }
             else if (clauseOrder == ClauseOrder.FailFirst)
             {
-                var elseLabel = Scope.GetLabel() + "ELSE";
-                var endLabel = Scope.GetLabel() + "END";
+                var elseLabel = assembly.GetLabel() + "ELSE";
+                var endLabel = assembly.GetLabel() + "END";
                 if (ChildNodes.Count == 3)
                 {
                     assembly.Add("SET", "PC", elseLabel);

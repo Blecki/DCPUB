@@ -18,7 +18,7 @@ namespace DCPUC
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             throw new CompileError("Comparisons in general expressions are not implemented");
             //Evaluate in reverse in case both need to go on the stack

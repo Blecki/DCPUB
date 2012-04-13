@@ -15,7 +15,7 @@ namespace DCPUC
                 AddChild("Statement", f);
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             foreach (var child in ChildNodes)
             {

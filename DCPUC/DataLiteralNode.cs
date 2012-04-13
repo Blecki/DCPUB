@@ -24,14 +24,14 @@ namespace DCPUC
         public override ushort GetConstantValue()
         {
             if (AsString.StartsWith("0x"))
-                return atoh(AsString.Substring(2));
+                return Hex.atoh(AsString.Substring(2));
             else
                 return Convert.ToUInt16(AsString);
         }
 
         public List<ushort> MakeData() { var r = new List<ushort>(); for (int i = 0; i < GetConstantValue(); ++i) r.Add(0); return r; }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             throw new CompileError("Should never reach this.");
         }
@@ -54,7 +54,7 @@ namespace DCPUC
                     (child.ChildNodes.Count > 0 && child.FirstChild.Term.Name == "BlockLiteral"))
                 {
                     int d = 0;
-                    if (token.StartsWith("0x")) d = atoh(token.Substring(2));
+                    if (token.StartsWith("0x")) d = Hex.atoh(token.Substring(2));
                     else d = Convert.ToUInt16(token);
                     for (int i = 0; i < d; ++i) data.Add(0);
                 }
@@ -64,12 +64,17 @@ namespace DCPUC
                 else if (token[0] == '\'')
                     data.Add((ushort)token[1]);
                 else if (token.StartsWith("0x"))
-                    data.Add(atoh(token.Substring(2)));
+                    data.Add(Hex.atoh(token.Substring(2)));
                 else
                     data.Add(Convert.ToUInt16(token));
             }
 
-            dataLabel = Scope.GetLabel() + "_DATA";
+            
+        }
+
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            dataLabel = context.GetLabel() + "_DATA";
         }
 
         public override bool IsConstant()
@@ -82,14 +87,14 @@ namespace DCPUC
             return data[0];
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext context, Scope scope, Register target)
         {
             //if (data.Count == 1)
             //    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(data[0]));
             //else
             //{
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), dataLabel);
-                Scope.AddData(dataLabel, data);
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), dataLabel);
+                context.AddData(dataLabel, data);
             //}
             if (target == Register.STACK) scope.stackDepth += 1;
         }

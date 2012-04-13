@@ -58,10 +58,10 @@ namespace DCPUC
 
         public override string GetConstantToken()
         {
-            return hex(GetConstantValue());
+            return Hex.hex(GetConstantValue());
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             int secondTarget = (int)Register.STACK;
 
@@ -70,7 +70,7 @@ namespace DCPUC
 
             if (firstConstant && secondConstant)
             {
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(GetConstantValue()));
+                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(GetConstantValue()));
                 if (target == Register.STACK) scope.stackDepth += 1;
                 return;
             }
@@ -87,17 +87,17 @@ namespace DCPUC
             if (target == Register.STACK)
             {
                 assembly.Add("SET", Scope.TempRegister,
-                     firstConstant ? hex((ChildNodes[0] as CompilableNode).GetConstantValue()) : "POP");
+                     firstConstant ? Hex.hex((ChildNodes[0] as CompilableNode).GetConstantValue()) : "POP");
                 assembly.Add(opcodes[AsString], Scope.TempRegister,
-                    secondConstant ? hex((ChildNodes[1] as CompilableNode).GetConstantValue()) : Scope.GetRegisterLabelSecond(secondTarget));
+                    secondConstant ? Hex.hex((ChildNodes[1] as CompilableNode).GetConstantValue()) : Scope.GetRegisterLabelSecond(secondTarget));
                 assembly.Add("SET", "PUSH", Scope.TempRegister);
             }
             else
             {
                 if (firstConstant)
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex((ChildNodes[0] as CompilableNode).GetConstantValue()));
+                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex((ChildNodes[0] as CompilableNode).GetConstantValue()));
                 assembly.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)target),
-                    secondConstant ? hex((ChildNodes[1] as CompilableNode).GetConstantValue()) : Scope.GetRegisterLabelSecond(secondTarget));
+                    secondConstant ? Hex.hex((ChildNodes[1] as CompilableNode).GetConstantValue()) : Scope.GetRegisterLabelSecond(secondTarget));
             }
              
 
