@@ -8,8 +8,8 @@ namespace DCPUC
 {
     public class VariableNameNode : CompilableNode
     {
-        Variable variable = null;
-        String variableName;
+        public Variable variable = null;
+        public String variableName;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -28,7 +28,8 @@ namespace DCPUC
                 if (variable == null) scope = scope.parent;
             }
 
-            if (variable == null) throw new CompileError("Could not find variable " + variableName);
+            if (variable == null) 
+                throw new CompileError("Could not find variable " + variableName);
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)

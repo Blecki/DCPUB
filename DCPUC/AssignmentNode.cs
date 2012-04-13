@@ -19,9 +19,7 @@ namespace DCPUC
         {
             if (ChildNodes[0] is VariableNameNode)
             {
-                var variable = scope.FindVariable(ChildNodes[0].AsString);
-                if (variable == null) throw new CompileError("Could not find variable " + ChildNodes[0].AsString);
-
+                var variable = (Child(0) as VariableNameNode).variable;
 
                 if (variable.location == Register.STACK)
                 {

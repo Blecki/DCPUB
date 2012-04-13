@@ -152,7 +152,8 @@ namespace DCPUC
                 //SET !PUSH, A
                 else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.a == instruction.b && lastIns.b != "POP" && instruction.a != "PUSH")
                 {
-                    lastIns.a = instruction.a;
+                    if (lastIns.b == instruction.a) instructions.RemoveAt(instructions.Count - 1);
+                    else lastIns.a = instruction.a;
                     ignore = true;
                 }
                 //SET PUSH, A
