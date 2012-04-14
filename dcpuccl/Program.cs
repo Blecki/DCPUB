@@ -31,7 +31,7 @@ namespace DCPUCCL
                 context.Initialize(options);
                 if (context.Parse(file, Console.WriteLine))
                 {
-                    context.GatherSymbols();
+                    context.GatherSymbols(Console.WriteLine);
                     context.FoldConstants();
                     context.Emit(Console.WriteLine);
 

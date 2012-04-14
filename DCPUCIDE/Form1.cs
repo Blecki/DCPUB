@@ -27,20 +27,21 @@ namespace DCPUCIDE
         private void compileButton_Click(object sender, EventArgs e)
         {
             outputBox.Clear();
-            var context = new DCPUC.CompileContext();
 
-            if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); }))
-            {
-                context.GatherSymbols();
-                context.FoldConstants();
-                context.Emit((s) => { outputBox.AppendText(s); });
+                var context = new DCPUC.CompileContext();
 
-                astBox.Nodes.Clear();
-                foreach (var n in buildAstTree(context.rootNode).Nodes[0].Nodes) astBox.Nodes.Add((TreeNode)n);
+                if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); }))
+                {
+                    context.GatherSymbols(outputBox.AppendText);
+                    context.FoldConstants();
+                    context.Emit((s) => { outputBox.AppendText(s); });
 
-                foreach (var str in context.instructions)
-                    outputBox.AppendText(str.ToString() + "\r\n");
-            }
+                    astBox.Nodes.Clear();
+                    foreach (var n in buildAstTree(context.rootNode).Nodes[0].Nodes) astBox.Nodes.Add((TreeNode)n);
+
+                    foreach (var str in context.instructions)
+                        outputBox.AppendText(str.ToString() + "\r\n");
+                }
 
         }
     }

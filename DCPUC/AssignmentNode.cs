@@ -21,7 +21,7 @@ namespace DCPUC
             {
                 var variable = (Child(0) as VariableNameNode).variable;
 
-                if (variable.location == Register.STACK)
+                if (variable.type == VariableType.Local && variable.location == Register.STACK)
                 {
                     var register = scope.FindAndUseFreeRegister();
                     (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
@@ -47,7 +47,7 @@ namespace DCPUC
                     assembly.Add("SET", "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond(register));
                     if (register == (int)Register.STACK) scope.stackDepth -= 1;
                 }
-                else if (variable.location == Register.CONST)
+                else if (variable.type == VariableType.Constant || variable.type == VariableType.ConstantReference)
                 {
                     throw new CompileError("Can't assign to const");
                 }

@@ -10,6 +10,8 @@ namespace DCPUC
     {
         public Function function = null;
         public List<String> parameters = new List<string>();
+        private RegisterBank usedRegisters = new RegisterBank();
+        private String footerLabel = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -34,6 +36,7 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             function.label = context.GetLabel() + function.name;
+            footerLabel = context.GetLabel() + function.name + "_footer";
             enclosingScope.functions.Add(function);
             function.localScope.parent = enclosingScope;
 
@@ -60,10 +63,20 @@ namespace DCPUC
             Child(0).GatherSymbols(context, function.localScope);
         }
 
-        public override AstNode FoldConstants()
+        public override CompilableNode FoldConstants()
         {
             base.FoldConstants();
             return null;
+        }
+
+        public override void AssignRegisters(RegisterBank parentState)
+        {
+            var localBank = new RegisterBank();
+            localBank.functionBank = usedRegisters;
+
+            Child(0).AssignRegisters(localBank);
+            foreach (var nestedFunction in function.localScope.functions)
+                nestedFunction.Node.AssignRegisters(parentState);
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)
@@ -77,9 +90,12 @@ namespace DCPUC
             var localScope = function.localScope.Push();
 
             context.Add(":" + function.label, "", "");
+            //Save registers
             Child(0).Compile(context, localScope, Register.DISCARD);
-            CompileReturn(context, localScope);
-
+            context.Add(":" + footerLabel, "", "");
+            context.Barrier();
+            //Restore registers
+            context.Add("SET", "PC", "POP");
             context.Barrier();
 
             foreach (var nestedFunction in function.localScope.functions)
@@ -90,7 +106,7 @@ namespace DCPUC
         {
             if (localScope.stackDepth - function.localScope.stackDepth > 0)
                 context.Add("ADD", "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth), "Cleanup stack"); 
-            context.Add("SET", "PC", "POP", "Return");
+            context.Add("SET", "PC", footerLabel, "Return");
         }
     }
 }

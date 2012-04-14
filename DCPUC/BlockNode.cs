@@ -20,6 +20,7 @@ namespace DCPUC
             foreach (var child in ChildNodes)
             {
                 assembly.Barrier();
+                assembly.AddSource(child.Span);
                 (child as CompilableNode).Compile(assembly, scope, Register.DISCARD);
             }
 

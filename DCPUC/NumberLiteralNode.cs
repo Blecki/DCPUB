@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class NumberLiteralNode : CompilableNode
     {
-        ushort Value = 0;
+        public ushort Value = 0;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -25,7 +25,17 @@ namespace DCPUC
                 Value = (ushort)Convert.ToInt16(AsString);
         }
 
+        public override string TreeLabel()
+        {
+            return "Literal (" + Hex.hex(Value) + ")" + (WasFolded ? " folded" : "");
+        }
+
         public override bool IsConstant()
+        {
+            return true;
+        }
+
+        public override bool IsIntegralConstant()
         {
             return true;
         }

@@ -8,6 +8,8 @@ namespace DCPUC
 {
     public class CompilableNode : AstNode
     {
+        public bool WasFolded = false;
+
         public virtual void Compile(CompileContext context, Scope scope, Register target) { throw new NotImplementedException(); }
         public virtual bool IsConstant() { return false; }
         public virtual ushort GetConstantValue() { return 0; }
@@ -23,7 +25,7 @@ namespace DCPUC
                 (child as CompilableNode).GatherSymbols(context, enclosingScope);
         }
 
-        public virtual AstNode FoldConstants()
+        public virtual CompilableNode FoldConstants()
         {
             var childrenCopy = new AstNodeList();
             foreach (var child in ChildNodes)
@@ -34,6 +36,11 @@ namespace DCPUC
             ChildNodes.Clear();
             ChildNodes.AddRange(childrenCopy);
             return this;
+        }
+
+        public virtual void AssignRegisters(RegisterBank parentState)
+        {
+
         }
 
         public static Scope BeginBlock(Scope scope)

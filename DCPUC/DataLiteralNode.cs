@@ -8,28 +8,34 @@ namespace DCPUC
 {
     class BlockLiteralNode : CompilableNode
     {
+        public String dataLabel;
+        public int dataSize;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AsString = "";
             foreach (var child in treeNode.ChildNodes)
                 AsString += child.FindTokenAndGetText();
-        }
 
-        public override bool IsConstant()
-        {
-            return true;
-        }
-
-        public override ushort GetConstantValue()
-        {
             if (AsString.StartsWith("0x"))
-                return Hex.atoh(AsString.Substring(2));
+                dataSize = Hex.atoh(AsString.Substring(2));
             else
-                return Convert.ToUInt16(AsString);
+                dataSize = Convert.ToUInt16(AsString);
         }
 
-        public List<ushort> MakeData() { var r = new List<ushort>(); for (int i = 0; i < GetConstantValue(); ++i) r.Add(0); return r; }
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            dataLabel = context.GetLabel() + "_DATA";
+            context.AddData(dataLabel, MakeData());
+        }
+
+        public List<ushort> MakeData() 
+        { 
+            var r = new List<ushort>(); 
+            for (int i = 0; i < dataSize; ++i) r.Add(0); 
+            return r; 
+        }
 
         public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
@@ -40,7 +46,7 @@ namespace DCPUC
     class DataLiteralNode : CompilableNode
     {
         public List<ushort> data = new List<ushort>();
-        string dataLabel;
+        public string dataLabel;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -75,16 +81,7 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             dataLabel = context.GetLabel() + "_DATA";
-        }
-
-        public override bool IsConstant()
-        {
-            return false;
-        }
-
-        public override ushort GetConstantValue()
-        {
-            return data[0];
+            context.AddData(dataLabel, data);
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)
@@ -94,7 +91,7 @@ namespace DCPUC
             //else
             //{
                 context.Add("SET", Scope.GetRegisterLabelFirst((int)target), dataLabel);
-                context.AddData(dataLabel, data);
+            //    context.AddData(dataLabel, data);
             //}
             if (target == Register.STACK) scope.stackDepth += 1;
         }

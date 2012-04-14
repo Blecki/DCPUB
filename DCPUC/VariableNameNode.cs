@@ -17,6 +17,23 @@ namespace DCPUC
             variableName = treeNode.FindTokenAndGetText();
         }
 
+        public override string TreeLabel()
+        {
+            return "Variable " + variableName;
+        }
+
+        public override bool IsIntegralConstant()
+        {
+            if (variable.type == VariableType.Constant)
+                return true;
+            return false;
+        }
+
+        public override ushort GetConstantValue()
+        {
+            return variable.constantValue;
+        }
+
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             var scope = enclosingScope;
@@ -34,29 +51,40 @@ namespace DCPUC
 
         public override void Compile(CompileContext context, Scope scope, Register target)
         {
-            if (variable.location == Register.CONST)
+            if (variable.type == VariableType.Constant)
+            {
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
+            }
+            else if (variable.type == VariableType.ConstantReference)
             {
                 context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
             }
-            else if (variable.location == Register.STATIC)
+            else if (variable.type == VariableType.Static)
             {
                 context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
             }
-            else if (variable.location == Register.STACK)
+            else if (variable.type == VariableType.Local)
             {
-                if (scope.stackDepth - variable.stackOffset > 1)
+                if (variable.location == Register.STACK)
                 {
-                    context.Add("SET", Scope.TempRegister, "SP");
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                    if (scope.stackDepth - variable.stackOffset > 1)
+                    {
+                        context.Add("SET", Scope.TempRegister, "SP");
+                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                    }
+                    else
+                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
+                }
+                else if (variable.location == target)
+                {
+                    context.Add(";SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
                 }
                 else
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
+                {
+                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
+                }
             }
-            else
-            {
-                if (target == variable.location) return;
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location), "Fetching variable");
-            }
+
             if (target == Register.STACK) scope.stackDepth += 1;
         }
     }

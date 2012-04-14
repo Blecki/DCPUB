@@ -22,83 +22,89 @@ namespace DCPUC
 
         public override string TreeLabel()
         {
-            return declLabel + " " + AsString;
+            return declLabel + " " + variable.name;
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
+            Child(0).GatherSymbols(context, enclosingScope);
+
             enclosingScope.variables.Add(variable);
             variable.scope = enclosingScope;
+            
+            if (declLabel == "var")
+            {
+                variable.type = VariableType.Local;
+            }
+            else if (declLabel == "static")
+            {
+                variable.type = VariableType.Static;
+                variable.location = Register.STATIC;
+                if (Child(0) is DataLiteralNode)
+                {
+                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    context.AddData(variable.staticLabel, (Child(0) as DataLiteralNode).dataLabel);
+                }
+                else if (Child(0) is BlockLiteralNode)
+                {
+                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    context.AddData(variable.staticLabel, (Child(0) as BlockLiteralNode).dataLabel);
+                }
+                else if (Child(0).IsIntegralConstant()) //Other expressions should fold if they are constant.
+                {
+                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    context.AddData(variable.staticLabel, Child(0).GetConstantValue());
+                }
+                else
+                    throw new CompileError("Statics must be initialized to a constant value.");
+            }
+            else if (declLabel == "const")
+            {
+                variable.location = Register.CONST;
+
+                if (Child(0) is DataLiteralNode)
+                {
+                    variable.staticLabel = (Child(0) as DataLiteralNode).dataLabel;
+                    variable.type = VariableType.ConstantReference;
+                }
+                else if (Child(0) is BlockLiteralNode)
+                {
+                    variable.staticLabel = (Child(0) as DataLiteralNode).dataLabel;
+                    variable.type = VariableType.ConstantReference;
+                }
+                else if (Child(0) is NumberLiteralNode) //Other expressions should fold if they are constant.
+                {
+                    variable.constantValue = (Child(0) as NumberLiteralNode).Value;
+                    variable.type = VariableType.Constant;
+                }
+                else
+                    throw new CompileError("Consts must be initialized to a constant value.");
+            }
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)
         {
             variable.stackOffset = scope.stackDepth;
-            if (declLabel == "var")
+            if (variable.type == VariableType.Local)
             {
                 variable.location = (Register)scope.FindAndUseFreeRegister();
-                if (variable.location == Register.I) variable.location = Register.STACK;
-                if (ChildNodes[0] is BlockLiteralNode)
+                if (variable.location == Register.I)
                 {
-                    var size = Child(0).GetConstantValue();
+                    variable.location = Register.STACK;
+                    scope.FreeRegister((int)Register.I);
+                }
+
+                if (Child(0) is BlockLiteralNode)
+                {
+                    var size = (Child(0) as BlockLiteralNode).dataSize;
                     scope.stackDepth += size;
                     context.Add("SUB", "SP", Hex.hex(size));
                     context.Add("SET", Scope.GetRegisterLabelFirst((int)variable.location), "SP");
-                    if (variable.location == Register.STACK) scope.stackDepth += 1;                  
+                    if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }
                 else
                     Child(0).Compile(context, scope, variable.location);
-
             }
-            else if (declLabel == "static")
-            {
-                variable.location = Register.STATIC;
-                if (Child(0) is BlockLiteralNode)
-                {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + AsString;
-                    var datLabel = context.GetLabel() + "_STATIC_" + AsString + "_DATA";
-                    context.AddData(datLabel, (ChildNodes[0] as BlockLiteralNode).MakeData());
-                    context.AddData(variable.staticLabel, datLabel);
-                }
-                else if ((ChildNodes[0] as CompilableNode).IsConstant())
-                {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + AsString;
-                    context.AddData(variable.staticLabel, new List<ushort>(new ushort[] { (ChildNodes[0] as CompilableNode).GetConstantValue() }));
-                }
-                else if (ChildNodes[0] is DataLiteralNode)
-                {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + AsString;
-                    var datLabel = context.GetLabel() + "_STATIC_" + AsString + "_DATA";
-                    context.AddData(datLabel, (ChildNodes[0] as DataLiteralNode).data);
-                    context.AddData(variable.staticLabel, datLabel);
-                }
-                else
-                    throw new CompileError("Statics must be initialized to a constant value");
-            }
-            else if (declLabel == "const")
-            {
-                variable.location = Register.CONST;
-                if (Child(0) is BlockLiteralNode)
-                {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + AsString;
-                    context.AddData(variable.staticLabel, (ChildNodes[0] as BlockLiteralNode).MakeData());
-                }
-                else if ((ChildNodes[0] as CompilableNode).IsConstant())
-                {
-                    //throw new CompileError("Initializing const to integrals is not supported yet");
-                    variable.staticLabel = (ChildNodes[0] as CompilableNode).GetConstantToken();
-                    //Scope.AddData(newVariable.staticLabel, (ChildNodes[0] as CompilableNode).GetConstantToken());
-                }
-                else if (ChildNodes[0] is DataLiteralNode)
-                {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + AsString;
-                    context.AddData(variable.staticLabel, (ChildNodes[0] as DataLiteralNode).data);
-                }
-            }
-
-            scope.variables.Add(variable);
-            //scope.stackDepth += 1;
-
         }
     }
 }

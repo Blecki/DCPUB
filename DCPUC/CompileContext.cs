@@ -15,6 +15,8 @@ namespace DCPUC
         private int nextLabelID = 0;
         public List<Instruction> instructions = new List<Instruction>();
         private int _barrier = 0;
+        public string source = null;
+        public CompileOptions options = new CompileOptions();
 
         
         public String GetLabel()
@@ -32,6 +34,11 @@ namespace DCPUC
         public void AddData(string label, string data)
         {
             dataElements.Add(new Tuple<string, List<string>>(label, new List<String>(new string[] { data })));
+        }
+
+        public void AddData(string label, ushort word)
+        {
+            dataElements.Add(new Tuple<string, List<string>>(label, new List<string>(new string[] { Hex.hex(word) })));
         }
 
             
@@ -53,12 +60,12 @@ namespace DCPUC
 
         public void Initialize(CompileOptions options)
         {
-
-
+            this.options = options;
         }
 
         public bool Parse(String code, Action<string> onError)
         {
+            source = code;
             globalScope = new Scope();
             dataElements.Clear();
             nextLabelID = 0;
@@ -82,14 +89,22 @@ namespace DCPUC
             return true;
         }
 
-        public void GatherSymbols()
+        public void GatherSymbols(Action<string> onError)
         {
-            rootNode.GatherSymbols(this, globalScope);
+            try
+            {
+                rootNode.GatherSymbols(this, globalScope);
+            }
+            catch (CompileError e)
+            {
+                onError(e.Message);
+            }
         }
 
         public void FoldConstants()
         {
             rootNode.FoldConstants();
+            rootNode.AssignRegisters(new RegisterBank());
         }
 
         public void Emit(Action<string> onError)
@@ -124,6 +139,11 @@ namespace DCPUC
 
         }
 
+        public void AddSource(Irony.Parsing.SourceSpan span)
+        {
+            var instruction = new Instruction { ins = ";" + source.Substring(span.Location.Position, span.Length) };
+            instructions.Add(instruction);
+        }
 
         public void Add(string ins, string a, string b, string comment = null)
         {
@@ -136,7 +156,7 @@ namespace DCPUC
             //instructions.Add(instruction);
             //return;
 
-            if (instructions.Count > _barrier)
+            if (options.p && instructions.Count > _barrier)
             {
                 bool ignore = false;
                 var lastIns = instructions[instructions.Count - 1];

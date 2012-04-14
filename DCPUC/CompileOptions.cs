@@ -10,6 +10,7 @@ namespace DCPUC
         public bool test = false;
         public string @in = null;
         public string @out = null;
+        public bool p = false;
 
         public static bool ParseCommandLine(string[] arguments, CompileOptions options, Action<string> onError)
         {

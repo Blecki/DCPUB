@@ -6,6 +6,14 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
+    public enum VariableType
+    {
+        Local,
+        Static,
+        Constant,
+        ConstantReference
+    }
+
     public class Variable
     {
         public String name;
@@ -14,6 +22,9 @@ namespace DCPUC
         public Register location;
         public string staticLabel;
         public bool emitBrackets = true;
+        public ushort constantValue;
+
+        public VariableType type;
     }
 
     public class Function
@@ -94,7 +105,8 @@ namespace DCPUC
 
         internal int FindFreeRegister()
         {
-            for (int i = 0; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
+            for (int i = 3; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
+            for (int i = 0; i < 3; ++i) if (registers[i] == RegisterState.Free) return i;
             return (int)Register.STACK;
         }
 

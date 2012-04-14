@@ -37,10 +37,6 @@ namespace DCPUC
         public static String hex(int x) { return "0x" + htoa((ushort)x); }
         public static String hex(string x) { return "0x" + htoa((ushort)Convert.ToInt16(x)); }
 
-        public static Scope BeginBlock(Scope scope)
-        {
-            return scope.Push(new Scope());
-        }
 
     }
 }
