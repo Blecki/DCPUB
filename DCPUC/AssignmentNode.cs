@@ -82,7 +82,7 @@ namespace DCPUC
             if (assignTo == null)
             {
                 Child(1).Emit(context, scope);
-                Child(0).Emit(context, scope);
+                Child(0).Child(0).Emit(context, scope); //Skip deref node
 
                 context.Add("SET",
                     (dereferenceLvalue ? "[" : "") + Scope.GetRegisterLabelSecond((int)lvalueTargetRegister) + (dereferenceLvalue ? "]" : ""),
