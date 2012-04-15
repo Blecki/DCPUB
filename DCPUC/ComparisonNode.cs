@@ -18,36 +18,50 @@ namespace DCPUC
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override string TreeLabel()
+        {
+            return AsString;
+        }
+
+        public override CompilableNode FoldConstants()
+        {
+            base.FoldConstants();
+            if (Child(0).IsIntegralConstant() && Child(1).IsIntegralConstant())
+            {
+                var firstValue = Child(0).GetConstantValue();
+                var secondValue = Child(1).GetConstantValue();
+                if (AsString == "==") return new NumberLiteralNode
+                {
+                    Value = (firstValue == secondValue ? (ushort)1 : (ushort)0),
+                    WasFolded = true
+                };
+                if (AsString == "!=") return new NumberLiteralNode
+                {
+                    Value = (firstValue != secondValue ? (ushort)1 : (ushort)0),
+                    WasFolded = true
+                };
+                if (AsString == ">") return new NumberLiteralNode
+                {
+                    Value = (firstValue > secondValue ? (ushort)1 : (ushort)0),
+                    WasFolded = true
+                };
+            }
+            return this;
+        }
+
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            throw new CompileError("Branch node should have handled this.");
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            throw new CompileError("Branch node should have handled this.");
+        }
+
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             throw new CompileError("Comparisons in general expressions are not implemented");
-            //Evaluate in reverse in case both need to go on the stack
-            var secondTarget = scope.FindFreeRegister();
-            if (Scope.IsRegister((Register)secondTarget)) scope.UseRegister(secondTarget);
-            (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondTarget);
-                        
-            if (AsString == "==" || AsString == "!=")
-            {
-                (ChildNodes[0] as CompilableNode).Compile(assembly, scope, Register.STACK);
-                if (target == Register.STACK)
-                {
-                    assembly.Add("SET", Scope.TempRegister, "0x0", "Equality onto stack");
-                    assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
-                    assembly.Add("SET", Scope.TempRegister, "0x1");
-                    assembly.Add("SET", "PUSH", Scope.TempRegister);
-                }
-                else
-                {
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x0",  "Equality into register");
-                    assembly.Add((AsString == "==" ? "IFE" : "IFN"), "POP", Scope.GetRegisterLabelSecond(secondTarget));
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "0x1");
-                }
-            }
-            
-            if (secondTarget == (int)Register.STACK)
-                scope.stackDepth -= 1;
-            else
-                scope.FreeRegister(secondTarget);
         }
     }
 

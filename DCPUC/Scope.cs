@@ -6,6 +6,14 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
+    public enum VariableType
+    {
+        Local,
+        Static,
+        Constant,
+        ConstantReference
+    }
+
     public class Variable
     {
         public String name;
@@ -14,6 +22,18 @@ namespace DCPUC
         public Register location;
         public string staticLabel;
         public bool emitBrackets = true;
+        public ushort constantValue;
+
+        public VariableType type;
+    }
+
+    public class Function
+    {
+        public String name;
+        public FunctionDeclarationNode Node;
+        public Scope localScope;
+        public String label;
+        public int parameterCount = 0;
     }
 
     public enum Register
@@ -38,29 +58,30 @@ namespace DCPUC
         Used = 1
     }
 
+    public enum ScopeType
+    {
+        Global,
+        Function,
+        Branch
+    }
 
     public class Scope
     {
-        private static int nextLabelID = 0;
-        public static String GetLabel()
-        {
-            return "L" + nextLabelID++;
-        }
-
         internal const string TempRegister = "J";
 
+        internal ScopeType type = ScopeType.Global;
         internal Scope parent = null;
         internal int parentDepth = 0;
         public List<Variable> variables = new List<Variable>();
+        public List<Function> functions = new List<Function>();
         public int stackDepth = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         public FunctionDeclarationNode activeFunction = null;
         internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
 
-        public static void Reset()
+        internal int StackOffset(int of)
         {
-            nextLabelID = 0;
-            dataElements.Clear();
+            return stackDepth - of - 1;
         }
 
         internal Scope Push(Scope child)
@@ -73,6 +94,12 @@ namespace DCPUC
             return child;
         }
 
+        internal Scope Push()
+        {
+            var child = new Scope();
+            return Push(child);
+        }
+
         internal Variable FindVariable(string name)
         {
             foreach (var variable in variables)
@@ -83,7 +110,8 @@ namespace DCPUC
 
         internal int FindFreeRegister()
         {
-            for (int i = 0; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
+            for (int i = 3; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
+            for (int i = 0; i < 3; ++i) if (registers[i] == RegisterState.Free) return i;
             return (int)Register.STACK;
         }
 
@@ -114,94 +142,5 @@ namespace DCPUC
 
         internal void FreeMaybeRegister(int r) { if (IsRegister((Register)r)) FreeRegister(r); }
 
-        public static List<Tuple<string, List<string>>> dataElements = new List<Tuple<string, List<string>>>();
-        public static void AddData(string label, List<ushort> data)
-        {
-            var strings = new List<string>();
-            foreach (var item in data) strings.Add(CompilableNode.hex(item));
-            dataElements.Add(new Tuple<string, List<string>>(label, strings));
-        }
-
-        public static void AddData(string label, string data)
-        {
-            dataElements.Add(new Tuple<string, List<string>>(label, new List<String>(new string[] { data })));
-        }
-
-        private static Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
-            
-        private static String extractLine(String s, int c)
-        {
-            int lc = 0;
-            int p = 0;
-            while (p < s.Length && lc < c)
-            {
-                if (s[p] == '\n') lc++;
-                ++p;
-            }
-
-            int ls = p;
-            while (p < s.Length && s[p] != '\n') ++p;
-
-            return s.Substring(ls, p - ls);
-        }
-
-        public static FunctionDeclarationNode Parse(String code, Action<string> onError)
-        {
-            var program = Parser.Parse(code);
-            if (onError == null) onError = (a) => { };
-            if (program.HasErrors())
-            {
-                foreach (var msg in program.ParserMessages)
-                {
-                    onError(msg.Level + ": " + msg.Message + " [line:" + msg.Location.Line + " column:" + msg.Location.Column + "]\r\n");
-                    onError(extractLine(code, msg.Location.Line) + "\r\n");
-                    onError(new String(' ', msg.Location.Column) + "^\r\n");
-                }
-                return null;
-            }
-
-            DCPUC.Scope.Reset();
-            var root = program.Root.AstNode as DCPUC.CompilableNode;
-            var newRoot = new FunctionDeclarationNode();
-            newRoot.ChildNodes.Add(root);
-            return newRoot;
-        }
-
-        public static void CompileRoot(FunctionDeclarationNode root, Assembly assembly, Action<string> onError)
-        {
-            DCPUC.Scope.Reset();
-            var scope = new DCPUC.Scope();
-            var end_of_program = new Variable();
-            end_of_program.location = Register.STATIC;
-            end_of_program.name = "__endofprogram";
-            end_of_program.staticLabel = "ENDOFPROGRAM";
-            end_of_program.emitBrackets = false;
-            scope.variables.Add(end_of_program);
-
-            var library = new List<String>(System.IO.File.ReadAllLines("libdcpuc.txt"));
-            //root.InsertLibrary(library);
-
-            try
-            {
-                root.CompileFunction(assembly, scope);
-                foreach (var dataItem in DCPUC.Scope.dataElements)
-                {
-                    var datString = "";
-                    foreach (var item in dataItem.Item2)
-                    {
-                        datString += item;
-                        datString += ", ";
-                    }
-                    assembly.Add(":" + dataItem.Item1, "DAT", datString.Substring(0, datString.Length - 2));
-                }
-                assembly.Add(":ENDOFPROGRAM", "", "");
-            }
-            catch (DCPUC.CompileError c)
-            {
-                onError(c.Message);
-                return;
-            }
-
-        }
     }
 }

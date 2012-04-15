@@ -8,12 +8,6 @@ namespace DCPUC
 {
     public class BranchStatementNode : CompilableNode
     {
-        private static void releaseRegister(Scope scope, int reg)
-        {
-            scope.FreeMaybeRegister(reg);
-            if (reg == (int)Register.STACK) scope.stackDepth -= 1;
-        }
-
         public enum ClauseOrder
         {
             ConstantPass,
@@ -22,139 +16,100 @@ namespace DCPUC
             FailFirst
         }
 
-        public static ClauseOrder CompileConditional(Assembly assembly, Scope scope, CompilableNode conditionNode)
+        public ClauseOrder clauseOrder = ClauseOrder.ConstantFail;
+        public String comparisonInstruction = "IFE";
+        public CompilableNode firstOperand = null;
+        public CompilableNode secondOperand = null;
+        public Register firstOperandTarget = Register.STACK;
+        public Register secondOperandTarget = Register.STACK;
+
+        public override string TreeLabel()
         {
-            if (!(conditionNode is ComparisonNode))
-            {
-                var condTarget = scope.FindAndUseFreeRegister();
-                conditionNode.Compile(assembly, scope, (Register)condTarget);
-                assembly.Add("IFE", Scope.GetRegisterLabelSecond(condTarget), "0x0", "If from expression");
-                scope.FreeMaybeRegister(condTarget);
-                return ClauseOrder.PassFirst;
-            }
-            else
-            {
-                var op = conditionNode.AsString;
-                ushort firstConstantValue = 0, secondConstantValue = 0;
-
-                var firstIsConstant = (conditionNode.ChildNodes[0] as CompilableNode).IsConstant();
-                var secondIsConstant = (conditionNode.ChildNodes[1] as CompilableNode).IsConstant();
-
-                int firstRegister = (int)Register.STACK;
-                int secondRegister = (int)Register.STACK;
-
-                if (secondIsConstant)
-                    secondConstantValue = (conditionNode.ChildNodes[1] as CompilableNode).GetConstantValue();
-                else
-                {
-                    secondRegister = scope.FindAndUseFreeRegister();
-                    (conditionNode.ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondRegister);
-                }
-
-                if (firstIsConstant)
-                    firstConstantValue = (conditionNode.ChildNodes[0] as CompilableNode).GetConstantValue();
-                else
-                {
-                    firstRegister = scope.FindAndUseFreeRegister();
-                    (conditionNode.ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)firstRegister);
-                }
-
-                if (op == "==")
-                {
-                    if (firstIsConstant && secondIsConstant)
-                    {
-                        if (firstConstantValue == secondConstantValue) { return ClauseOrder.ConstantPass; }
-                        else { return ClauseOrder.ConstantFail; }
-                    }
-                    else if (firstIsConstant)
-                    {
-                        assembly.Add("IFE", (conditionNode.ChildNodes[0] as CompilableNode).GetConstantToken(), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, secondRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                    else if (secondIsConstant)
-                    {
-                        assembly.Add("IFE", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
-                        releaseRegister(scope, firstRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                    else
-                    {
-                        assembly.Add("IFE", Scope.GetRegisterLabelSecond(firstRegister), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, firstRegister);
-                        releaseRegister(scope, secondRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                }
-                else if (op == "!=")
-                {
-                    if (firstIsConstant && secondIsConstant)
-                    {
-                        if (firstConstantValue != secondConstantValue) { return ClauseOrder.ConstantPass; }
-                        else { return ClauseOrder.ConstantFail; }
-                    }
-                    else if (firstIsConstant)
-                    {
-                        assembly.Add("IFN", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, secondRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                    else if (secondIsConstant)
-                    {
-                        assembly.Add("IFN", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
-                        releaseRegister(scope, firstRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                    else
-                    {
-                        assembly.Add("IFN", Scope.GetRegisterLabelSecond(firstRegister), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, firstRegister);
-                        releaseRegister(scope, secondRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                }
-                else if (op == ">")
-                {
-                    if (firstIsConstant && secondIsConstant)
-                    {
-                        if (firstConstantValue > secondConstantValue) { return ClauseOrder.ConstantPass; }
-                        else { return ClauseOrder.ConstantFail; }
-                    }
-                    else if (firstIsConstant)
-                    {
-                        assembly.Add("IFG", hex(firstConstantValue), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, secondRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                    else if (secondIsConstant)
-                    {
-                        assembly.Add("IFG", Scope.GetRegisterLabelSecond(firstRegister), hex(secondConstantValue));
-                        releaseRegister(scope, firstRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                    else
-                    {
-                        assembly.Add("IFG", Scope.GetRegisterLabelSecond(firstRegister), Scope.GetRegisterLabelSecond(secondRegister));
-                        releaseRegister(scope, firstRegister);
-                        releaseRegister(scope, secondRegister);
-                        return ClauseOrder.FailFirst;
-                    }
-                }
-
-            }
-
-            throw new CompileError("Impossible situation reached");
+            return "branch " + clauseOrder.ToString();
         }
 
-        public static void CompileBlock(Assembly assembly, Scope scope, CompilableNode block)
+        public void FindClauseOrder(CompilableNode conditionNode)
         {
-            var blockScope = BeginBlock(scope);
-            assembly.Barrier();
-            block.Compile(assembly, blockScope, Register.DISCARD);
-            assembly.Barrier();
-            EndBlock(assembly, blockScope);
+            if (conditionNode.IsIntegralConstant())
+            {
+                var value = conditionNode.GetConstantValue();
+                if (value != 0) clauseOrder = ClauseOrder.ConstantPass;
+                else clauseOrder = ClauseOrder.ConstantFail;
+            }
+            else if (conditionNode is ComparisonNode)
+            {
+                var @operator = conditionNode.AsString;
+                firstOperand = conditionNode.Child(0);
+                secondOperand = conditionNode.Child(1);
+                if (@operator == "==") comparisonInstruction = "IFE";
+                if (@operator == "!=") comparisonInstruction = "IFN";
+                if (@operator == ">") comparisonInstruction = "IFG";
+                clauseOrder = ClauseOrder.FailFirst;
+            }
         }
 
+        public override CompilableNode FoldConstants()
+        {
+            base.FoldConstants();
+            FindClauseOrder(Child(0));
+            return this;
+        }
+
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            foreach (var child in ChildNodes) (child as CompilableNode).GatherSymbols(context, enclosingScope);
+        }
+
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            if (target != Register.DISCARD) throw new CompileError("Branch not at top level");
+            switch (clauseOrder)
+            {
+                case ClauseOrder.ConstantFail:
+                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(parentState, Register.DISCARD);
+                    break;
+                case ClauseOrder.ConstantPass:
+                    Child(1).AssignRegisters(parentState, Register.DISCARD);
+                    break;
+                default:
+                    {
+                        if (!firstOperand.IsIntegralConstant())
+                        {
+                            firstOperandTarget = parentState.FindAndUseFreeRegister();
+                            firstOperand.AssignRegisters(parentState, firstOperandTarget);
+                        }
+                        if (!secondOperand.IsIntegralConstant())
+                        {
+                            secondOperandTarget = parentState.FindAndUseFreeRegister();
+                            secondOperand.AssignRegisters(parentState, secondOperandTarget);
+                        }
+                        parentState.FreeRegisters(firstOperandTarget, secondOperandTarget);    
+                    }
+                    break;
+            }
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            if (!firstOperand.IsIntegralConstant())
+                firstOperand.Emit(context, scope);
+            if (!secondOperand.IsIntegralConstant())
+                secondOperand.Emit(context, scope);
+
+            context.Add(comparisonInstruction,
+                firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)firstOperandTarget),
+                secondOperand.IsIntegralConstant() ? secondOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)secondOperandTarget));
+            if (firstOperandTarget == Register.STACK) scope.stackDepth -= 1;
+            if (secondOperandTarget == Register.STACK) scope.stackDepth -= 1;
+        }
+
+        public static void EmitBlock(CompileContext context, Scope scope, CompilableNode block)
+        {
+            var blockScope = scope.Push();
+            block.Emit(context, blockScope);
+            if (blockScope.stackDepth - scope.stackDepth > 0)
+                context.Add("ADD", "SP", Hex.hex(blockScope.stackDepth - scope.stackDepth));
+        }
         
 
     }

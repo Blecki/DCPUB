@@ -8,30 +8,36 @@ namespace DCPUC
 {
     class BlockLiteralNode : CompilableNode
     {
+        public String dataLabel;
+        public int dataSize;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AsString = "";
             foreach (var child in treeNode.ChildNodes)
                 AsString += child.FindTokenAndGetText();
-        }
 
-        public override bool IsConstant()
-        {
-            return true;
-        }
-
-        public override ushort GetConstantValue()
-        {
             if (AsString.StartsWith("0x"))
-                return atoh(AsString.Substring(2));
+                dataSize = Hex.atoh(AsString.Substring(2));
             else
-                return Convert.ToUInt16(AsString);
+                dataSize = Convert.ToUInt16(AsString);
         }
 
-        public List<ushort> MakeData() { var r = new List<ushort>(); for (int i = 0; i < GetConstantValue(); ++i) r.Add(0); return r; }
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            dataLabel = context.GetLabel() + "_DATA";
+            context.AddData(dataLabel, MakeData());
+        }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public List<ushort> MakeData() 
+        { 
+            var r = new List<ushort>(); 
+            for (int i = 0; i < dataSize; ++i) r.Add(0); 
+            return r; 
+        }
+
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             throw new CompileError("Should never reach this.");
         }
@@ -40,7 +46,7 @@ namespace DCPUC
     class DataLiteralNode : CompilableNode
     {
         public List<ushort> data = new List<ushort>();
-        string dataLabel;
+        public string dataLabel;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -54,7 +60,7 @@ namespace DCPUC
                     (child.ChildNodes.Count > 0 && child.FirstChild.Term.Name == "BlockLiteral"))
                 {
                     int d = 0;
-                    if (token.StartsWith("0x")) d = atoh(token.Substring(2));
+                    if (token.StartsWith("0x")) d = Hex.atoh(token.Substring(2));
                     else d = Convert.ToUInt16(token);
                     for (int i = 0; i < d; ++i) data.Add(0);
                 }
@@ -64,32 +70,28 @@ namespace DCPUC
                 else if (token[0] == '\'')
                     data.Add((ushort)token[1]);
                 else if (token.StartsWith("0x"))
-                    data.Add(atoh(token.Substring(2)));
+                    data.Add(Hex.atoh(token.Substring(2)));
                 else
                     data.Add(Convert.ToUInt16(token));
             }
 
-            dataLabel = Scope.GetLabel() + "_DATA";
+            
         }
 
-        public override bool IsConstant()
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            return false;
+            dataLabel = context.GetLabel() + "_DATA";
+            context.AddData(dataLabel, data);
         }
 
-        public override ushort GetConstantValue()
-        {
-            return data[0];
-        }
-
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void Compile(CompileContext context, Scope scope, Register target)
         {
             //if (data.Count == 1)
             //    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(data[0]));
             //else
             //{
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), dataLabel);
-                Scope.AddData(dataLabel, data);
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), dataLabel);
+            //    context.AddData(dataLabel, data);
             //}
             if (target == Register.STACK) scope.stackDepth += 1;
         }

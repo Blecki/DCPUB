@@ -40,7 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assembly.cs" />
+    <Compile Include="CompileOptions.cs" />
+    <Compile Include="RegisterBank.cs" />
+    <Compile Include="RootProgramNode.cs" />
+    <Compile Include="Hex.cs" />
+    <Compile Include="Instruction.cs" />
     <Compile Include="AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -58,6 +62,7 @@
     </Compile>
     <Compile Include="ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
+    <Compile Include="CompileContext.cs" />
     <Compile Include="WhileStatementNode.cs" />
     <Compile Include="DataLiteralNode.cs" />
     <Compile Include="LibraryFunctionNode.cs" />

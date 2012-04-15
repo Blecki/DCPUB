@@ -8,87 +8,128 @@ namespace DCPUC
 {
     public class FunctionDeclarationNode : CompilableNode
     {
-        public Scope localScope;
-        public String label;
-        public int parameterCount = 0;
-        public int references = 0;
-        //public List<Variable> parameters = new List<Variable>();
-
-        protected void InitCompilableNode(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
-        {
-            base.Init(context, treeNode);
-        }
+        public Function function = null;
+        public List<String> parameters = new List<string>();
+        public RegisterBank usedRegisters = new RegisterBank();
+        protected String footerLabel = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AddChild("Block", treeNode.ChildNodes[3]);
+            foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
+                parameters.Add(parameter.ChildNodes[0].FindTokenAndGetText());
+            function = new Function();
+            function.name = treeNode.ChildNodes[1].FindTokenAndGetText();
+            function.Node = this;
+            function.parameterCount = parameters.Count;
+            function.localScope = new Scope();
+            function.localScope.type = ScopeType.Function;
+            function.localScope.activeFunction = this;
+        }
 
-            localScope = new Scope();
+        public override string TreeLabel()
+        {
+            return "Function " + function.name + " " + function.parameterCount;
+        }
 
-            var parameters = treeNode.ChildNodes[2].ChildNodes;
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            function.label = context.GetLabel() + function.name;
+            footerLabel = context.GetLabel() + function.name + "_footer";
+            enclosingScope.functions.Add(function);
+            function.localScope.parent = enclosingScope;
 
             for (int i = 0; i < parameters.Count; ++i)
             {
                 var variable = new Variable();
-                variable.scope = localScope;
-                variable.name = parameters[i].ChildNodes[0].FindTokenAndGetText();
-                localScope.variables.Add(variable);
+                variable.scope = function.localScope;
+                variable.name = parameters[i];
+                function.localScope.variables.Add(variable);
 
                 if (i < 3)
                 {
                     variable.location = (Register)i;
-                    localScope.UseRegister(i);
+                    function.localScope.UseRegister(i);
                 }
                 else
                 {
                     variable.location = Register.STACK;
-                    variable.stackOffset = localScope.stackDepth;
-                    localScope.stackDepth += 1;
+                    variable.stackOffset = function.localScope.stackDepth;
+                    function.localScope.stackDepth += 1;
+                }
+            }
+
+            Child(0).GatherSymbols(context, function.localScope);
+        }
+
+        public override CompilableNode FoldConstants()
+        {
+            base.FoldConstants();
+            return null;
+        }
+
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            var localBank = new RegisterBank();
+            localBank.functionBank = usedRegisters;
+            for (int i = 0; i < 3 && i < function.parameterCount; ++i)
+                localBank.UseRegister((Register)i);
+
+            Child(0).AssignRegisters(localBank, Register.DISCARD);
+
+            foreach (var nestedFunction in function.localScope.functions)
+                nestedFunction.Node.AssignRegisters(parentState, Register.DISCARD);
+        }
+
+        public override void Compile(CompileContext context, Scope scope, Register target)
+        {
+            throw new CompileError("Function was not removed by Fold pass");
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            throw new CompileError("Function was not removed by fold pass");
+        }
+
+        public virtual void CompileFunction(CompileContext context)
+        {
+            function.localScope.stackDepth += 1;
+
+            context.Add(":" + function.label, "", "");
+
+            //Save registers
+            //ABC saved by caller
+            for (int i = Math.Min(3, function.parameterCount); i < 7; ++i)
+                if (usedRegisters.registers[i] == RegisterState.Used)
+                {
+                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond(i));
+                    function.localScope.stackDepth += 1;
                 }
 
-                parameterCount += 1;
-            }
+            var localScope = function.localScope.Push();
 
-            this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
-            label = Scope.GetLabel() + "_" + AsString;
-            localScope.activeFunction = this;
+            Child(0).Emit(context, localScope);
+            context.Add(":" + footerLabel, "", "");
+            context.Barrier();
+
+            //Restore registers
+            for (int i = 6; i >= Math.Min(3, function.parameterCount); --i)
+                if (usedRegisters.registers[i] == RegisterState.Used)
+                    context.Add("SET", "POP", Scope.GetRegisterLabelSecond(i));
+
+            context.Add("SET", "PC", "POP");
+            context.Barrier();
+
+            foreach (var nestedFunction in function.localScope.functions)
+                nestedFunction.Node.CompileFunction(context);
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        internal virtual void CompileReturn(CompileContext context, Scope localScope)
         {
-            scope.pendingFunctions.Add(this);
-        }
-
-        public virtual void CompileFunction(Assembly assembly, Scope topscope)
-        {
-            Scope lScope;
-            if (localScope != null)
-            {
-                foreach (var variable in topscope.variables)
-                    if (variable.location == Register.STATIC)
-                        localScope.variables.Add(variable);
-                lScope = localScope.Push(new Scope());
-                assembly.Add(":" + label, "", "");
-            }
-            else
-                lScope = topscope;
-            assembly.Barrier();
-            if (localScope != null) lScope.stackDepth += 1; //account for return address
-            (ChildNodes[0] as CompilableNode).Compile(assembly, lScope, Register.DISCARD);
-            if (localScope != null) CompileReturn(assembly, lScope);
-            else assembly.Add("BRK", "", "");
-            assembly.Barrier();
-            //Should leave the return value, if any, in A.
-            foreach (var function in lScope.pendingFunctions)
-                function.CompileFunction(assembly, topscope);
-        }
-
-        internal void CompileReturn(Assembly assembly, Scope lScope)
-        {
-            if (lScope.stackDepth - localScope.stackDepth > 1)
-                assembly.Add("ADD", "SP", hex(lScope.stackDepth - localScope.stackDepth - 1), "Cleanup stack"); 
-            assembly.Add("SET", "PC", "POP", "Return");
+            if (localScope.stackDepth - function.localScope.stackDepth > 0)
+                context.Add("ADD", "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth), "Cleanup stack"); 
+            context.Add("SET", "PC", footerLabel, "Return");
         }
     }
 }

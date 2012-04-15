@@ -8,16 +8,14 @@ SUB PC, 0x1
 ;DCPUC FUNCTION itoa itoa_FUNCTION 2 number *dest
 ;Writes the digits to *dest, returns end of written buffer.
 :itoa_FUNCTION	
-IFG A, 0xA	
-SET PC, itoa_THENCLAUSE
+IFG 0xA, A
 SET PC, itoa_REST
-:itoa_THENCLAUSE
 SET PUSH, A
 DIV A, 0xA		
 JSR itoa_FUNCTION	
 SET A, POP
 :itoa_REST
-MOD A, 0xA
+MOD A, 0xA  
 ADD A, 0x30
 SET [B], A
 ADD B, 0x1
@@ -29,13 +27,14 @@ SET PC, POP
 ;Returns the length of the string
 :strlen_FUNCTION
 SET B, A
-SET A, 0x0
 :strlen_LOOP
-IFE [B], 0x0
-SET PC, POP
+IFE [A], 0x0
+SET PC, strlen_LEAVE
 ADD A, 0x1
-ADD B, 0x1
 SET PC, strlen_LOOP
+:strlen_LEAVE
+SUB A, B
+SET PC, POP
 ;DCPUC ENDFUNCTION
 
 ;DCPUC FUNCTION strcpy strcpy_FUNCTION 2 *char a, *char b
@@ -48,8 +47,8 @@ ADD B, 0x1
 ADD A, 0x1
 SET PC, strcpy_FUNCTION
 :strcpy_LEAVE
-SET A, B;
-SET PC, POP;
+SET A, B
+SET PC, POP
 ;DCPUC ENDFUNCTION
 
 ;DCPUC FUNCTION abort dcpuc_abort 1 *char
