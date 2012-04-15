@@ -10,6 +10,7 @@ namespace DCPUC
     {
         public Variable variable = null;
         public String variableName;
+        Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -19,7 +20,7 @@ namespace DCPUC
 
         public override string TreeLabel()
         {
-            return "Variable " + variableName;
+            return "varref " + variableName + " [into:" + target.ToString() + "]";
         }
 
         public override bool IsIntegralConstant()
@@ -49,7 +50,12 @@ namespace DCPUC
                 throw new CompileError("Could not find variable " + variableName);
         }
 
-        public override void Compile(CompileContext context, Scope scope, Register target)
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            this.target = target;
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
         {
             if (variable.type == VariableType.Constant)
             {
@@ -67,17 +73,18 @@ namespace DCPUC
             {
                 if (variable.location == Register.STACK)
                 {
-                    if (scope.stackDepth - variable.stackOffset > 1)
+                    var stackOffset = scope.StackOffset(variable.stackOffset);
+                    if (stackOffset > 0)
                     {
                         context.Add("SET", Scope.TempRegister, "SP");
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]", "Fetching variable");
                     }
                     else
                         context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
                 }
                 else if (variable.location == target)
                 {
-                    context.Add(";SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
+                    //context.Add(";SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
                 }
                 else
                 {

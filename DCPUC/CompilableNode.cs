@@ -10,7 +10,8 @@ namespace DCPUC
     {
         public bool WasFolded = false;
 
-        public virtual void Compile(CompileContext context, Scope scope, Register target) { throw new NotImplementedException(); }
+        public virtual void Emit(CompileContext context, Scope scope) {  }
+        public virtual void Compile(CompileContext context, Scope scope, Register target) { }
         public virtual bool IsConstant() { return false; }
         public virtual ushort GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
@@ -38,9 +39,14 @@ namespace DCPUC
             return this;
         }
 
-        public virtual void AssignRegisters(RegisterBank parentState)
+        public virtual void AssignRegisters(RegisterBank parentState, Register target)
         {
 
+        }
+
+        public virtual int CountRegistersUsed()
+        {
+            return 0;
         }
 
         public static Scope BeginBlock(Scope scope)

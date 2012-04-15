@@ -1,19 +1,21 @@
-* Sample Programs
-* Comparison Operators
-* Struct syntax sugar
-* operator[]
-* Compile options
-* Command line interface
-* Multiple pass compilation
+[ ] Sample Programs
+[ ] Comparison Operators
+[ ] Struct syntax sugar
+[ ] operator[]
+[ ] Compile options
+[*] Command line interface
+[*] Multiple pass compilation
 [*]	- Pass 1: Build symbol tree. 
 [*]	- Pass 2: Resolve symbols.
-	- Pass 3: Fold constants and prune.
+[*]	- Pass 3: Fold constants and prune.
+[*]	- Pass 3b: Assign registers
 [*]	- Pass 4: Emit assembly
-* Support multiple calling conventions
-* Implement callee register protection
-* Function header/footer rather than multiple return points
-* Don't transform strings to bytes
-* 'length of' operator, applies to datalists and stack-allocated arrays (resolves at compile time)
-* Don't halt on errors (May not be possible with parser errors)
-* Move all DAT emission to top of program so locations can be predicted and folded
-* Implement http://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm
+[ ] Support multiple calling conventions
+[*] Implement callee register protection
+[*] Function header/footer rather than multiple return points
+[ ] Don't transform strings to bytes
+[ ] 'length of' operator, applies to datalists and stack-allocated arrays (resolves at compile time)
+[ ] Don't halt on errors (May not be possible with parser errors)
+[ ] Move all DAT emission to top of program so locations can be predicted and folded
+[ ] Implement http://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm
+[ ] BUG: Variables leak out of IF/WHILE blocks when condition is constant

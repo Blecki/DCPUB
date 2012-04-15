@@ -10,8 +10,8 @@ namespace DCPUC
     {
         public Function function = null;
         public List<String> parameters = new List<string>();
-        private RegisterBank usedRegisters = new RegisterBank();
-        private String footerLabel = null;
+        public RegisterBank usedRegisters = new RegisterBank();
+        protected String footerLabel = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -69,14 +69,17 @@ namespace DCPUC
             return null;
         }
 
-        public override void AssignRegisters(RegisterBank parentState)
+        public override void AssignRegisters(RegisterBank parentState, Register target)
         {
             var localBank = new RegisterBank();
             localBank.functionBank = usedRegisters;
+            for (int i = 0; i < 3 && i < function.parameterCount; ++i)
+                localBank.UseRegister((Register)i);
 
-            Child(0).AssignRegisters(localBank);
+            Child(0).AssignRegisters(localBank, Register.DISCARD);
+
             foreach (var nestedFunction in function.localScope.functions)
-                nestedFunction.Node.AssignRegisters(parentState);
+                nestedFunction.Node.AssignRegisters(parentState, Register.DISCARD);
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)
@@ -84,17 +87,37 @@ namespace DCPUC
             throw new CompileError("Function was not removed by Fold pass");
         }
 
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            throw new CompileError("Function was not removed by fold pass");
+        }
+
         public virtual void CompileFunction(CompileContext context)
         {
             function.localScope.stackDepth += 1;
-            var localScope = function.localScope.Push();
 
             context.Add(":" + function.label, "", "");
+
             //Save registers
-            Child(0).Compile(context, localScope, Register.DISCARD);
+            //ABC saved by caller
+            for (int i = Math.Min(3, function.parameterCount); i < 7; ++i)
+                if (usedRegisters.registers[i] == RegisterState.Used)
+                {
+                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond(i));
+                    function.localScope.stackDepth += 1;
+                }
+
+            var localScope = function.localScope.Push();
+
+            Child(0).Emit(context, localScope);
             context.Add(":" + footerLabel, "", "");
             context.Barrier();
+
             //Restore registers
+            for (int i = 6; i >= Math.Min(3, function.parameterCount); --i)
+                if (usedRegisters.registers[i] == RegisterState.Used)
+                    context.Add("SET", "POP", Scope.GetRegisterLabelSecond(i));
+
             context.Add("SET", "PC", "POP");
             context.Barrier();
 
@@ -102,7 +125,7 @@ namespace DCPUC
                 nestedFunction.Node.CompileFunction(context);
         }
 
-        internal void CompileReturn(CompileContext context, Scope localScope)
+        internal virtual void CompileReturn(CompileContext context, Scope localScope)
         {
             if (localScope.stackDepth - function.localScope.stackDepth > 0)
                 context.Add("ADD", "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth), "Cleanup stack"); 

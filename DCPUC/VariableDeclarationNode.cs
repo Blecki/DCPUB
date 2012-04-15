@@ -22,7 +22,7 @@ namespace DCPUC
 
         public override string TreeLabel()
         {
-            return declLabel + " " + variable.name;
+            return declLabel + " " + variable.name + " [loc:" + variable.location.ToString() + "]";
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -35,6 +35,7 @@ namespace DCPUC
             if (declLabel == "var")
             {
                 variable.type = VariableType.Local;
+
             }
             else if (declLabel == "static")
             {
@@ -82,18 +83,26 @@ namespace DCPUC
             }
         }
 
-        public override void Compile(CompileContext context, Scope scope, Register target)
+        public override void AssignRegisters(RegisterBank parentState, Register target)
         {
-            variable.stackOffset = scope.stackDepth;
             if (variable.type == VariableType.Local)
             {
-                variable.location = (Register)scope.FindAndUseFreeRegister();
+                variable.location = parentState.FindAndUseFreeRegister();
                 if (variable.location == Register.I)
                 {
                     variable.location = Register.STACK;
-                    scope.FreeRegister((int)Register.I);
+                    parentState.FreeMaybeRegister(Register.I);
                 }
+                Child(0).AssignRegisters(parentState, variable.location);
+            }
+        }
 
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            variable.stackOffset = scope.stackDepth;
+            
+            if (variable.type == VariableType.Local)
+            {
                 if (Child(0) is BlockLiteralNode)
                 {
                     var size = (Child(0) as BlockLiteralNode).dataSize;
@@ -103,7 +112,7 @@ namespace DCPUC
                     if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }
                 else
-                    Child(0).Compile(context, scope, variable.location);
+                    Child(0).Emit(context, scope);
             }
         }
     }

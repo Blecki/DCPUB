@@ -91,6 +91,13 @@ namespace DCPUC
 
         public void GatherSymbols(Action<string> onError)
         {
+            var end_of_program = new Variable();
+            end_of_program.location = Register.STATIC;
+            end_of_program.name = "__endofprogram";
+            end_of_program.staticLabel = "ENDOFPROGRAM";
+            end_of_program.emitBrackets = false;
+            globalScope.variables.Add(end_of_program);
+
             try
             {
                 rootNode.GatherSymbols(this, globalScope);
@@ -104,17 +111,12 @@ namespace DCPUC
         public void FoldConstants()
         {
             rootNode.FoldConstants();
-            rootNode.AssignRegisters(new RegisterBank());
+            rootNode.AssignRegisters(new RegisterBank(), Register.DISCARD);
         }
 
         public void Emit(Action<string> onError)
         {
-            var end_of_program = new Variable();
-            end_of_program.location = Register.STATIC;
-            end_of_program.name = "__endofprogram";
-            end_of_program.staticLabel = "ENDOFPROGRAM";
-            end_of_program.emitBrackets = false;
-            globalScope.variables.Add(end_of_program);
+            
 
             try
             {
@@ -155,7 +157,7 @@ namespace DCPUC
 
             //instructions.Add(instruction);
             //return;
-
+            /*
             if (options.p && instructions.Count > _barrier)
             {
                 bool ignore = false;
@@ -201,7 +203,7 @@ namespace DCPUC
 
                 if (!ignore) instructions.Add(instruction);
             }
-            else
+            else*/
                 instructions.Add(instruction);
 
         }

@@ -10,6 +10,8 @@ namespace DCPUC
     {
         Function function;
         String functionName;
+        Register target;
+        Scope enclosingScope;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -19,23 +21,22 @@ namespace DCPUC
                 AddChild("parameter", parameter);
         }
 
+        public override string TreeLabel()
+        {
+            return "call " + functionName + " [into:" + target.ToString() + "]";
+        }
+
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            
-            foreach (CompilableNode child in ChildNodes) child.GatherSymbols(context, enclosingScope);
+            base.GatherSymbols(context, enclosingScope);
+            this.enclosingScope = enclosingScope;
         }
 
-        private static void PushRegister(CompileContext context, Scope scope, Register r)
+        public override void AssignRegisters(RegisterBank parentState, Register target)
         {
-            context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)r), "Saving register");
-            scope.FreeRegister(0);
-            scope.stackDepth += 1;
-        }
+            this.target = target;
 
-        public override void Compile(CompileContext context, Scope scope, Register target)
-        {
-            //Lookup function : Waiting until compile times allows us to dispense with function prototypes.
-            var func_scope = scope;
+            var func_scope = enclosingScope;
             while (function == null && func_scope != null)
             {
                 foreach (var v in func_scope.functions)
@@ -46,60 +47,58 @@ namespace DCPUC
 
             if (function == null) throw new CompileError("Could not find function " + functionName);
             if (function.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments to function");
-            
-            //Marshall registers : New calling convention (when implemented) would require only marshalling A, B, C.
-            var startingRegisterState = scope.SaveRegisterState();
 
+            var startingRegisterState = parentState.SaveRegisterState();
+
+            for (int i = 0; i < 3 && i < function.parameterCount; ++i)
+                Child(i).AssignRegisters(parentState, (Register)i);
+            for (int i = 3; i < function.parameterCount; ++i)
+                Child(i).AssignRegisters(parentState, Register.STACK);
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
             for (int i = 0; i < 3; ++i)
             {
-                if (startingRegisterState[i] == RegisterState.Used)
+                if (scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    PushRegister(context, scope, (Register)i);
-                    if (scope.activeFunction != null && scope.activeFunction.function.parameterCount > i)
+                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)i), "Saving register");
+                    scope.stackDepth += 1;
+                    if (scope.activeFunction.function.parameterCount > i)
                     {
                         scope.activeFunction.function.localScope.variables[i].location = Register.STACK;
                         scope.activeFunction.function.localScope.variables[i].stackOffset = scope.stackDepth - 1;
                     }
                 }
-                if (function.parameterCount > i)
-                {
-                    scope.UseRegister(i);
-                    (ChildNodes[i] as CompilableNode).Compile(context, scope, (Register)i);
-                }
+                if (ChildNodes.Count > i)
+                    Child(i).Emit(context, scope); //Should already be targetting i.
             }
 
-            for (int i = 3; i < 7; ++i)
-                if (startingRegisterState[i] == RegisterState.Used)
-                    PushRegister(context, scope, (Register)i);
-
-            if (function.parameterCount > 3)
-                for (int i = 3; i < function.parameterCount; ++i)
-                    (ChildNodes[i] as CompilableNode).Compile(context, scope, Register.STACK);
+            for (int i = 3; i < ChildNodes.Count; ++i)
+            {
+                Child(i).Emit(context, scope);
+                scope.stackDepth += 1;
+            }
 
             context.Add("JSR", function.label, "", "Calling function");
 
-            if (function.parameterCount > 3) //Need to remove parameters from stack
+            if (ChildNodes.Count > 3) //Need to remove parameters from stack
             {
-                context.Add("ADD", "SP", Hex.hex(function.parameterCount - 3), "Remove parameters");
-                scope.stackDepth -= (function.parameterCount - 3);
+                context.Add("ADD", "SP", Hex.hex(ChildNodes.Count - 3), "Remove parameters");
+                scope.stackDepth -= (ChildNodes.Count - 3);
             }
 
-            if (scope.activeFunction != null)
-                for (int i = 0; i < 3 && i < scope.activeFunction.function.parameterCount; ++i)
-                    scope.activeFunction.function.localScope.variables[i].location = (Register)i;
+            var saveA = scope.activeFunction.usedRegisters.registers[0] == RegisterState.Used;
+            if (saveA && target != Register.DISCARD) context.Add("SET", Scope.TempRegister, "A");
 
-            var saveA = startingRegisterState[0] == RegisterState.Used;
-            if (saveA && target != Register.DISCARD) context.Add("SET", Scope.TempRegister, "A", "Save return value from being overwritten by stored register");
-
-            for (int i = 6; i >= 0; --i)
-            {
-                if (startingRegisterState[i] == RegisterState.Used)
+            for (int i = 2; i >= 0; --i)
+                if (scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    context.Add("SET", Scope.GetRegisterLabelFirst(i), "POP", "Restoring register");
-                    scope.UseRegister(i);
+                    context.Add("SET", Scope.GetRegisterLabelFirst(i), "POP");
                     scope.stackDepth -= 1;
+                    if (scope.activeFunction.function.parameterCount > i)
+                        scope.activeFunction.function.localScope.variables[i].location = (Register)i;
                 }
-            }
 
             if (target == Register.A && !saveA) return;
             else if (Scope.IsRegister(target)) context.Add("SET", Scope.GetRegisterLabelFirst((int)target), saveA ? Scope.TempRegister : "A");

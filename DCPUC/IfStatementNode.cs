@@ -26,53 +26,46 @@ namespace DCPUC
             this.AsString = "If";
         }
 
-        public override void Compile(CompileContext assembly, Scope scope, Register target)
+        public override string TreeLabel()
         {
-            var clauseOrder = CompileConditional(assembly, scope, ChildNodes[0] as CompilableNode);
+            return "if " + base.TreeLabel();
+        }
 
-            if (clauseOrder == ClauseOrder.ConstantPass)
-                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
-            else if (clauseOrder == ClauseOrder.ConstantFail)
+        public override CompilableNode FoldConstants()
+        {
+            base.FoldConstants();
+            switch (clauseOrder)
             {
-                if (ChildNodes.Count == 3) CompileBlock(assembly, scope, ChildNodes[2] as CompilableNode);
+                case ClauseOrder.ConstantPass:
+                    return Child(1);
+                case ClauseOrder.ConstantFail:
+                    return ChildNodes.Count > 2 ? Child(2) : null;
+                default:
+                    return this;
             }
-            else if (clauseOrder == ClauseOrder.PassFirst)
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            base.Emit(context, scope);
+            switch (clauseOrder)
             {
-                var elseLabel = assembly.GetLabel() + "ELSE";
-                var endLabel = assembly.GetLabel() + "END";
+                case ClauseOrder.FailFirst: //Only actual valid order.
+                    {
+                        var thenLabel = context.GetLabel() + "THEN";
+                        var endLabel = context.GetLabel() + "END";
 
-                assembly.Add("SET", "PC", elseLabel);
-                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
+                        context.Add("SET", "PC", thenLabel);
+                        if (ChildNodes.Count == 3) EmitBlock(context, scope, Child(2));
+                        context.Add("SET", "PC", endLabel);
+                        context.Add(":" + thenLabel, "", "");
 
-                if (ChildNodes.Count == 3)
-                {
-                    assembly.Add("SET", "PC", endLabel);
-                    assembly.Add(":" + elseLabel, "", "");
-                    CompileBlock(assembly, scope, ChildNodes[2] as CompilableNode);
-                }
-
-                assembly.Add(":" + endLabel, "", "");
-            }
-            else if (clauseOrder == ClauseOrder.FailFirst)
-            {
-                var elseLabel = assembly.GetLabel() + "ELSE";
-                var endLabel = assembly.GetLabel() + "END";
-                if (ChildNodes.Count == 3)
-                {
-                    assembly.Add("SET", "PC", elseLabel);
-                    CompileBlock(assembly, scope, ChildNodes[2] as CompilableNode);
-                    assembly.Add("SET", "PC", endLabel);
-                    assembly.Add(":" + elseLabel, "", "");
-                }
-                else
-                {
-                    assembly.Add("SET", "PC", elseLabel);
-                    assembly.Add("SET", "PC", endLabel);
-                    assembly.Add(":" + elseLabel, "", "");
-                }
-
-                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
-                assembly.Add(":" + endLabel, "", "");
+                        EmitBlock(context, scope, Child(1));
+                        context.Add(":" + endLabel, "", "");
+                    }
+                    break;
+                default:
+                    throw new CompileError("Not implemented");
             }
 
         }

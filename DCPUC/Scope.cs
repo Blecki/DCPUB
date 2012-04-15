@@ -79,6 +79,11 @@ namespace DCPUC
         public FunctionDeclarationNode activeFunction = null;
         internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
 
+        internal int StackOffset(int of)
+        {
+            return stackDepth - of - 1;
+        }
+
         internal Scope Push(Scope child)
         {
             child.parent = this;

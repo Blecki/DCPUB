@@ -9,6 +9,7 @@ namespace DCPUC
     public class NumberLiteralNode : CompilableNode
     {
         public ushort Value = 0;
+        public Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -27,7 +28,7 @@ namespace DCPUC
 
         public override string TreeLabel()
         {
-            return "Literal (" + Hex.hex(Value) + ")" + (WasFolded ? " folded" : "");
+            return "literal (" + Hex.hex(Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
         }
 
         public override bool IsConstant()
@@ -48,6 +49,17 @@ namespace DCPUC
         public override string GetConstantToken()
         {
             return Hex.hex(GetConstantValue());
+        }
+
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            this.target = target;
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            context.Add("SET", Scope.GetRegisterLabelFirst((int)target), GetConstantToken());
+            if (target == Register.STACK) scope.stackDepth += 1;
         }
 
         public override void Compile(CompileContext assembly, Scope scope, Register target) 

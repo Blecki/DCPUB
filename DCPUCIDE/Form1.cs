@@ -18,9 +18,14 @@ namespace DCPUCIDE
 
         TreeNode buildAstTree(DCPUC.CompilableNode node)
         {
-            var tree_node = new TreeNode(node.Role + ": " + node.TreeLabel());
+            var tree_node = new TreeNode(node.TreeLabel());
             foreach (var child in node.ChildNodes)
+            {
                 tree_node.Nodes.Add(buildAstTree(child as DCPUC.CompilableNode));
+                if (child is DCPUC.FunctionDeclarationNode)
+                    foreach (var subfunc in (child as DCPUC.FunctionDeclarationNode).function.localScope.functions)
+                        tree_node.Nodes.Add(buildAstTree(subfunc.Node));
+            }
             return tree_node;
         }
 
@@ -37,7 +42,9 @@ namespace DCPUCIDE
                     context.Emit((s) => { outputBox.AppendText(s); });
 
                     astBox.Nodes.Clear();
-                    foreach (var n in buildAstTree(context.rootNode).Nodes[0].Nodes) astBox.Nodes.Add((TreeNode)n);
+                    astBox.Nodes.Add(buildAstTree(context.rootNode));
+                    foreach (var func in context.rootNode.function.localScope.functions)
+                        astBox.Nodes.Add(buildAstTree(func.Node));
 
                     foreach (var str in context.instructions)
                         outputBox.AppendText(str.ToString() + "\r\n");

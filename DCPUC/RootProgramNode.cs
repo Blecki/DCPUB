@@ -15,6 +15,7 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
+            footerLabel = context.GetLabel() + "main_footer";
             function = new Function();
             function.localScope = enclosingScope;
             function.Node = this;
@@ -27,8 +28,9 @@ namespace DCPUC
         {
             var localScope = function.localScope.Push();
 
-            Child(0).Compile(context, localScope, Register.DISCARD);
-            CompileReturn(context, localScope);
+            Child(0).Emit(context, localScope);
+            context.Add(":" + footerLabel, "", "");
+            context.Add("BRK", "", "");
 
             context.Barrier();
 
@@ -36,9 +38,5 @@ namespace DCPUC
                 nestedFunction.Node.CompileFunction(context);
         }
 
-        internal void CompileReturn(CompileContext context, Scope localScope)
-        {
-            context.Add("BRK", "", "");
-        }
     }
 }

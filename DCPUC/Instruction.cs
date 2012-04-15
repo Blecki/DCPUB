@@ -16,7 +16,7 @@ namespace DCPUC
         {
             if (String.IsNullOrEmpty(a)) return ins;
             else if (String.IsNullOrEmpty(b)) return ins + " " + a;
-            else return ins + " " + a + (a != "DAT" ? ", " : " ") + b;
+            else return (ins[0] == ';' ? "" : "   ") + ins + " " + a + (a != "DAT" ? ", " : " ") + b;
         }
     }
 
