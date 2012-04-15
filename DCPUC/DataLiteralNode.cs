@@ -47,6 +47,7 @@ namespace DCPUC
     {
         public List<ushort> data = new List<ushort>();
         public string dataLabel;
+        Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -84,7 +85,12 @@ namespace DCPUC
             context.AddData(dataLabel, data);
         }
 
-        public override void Compile(CompileContext context, Scope scope, Register target)
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            this.target = target;
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
         {
             //if (data.Count == 1)
             //    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(data[0]));
