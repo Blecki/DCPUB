@@ -116,7 +116,7 @@ namespace DCPUC
             //Restore registers
             for (int i = 6; i >= Math.Min(3, function.parameterCount); --i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
-                    context.Add("SET", "POP", Scope.GetRegisterLabelSecond(i));
+                    context.Add("SET", Scope.GetRegisterLabelSecond(i), "POP");
 
             context.Add("SET", "PC", "POP");
             context.Barrier();
