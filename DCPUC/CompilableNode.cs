@@ -8,7 +8,10 @@ namespace DCPUC
 {
     public class CompilableNode : AstNode
     {
-        public virtual void Compile(Assembly assembly, Scope scope, Register target) { throw new NotImplementedException(); }
+        public bool WasFolded = false;
+
+        public virtual void Emit(CompileContext context, Scope scope) {  }
+        public virtual void Compile(CompileContext context, Scope scope, Register target) { }
         public virtual bool IsConstant() { return false; }
         public virtual ushort GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
@@ -17,7 +20,13 @@ namespace DCPUC
 
         public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
 
-        public virtual AstNode FoldConstants()
+        public virtual void GatherSymbols(CompileContext context, Scope enclosingScope) 
+        {
+            foreach (var child in ChildNodes)
+                (child as CompilableNode).GatherSymbols(context, enclosingScope);
+        }
+
+        public virtual CompilableNode FoldConstants()
         {
             var childrenCopy = new AstNodeList();
             foreach (var child in ChildNodes)
@@ -30,45 +39,28 @@ namespace DCPUC
             return this;
         }
 
-        private static string hexDigits = "0123456789ABCDEF";
-        public static String htoa(int x)
+        public virtual void AssignRegisters(RegisterBank parentState, Register target)
         {
-            var s = "";
-            while (x > 0)
-            {
-                s = hexDigits[x % 16] + s;
-                x /= 16;
-            }
-            while (s.Length < 4) s = '0' + s;
-            return s;
-        }
-        public static ushort atoh(string s)
-        {
-            ushort h = 0;
-            s = s.ToUpper();
-            for (int i = 0; i < s.Length; ++i)
-            {
-                h <<= 4;
-                ushort d = (ushort)hexDigits.IndexOf(s[i]);
-                h += d;
-            }
-            return h;
+
         }
 
-        public static String hex(int x) { return "0x" + htoa((ushort)x); }
-        public static String hex(string x) { return "0x" + htoa((ushort)Convert.ToInt16(x)); }
+        public virtual int CountRegistersUsed()
+        {
+            return 0;
+        }
 
         public static Scope BeginBlock(Scope scope)
         {
             return scope.Push(new Scope());
         }
 
-        public static void EndBlock(Assembly assembly, Scope scope)
+        public static void EndBlock(CompileContext context, Scope scope)
         {
             if (scope.stackDepth - scope.parentDepth > 0) 
-                assembly.Add("ADD", "SP", hex(scope.stackDepth - scope.parentDepth), "End block");
+                context.Add("ADD", "SP", Hex.hex(scope.stackDepth - scope.parentDepth), "End block");
         }
 
+        /*
         public void InsertLibrary(List<string> library)
         {
             for (int i = 0; i < library.Count; ++i)
@@ -114,6 +106,7 @@ namespace DCPUC
                     ChildNodes.Add(funcNode);
                 }
             }
-        }
+        
+        }*/
     }
 }

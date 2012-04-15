@@ -9,92 +9,111 @@ namespace DCPUC
     public class VariableDeclarationNode : CompilableNode
     {
         string declLabel = "";
+        Variable variable = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AddChild("Value", treeNode.ChildNodes[3].FirstChild);
-            AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
             declLabel = treeNode.ChildNodes[0].FindTokenAndGetText();
-
+            variable = new Variable();
+            variable.name = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
         public override string TreeLabel()
         {
-            return "Vardecl " + declLabel + " " + AsString;
+            return declLabel + " " + variable.name + " [loc:" + variable.location.ToString() + "]";
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            var newVariable = new Variable();
-            newVariable.name = AsString;
-            newVariable.scope = scope;
-            newVariable.stackOffset = scope.stackDepth;
+            Child(0).GatherSymbols(context, enclosingScope);
+
+            enclosingScope.variables.Add(variable);
+            variable.scope = enclosingScope;
+            
             if (declLabel == "var")
             {
-                newVariable.location = (Register)scope.FindAndUseFreeRegister();
-                if (newVariable.location == Register.I) newVariable.location = Register.STACK;
-                if (ChildNodes[0] is BlockLiteralNode)
-                {
-                    var size = Child(0).GetConstantValue();
-                    scope.stackDepth += size;
-                    assembly.Add("SUB", "SP", hex(size));
-                    assembly.Add("SET", Scope.GetRegisterLabelFirst((int)newVariable.location), "SP");
-                    if (newVariable.location == Register.STACK) scope.stackDepth += 1;                  
-                }
-                else
-                    (ChildNodes[0] as CompilableNode).Compile(assembly, scope, newVariable.location);
+                variable.type = VariableType.Local;
 
             }
             else if (declLabel == "static")
             {
-                newVariable.location = Register.STATIC;
-                if (Child(0) is BlockLiteralNode)
+                variable.type = VariableType.Static;
+                variable.location = Register.STATIC;
+                if (Child(0) is DataLiteralNode)
                 {
-                    newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
-                    var datLabel = Scope.GetLabel() + "_STATIC_" + AsString + "_DATA";
-                    Scope.AddData(datLabel, (ChildNodes[0] as BlockLiteralNode).MakeData());
-                    Scope.AddData(newVariable.staticLabel, datLabel);
+                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    context.AddData(variable.staticLabel, (Child(0) as DataLiteralNode).dataLabel);
                 }
-                else if ((ChildNodes[0] as CompilableNode).IsConstant())
+                else if (Child(0) is BlockLiteralNode)
                 {
-                    newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
-                    Scope.AddData(newVariable.staticLabel, new List<ushort>(new ushort[] { (ChildNodes[0] as CompilableNode).GetConstantValue() }));
+                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    context.AddData(variable.staticLabel, (Child(0) as BlockLiteralNode).dataLabel);
                 }
-                else if (ChildNodes[0] is DataLiteralNode)
+                else if (Child(0).IsIntegralConstant()) //Other expressions should fold if they are constant.
                 {
-                    newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
-                    var datLabel = Scope.GetLabel() + "_STATIC_" + AsString + "_DATA";
-                    Scope.AddData(datLabel, (ChildNodes[0] as DataLiteralNode).data);
-                    Scope.AddData(newVariable.staticLabel, datLabel);
+                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    context.AddData(variable.staticLabel, Child(0).GetConstantValue());
                 }
                 else
-                    throw new CompileError("Statics must be initialized to a constant value");
+                    throw new CompileError("Statics must be initialized to a constant value.");
             }
             else if (declLabel == "const")
             {
-                newVariable.location = Register.CONST;
+                variable.location = Register.CONST;
+
+                if (Child(0) is DataLiteralNode)
+                {
+                    variable.staticLabel = (Child(0) as DataLiteralNode).dataLabel;
+                    variable.type = VariableType.ConstantReference;
+                }
+                else if (Child(0) is BlockLiteralNode)
+                {
+                    variable.staticLabel = (Child(0) as DataLiteralNode).dataLabel;
+                    variable.type = VariableType.ConstantReference;
+                }
+                else if (Child(0) is NumberLiteralNode) //Other expressions should fold if they are constant.
+                {
+                    variable.constantValue = (Child(0) as NumberLiteralNode).Value;
+                    variable.type = VariableType.Constant;
+                }
+                else
+                    throw new CompileError("Consts must be initialized to a constant value.");
+            }
+        }
+
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            if (variable.type == VariableType.Local)
+            {
+                variable.location = parentState.FindAndUseFreeRegister();
+                if (variable.location == Register.I)
+                {
+                    variable.location = Register.STACK;
+                    parentState.FreeMaybeRegister(Register.I);
+                }
+                Child(0).AssignRegisters(parentState, variable.location);
+            }
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            variable.stackOffset = scope.stackDepth;
+            
+            if (variable.type == VariableType.Local)
+            {
                 if (Child(0) is BlockLiteralNode)
                 {
-                    newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
-                    Scope.AddData(newVariable.staticLabel, (ChildNodes[0] as BlockLiteralNode).MakeData());
+                    var size = (Child(0) as BlockLiteralNode).dataSize;
+                    scope.stackDepth += size;
+                    context.Add("SUB", "SP", Hex.hex(size));
+                    context.Add("SET", Scope.GetRegisterLabelFirst((int)variable.location), "SP");
+                    if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }
-                else if ((ChildNodes[0] as CompilableNode).IsConstant())
-                {
-                    //throw new CompileError("Initializing const to integrals is not supported yet");
-                    newVariable.staticLabel = (ChildNodes[0] as CompilableNode).GetConstantToken();
-                    //Scope.AddData(newVariable.staticLabel, (ChildNodes[0] as CompilableNode).GetConstantToken());
-                }
-                else if (ChildNodes[0] is DataLiteralNode)
-                {
-                    newVariable.staticLabel = Scope.GetLabel() + "_STATIC_" + AsString;
-                    Scope.AddData(newVariable.staticLabel, (ChildNodes[0] as DataLiteralNode).data);
-                }
+                else
+                    Child(0).Emit(context, scope);
             }
-
-            scope.variables.Add(newVariable);
-            //scope.stackDepth += 1;
-
         }
     }
 }

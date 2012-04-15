@@ -8,7 +8,8 @@ namespace DCPUC
 {
     public class NumberLiteralNode : CompilableNode
     {
-        ushort Value = 0;
+        public ushort Value = 0;
+        public Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -18,14 +19,24 @@ namespace DCPUC
                 AsString += child.FindTokenAndGetText();
 
             if (AsString.StartsWith("0x"))
-                Value = atoh(AsString.Substring(2));
+                Value = Hex.atoh(AsString.Substring(2));
             else if (AsString.StartsWith("'"))
                 Value = AsString[1];
             else
                 Value = (ushort)Convert.ToInt16(AsString);
         }
 
+        public override string TreeLabel()
+        {
+            return "literal (" + Hex.hex(Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
+        }
+
         public override bool IsConstant()
+        {
+            return true;
+        }
+
+        public override bool IsIntegralConstant()
         {
             return true;
         }
@@ -37,12 +48,23 @@ namespace DCPUC
 
         public override string GetConstantToken()
         {
-            return hex(GetConstantValue());
+            return Hex.hex(GetConstantValue());
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target) 
+        public override void AssignRegisters(RegisterBank parentState, Register target)
         {
-            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), hex(Value));
+            this.target = target;
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            context.Add("SET", Scope.GetRegisterLabelFirst((int)target), GetConstantToken());
+            if (target == Register.STACK) scope.stackDepth += 1;
+        }
+
+        public override void Compile(CompileContext assembly, Scope scope, Register target) 
+        {
+            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(Value));
             if (target == Register.STACK) scope.stackDepth += 1;
         }
     }

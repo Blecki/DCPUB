@@ -18,27 +18,37 @@ namespace DCPUCIDE
 
         TreeNode buildAstTree(DCPUC.CompilableNode node)
         {
-            var tree_node = new TreeNode(node.Role + ": " + node.TreeLabel());
+            var tree_node = new TreeNode(node.TreeLabel());
             foreach (var child in node.ChildNodes)
+            {
                 tree_node.Nodes.Add(buildAstTree(child as DCPUC.CompilableNode));
+                if (child is DCPUC.FunctionDeclarationNode)
+                    foreach (var subfunc in (child as DCPUC.FunctionDeclarationNode).function.localScope.functions)
+                        tree_node.Nodes.Add(buildAstTree(subfunc.Node));
+            }
             return tree_node;
         }
 
         private void compileButton_Click(object sender, EventArgs e)
         {
             outputBox.Clear();
-            var ast = DCPUC.Scope.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); });
-            if (ast != null)
-            {
-                var assembly = new DCPUC.Assembly();
-                DCPUC.Scope.CompileRoot(ast, assembly, (s) => { outputBox.AppendText(s); });
 
-                astBox.Nodes.Clear();
-                foreach (var n in buildAstTree(ast).Nodes[0].Nodes) astBox.Nodes.Add((TreeNode)n);
+                var context = new DCPUC.CompileContext();
 
-                foreach (var str in assembly.instructions)
-                    outputBox.AppendText(str.ToString() + "\r\n");
-            }
+                if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); }))
+                {
+                    context.GatherSymbols(outputBox.AppendText);
+                    context.FoldConstants();
+                    context.Emit((s) => { outputBox.AppendText(s); });
+
+                    astBox.Nodes.Clear();
+                    astBox.Nodes.Add(buildAstTree(context.rootNode));
+                    foreach (var func in context.rootNode.function.localScope.functions)
+                        astBox.Nodes.Add(buildAstTree(func.Node));
+
+                    foreach (var str in context.instructions)
+                        outputBox.AppendText(str.ToString() + "\r\n");
+                }
 
         }
     }

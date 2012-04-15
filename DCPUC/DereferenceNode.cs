@@ -8,6 +8,8 @@ namespace DCPUC
 {
     public class DereferenceNode : CompilableNode
     {
+        Register target;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -15,7 +17,32 @@ namespace DCPUC
             
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override string TreeLabel()
+        {
+            return "deref [into:" + target.ToString() + "]";
+        }
+
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            this.target = target;
+            Child(0).AssignRegisters(parentState, target);
+        }
+
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            Child(0).Emit(context, scope);
+            if (target == Register.STACK)
+            {
+                context.Add("SET", "PEEK", "[PEEK]");
+            }
+            else
+            {
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                    "[" + Scope.GetRegisterLabelSecond((int)target) + "]");
+            }
+        }
+
+        public override void Compile(CompileContext assembly, Scope scope, Register target)
         {
             var destRegister = target == Register.STACK ? scope.FindAndUseFreeRegister() : (int)target;
             (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)destRegister);

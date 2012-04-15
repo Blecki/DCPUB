@@ -16,41 +16,47 @@ namespace DCPUC
             this.AsString = "While";
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override string TreeLabel()
         {
-            var topLabel = Scope.GetLabel() + "BEGIN_WHILE";
-            assembly.Add(":" + topLabel, "", "");
+            return "while " + base.TreeLabel();
+        }
 
-            var clauseOrder = CompileConditional(assembly, scope, ChildNodes[0] as CompilableNode);
+        public override CompilableNode FoldConstants()
+        {
+            base.FoldConstants();
+            switch (clauseOrder)
+            {
+                case ClauseOrder.ConstantPass:
+                    return Child(1);
+                case ClauseOrder.ConstantFail:
+                    return null;
+                default:
+                    return this;
+            }
+        }
 
-            if (clauseOrder == ClauseOrder.ConstantPass)
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            var topLabel = context.GetLabel() + "BEGIN_WHILE";
+            context.Add(":" + topLabel, "", "");
+            base.Emit(context, scope);
+            switch (clauseOrder)
             {
-                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
-                assembly.Add("SET", "PC", topLabel);
+                case ClauseOrder.ConstantFail:
+                    {
+                        var yesLabel = context.GetLabel() + "YES";
+                        var endLabel = context.GetLabel() + "END_WHILE";
+                        context.Add("SET", "PC", yesLabel);
+                        context.Add("SET", "PC", endLabel);
+                        context.Add(":" + yesLabel, "", "");
+                        EmitBlock(context, scope, Child(1));
+                        context.Add("SET", "PC", topLabel);
+                        context.Add(":" + endLabel, "", "");
+                    }
+                    break;
+                default:
+                    throw new CompileError("Not implemented");
             }
-            else if (clauseOrder == ClauseOrder.ConstantFail)
-            {
-            }
-            else if (clauseOrder == ClauseOrder.PassFirst)
-            {
-                var endLabel = Scope.GetLabel() + "END";
-                assembly.Add("SET", "PC", endLabel);
-                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
-                assembly.Add("SET", "PC", topLabel);
-                assembly.Add(":" + endLabel, "", "");
-            }
-            else if (clauseOrder == ClauseOrder.FailFirst)
-            {
-                var elseLabel = Scope.GetLabel() + "ELSE";
-                var endLabel = Scope.GetLabel() + "END";
-                assembly.Add("SET", "PC", elseLabel);
-                assembly.Add("SET", "PC", endLabel);
-                assembly.Add(":" + elseLabel, "", "");
-                CompileBlock(assembly, scope, ChildNodes[1] as CompilableNode);
-                assembly.Add("SET", "PC", topLabel);
-                assembly.Add(":" + endLabel, "", "");
-            }
-
         }
 
     }

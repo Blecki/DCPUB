@@ -8,6 +8,11 @@ namespace DCPUC
 {
     public class AssignmentNode : CompilableNode
     {
+        public Register rvalueTargetRegister = Register.STACK;
+        public Register lvalueTargetRegister = Register.STACK;
+        public Variable assignTo = null;
+        public Boolean dereferenceLvalue = false;
+        
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -15,100 +20,109 @@ namespace DCPUC
             AddChild("RValue", treeNode.ChildNodes[2]);
         }
 
-        public override void Compile(Assembly assembly, Scope scope, Register target)
+        public override string TreeLabel()
         {
-            if (ChildNodes[0] is VariableNameNode)
+            return "= " + (dereferenceLvalue ? "* " : "") + "[l:" + lvalueTargetRegister.ToString() + " r:" + rvalueTargetRegister.ToString() + "]";
+        }
+
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            Child(0).GatherSymbols(context, enclosingScope);
+            if (Child(0) is VariableNameNode)
             {
-                var variable = scope.FindVariable(ChildNodes[0].AsString);
-                if (variable == null) throw new CompileError("Could not find variable " + ChildNodes[0].AsString);
-
-
-                if (variable.location == Register.STACK)
-                {
-                    var register = scope.FindAndUseFreeRegister();
-                    (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
-                    scope.FreeMaybeRegister(register);
-
-                    if (scope.stackDepth - variable.stackOffset > 1)
-                    {
-                        assembly.Add("SET", Scope.TempRegister, "SP");
-                        assembly.Add("SET", "[" + hex(scope.stackDepth - variable.stackOffset - 1) + "+" + Scope.TempRegister + "]",
-                            Scope.GetRegisterLabelSecond(register), "Fetching variable");
-                    }
-                    else
-                        assembly.Add("SET", "PEEK", Scope.GetRegisterLabelSecond(register), "Fetching variable");
-
-                    if (register == (int)Register.STACK) scope.stackDepth -= 1;
-                }
-                else if (variable.location == Register.STATIC)
-                {
-                    //if (!variable.emitBrackets) throw new CompileError("Can't assign to data pointers!");
-                     var register = scope.FindAndUseFreeRegister();
-                    (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)register);
-                    scope.FreeMaybeRegister(register);
-                    assembly.Add("SET", "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond(register));
-                    if (register == (int)Register.STACK) scope.stackDepth -= 1;
-                }
-                else if (variable.location == Register.CONST)
-                {
-                    throw new CompileError("Can't assign to const");
-                }
-                else
-                    (ChildNodes[1] as CompilableNode).Compile(assembly, scope, variable.location);
-
+                assignTo = (Child(0) as VariableNameNode).variable;
+                if (assignTo.type == VariableType.Constant || assignTo.type == VariableType.ConstantReference)
+                    throw new CompileError("Can't assign to constants");
             }
-            else if (ChildNodes[0] is DereferenceNode)
+            else if (Child(0) is DereferenceNode) 
             {
-                bool firstConstant = false;
-                int firstRegister = (int)Register.STACK;
+                dereferenceLvalue = true;
+            }
+            else
+                throw new CompileError("Illegal assignment");
+            Child(1).GatherSymbols(context, enclosingScope);
+        }
 
-                if ((ChildNodes[0].ChildNodes[0] as CompilableNode).IsConstant())
-                    firstConstant = true;
-                else
+        public override void AssignRegisters(RegisterBank parentState, Register target)
+        {
+            if (target != Register.DISCARD)
+                throw new CompileError("Assignment should always target discard");
+
+            if (assignTo != null)
+            {
+                lvalueTargetRegister = assignTo.location;
+                if (assignTo.type != VariableType.Local)
                 {
-                    firstRegister = scope.FindAndUseFreeRegister();
-                    (ChildNodes[0].ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)firstRegister);
-                }
-
-                var secondRegister = scope.FindAndUseFreeRegister();
-                (ChildNodes[1] as CompilableNode).Compile(assembly, scope, (Register)secondRegister);
-
-                if (firstConstant)
-                {
-                    assembly.Add("SET", "[" + hex((ChildNodes[0].ChildNodes[0] as CompilableNode).GetConstantValue()) + "]",
-                        Scope.GetRegisterLabelSecond(secondRegister));
-                    if (secondRegister == (int)Register.STACK)
-                        scope.stackDepth -= 1;
-                    else
-                        scope.FreeMaybeRegister(secondRegister);
+                    rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                    Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                    parentState.FreeMaybeRegister(rvalueTargetRegister);
                 }
                 else
                 {
-                    if (firstRegister == (int)Register.STACK && secondRegister == (int)Register.STACK)
-                    {
-                        assembly.Add("SET", Scope.TempRegister, "POP");
-                        assembly.Add("SET", "[" + Scope.TempRegister + "]", "POP");
-                        scope.stackDepth -= 2;
-                    }
-                    else if (secondRegister == (int)Register.STACK)
-                    {
-                        assembly.Add("SET", "[" + Scope.GetRegisterLabelFirst(firstRegister) + "]", "POP");
-                        scope.stackDepth -= 1;
-                        scope.FreeMaybeRegister(firstRegister);
-                        return;
-                    }
-                    else if (firstRegister == (int)Register.STACK)
-                    {
-                        throw new CompileError("Impossible situation entered");
-                    }
+                    if (assignTo.location != Register.STACK)
+                        rvalueTargetRegister = assignTo.location;
                     else
-                    {
-                        assembly.Add("SET", "[" + Scope.GetRegisterLabelFirst(firstRegister) + "]", Scope.GetRegisterLabelSecond(secondRegister));
-                        scope.FreeMaybeRegister(firstRegister);
-                        scope.FreeMaybeRegister(secondRegister);
-                    }
+                        rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                    Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                    parentState.FreeMaybeRegister(rvalueTargetRegister);
                 }
             }
+            else 
+            {
+                rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                lvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                Child(0).AssignRegisters(parentState, lvalueTargetRegister);
+                parentState.FreeRegisters(lvalueTargetRegister, rvalueTargetRegister);
+            }
+        }
+        
+        public override void Emit(CompileContext context, Scope scope)
+        {
+            if (assignTo == null)
+            {
+                Child(1).Emit(context, scope);
+                Child(0).Emit(context, scope);
+
+                context.Add("SET",
+                    (dereferenceLvalue ? "[" : "") + Scope.GetRegisterLabelSecond((int)lvalueTargetRegister) + (dereferenceLvalue ? "]" : ""),
+                     Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+
+                if (lvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
+                if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
+            }
+            else if (assignTo.type == VariableType.Local)
+            {
+               Child(1).Emit(context, scope);
+               if (assignTo.location != rvalueTargetRegister)
+               {
+                   if (assignTo.location == Register.STACK)
+                   {
+                       var stackOffset = scope.StackOffset(assignTo.stackOffset);
+                       if (stackOffset > 0)
+                       {
+                           context.Add("SET", Scope.TempRegister, "SP");
+                           context.Add("SET", "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
+                               Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                       }
+                       else
+                           context.Add("SET", "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                   }
+                   else
+                       context.Add("SET", Scope.GetRegisterLabelFirst((int)assignTo.location),
+                           Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+
+               }
+                if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
+            }
+            else if (assignTo.type == VariableType.Static)
+            {
+                Child(1).Emit(context, scope);
+                context.Add("SET", "[" + assignTo.staticLabel + "]", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
+            }
+            
+           
         }
     }
 
