@@ -65,7 +65,7 @@ namespace DCPUC
                     }
                     break;
                 default:
-                    throw new CompileError("Not implemented");
+                    throw new CompileError("IF !FailFirst Not implemented");
             }
 
         }

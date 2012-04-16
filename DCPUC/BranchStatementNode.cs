@@ -83,7 +83,10 @@ namespace DCPUC
                             secondOperandTarget = parentState.FindAndUseFreeRegister();
                             secondOperand.AssignRegisters(parentState, secondOperandTarget);
                         }
-                        parentState.FreeRegisters(firstOperandTarget, secondOperandTarget);    
+                        parentState.FreeRegisters(firstOperandTarget, secondOperandTarget);
+
+                        Child(1).AssignRegisters(parentState, Register.DISCARD);
+                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(parentState, Register.DISCARD);
                     }
                     break;
             }

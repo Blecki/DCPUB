@@ -9,7 +9,7 @@ const VEC3D_SIZE = 0x3;
 
 function VEC3D_add(a, b)
 {
-	*(a + VEC3D_X) = *(a + VEC3D_x) + *(b + VEC3D_x);
+	*(a + VEC3D_X) = *(a + VEC3D_X) + *(b + VEC3D_Y);
 	*(a + VEC3D_Y) = *(a + VEC3D_Y) + *(b + VEC3D_Y);
 	*(a + VEC3D_Z) = *(a + VEC3D_Z) + *(b + VEC3D_Z);
 }
