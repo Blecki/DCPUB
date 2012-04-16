@@ -3,6 +3,7 @@
 [ ] Struct syntax sugar
 [ ] operator[]
 [ ] Compile options
+[ ] Compound assignment operators
 [*] Command line interface
 [*] Multiple pass compilation
 [*]	- Pass 1: Build symbol tree. 
@@ -20,3 +21,4 @@
 [ ] Implement http://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm
 [ ] BUG: Variables leak out of IF/WHILE blocks when condition is constant
 [ ] BUG: stack allocated array produce extraneous DAT
+[ ] Preprocessor (Perhaps the constant folding pass can expand defines?)

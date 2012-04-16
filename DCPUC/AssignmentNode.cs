@@ -8,21 +8,41 @@ namespace DCPUC
 {
     public class AssignmentNode : CompilableNode
     {
+        private static Dictionary<String, String> opcodes = null;
+
         public Register rvalueTargetRegister = Register.STACK;
         public Register lvalueTargetRegister = Register.STACK;
         public Variable assignTo = null;
         public Boolean dereferenceLvalue = false;
+        public String @operator;
         
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AddChild("LValue", treeNode.ChildNodes[0].ChildNodes[0]);
             AddChild("RValue", treeNode.ChildNodes[2]);
+            @operator = treeNode.ChildNodes[1].FindTokenAndGetText();
+
+            if (opcodes == null)
+            {
+                opcodes = new Dictionary<string, string>();
+                opcodes.Add("=", "SET");
+                opcodes.Add("+=", "ADD");
+                opcodes.Add("-=", "SUB");
+                opcodes.Add("*=", "MUL");
+                opcodes.Add("/=", "DIV");
+                opcodes.Add("%=", "MOD");
+                opcodes.Add("<<=", "SHL");
+                opcodes.Add(">>=", "SHR");
+                opcodes.Add("&=", "AND");
+                opcodes.Add("|=", "BOR");
+                opcodes.Add("^=", "XOR");
+            }
         }
 
         public override string TreeLabel()
         {
-            return "= " + (dereferenceLvalue ? "* " : "") + "[l:" + lvalueTargetRegister.ToString() + " r:" + rvalueTargetRegister.ToString() + "]";
+            return @operator + " " + (dereferenceLvalue ? "* " : "") + "[l:" + lvalueTargetRegister.ToString() + " r:" + rvalueTargetRegister.ToString() + "]";
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -51,18 +71,27 @@ namespace DCPUC
             if (assignTo != null)
             {
                 lvalueTargetRegister = assignTo.location;
-                if (assignTo.type != VariableType.Local)
+                if (@operator == "=")
                 {
-                    rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                    Child(1).AssignRegisters(parentState, rvalueTargetRegister);
-                    parentState.FreeMaybeRegister(rvalueTargetRegister);
+                    if (assignTo.type != VariableType.Local)
+                    {
+                        rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                        Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                        parentState.FreeMaybeRegister(rvalueTargetRegister);
+                    }
+                    else
+                    {
+                        if (assignTo.location != Register.STACK)
+                            rvalueTargetRegister = assignTo.location;
+                        else
+                            rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                        Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                        if (rvalueTargetRegister != assignTo.location) parentState.FreeMaybeRegister(rvalueTargetRegister);
+                    }
                 }
                 else
                 {
-                    if (assignTo.location != Register.STACK)
-                        rvalueTargetRegister = assignTo.location;
-                    else
-                        rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                    rvalueTargetRegister = parentState.FindAndUseFreeRegister();
                     Child(1).AssignRegisters(parentState, rvalueTargetRegister);
                     parentState.FreeMaybeRegister(rvalueTargetRegister);
                 }
@@ -79,12 +108,13 @@ namespace DCPUC
         
         public override void Emit(CompileContext context, Scope scope)
         {
+            Child(1).Emit(context, scope);
+
             if (assignTo == null)
             {
-                Child(1).Emit(context, scope);
                 Child(0).Child(0).Emit(context, scope); //Skip deref node
 
-                context.Add("SET",
+                context.Add(opcodes[@operator],
                     (dereferenceLvalue ? "[" : "") + Scope.GetRegisterLabelSecond((int)lvalueTargetRegister) + (dereferenceLvalue ? "]" : ""),
                      Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
 
@@ -93,7 +123,6 @@ namespace DCPUC
             }
             else if (assignTo.type == VariableType.Local)
             {
-               Child(1).Emit(context, scope);
                if (assignTo.location != rvalueTargetRegister)
                {
                    if (assignTo.location == Register.STACK)
@@ -102,14 +131,14 @@ namespace DCPUC
                        if (stackOffset > 0)
                        {
                            context.Add("SET", Scope.TempRegister, "SP");
-                           context.Add("SET", "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
+                           context.Add(opcodes[@operator], "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
                                Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                        }
                        else
-                           context.Add("SET", "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                           context.Add(opcodes[@operator], "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                    }
                    else
-                       context.Add("SET", Scope.GetRegisterLabelFirst((int)assignTo.location),
+                       context.Add(opcodes[@operator], Scope.GetRegisterLabelFirst((int)assignTo.location),
                            Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
 
                }
@@ -117,8 +146,7 @@ namespace DCPUC
             }
             else if (assignTo.type == VariableType.Static)
             {
-                Child(1).Emit(context, scope);
-                context.Add("SET", "[" + assignTo.staticLabel + "]", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                context.Add(opcodes[@operator], "[" + assignTo.staticLabel + "]", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                 if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
             }
             
