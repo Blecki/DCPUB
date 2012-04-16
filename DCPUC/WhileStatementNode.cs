@@ -42,7 +42,7 @@ namespace DCPUC
             base.Emit(context, scope);
             switch (clauseOrder)
             {
-                case ClauseOrder.ConstantFail:
+                case ClauseOrder.FailFirst:
                     {
                         var yesLabel = context.GetLabel() + "YES";
                         var endLabel = context.GetLabel() + "END_WHILE";
@@ -55,7 +55,7 @@ namespace DCPUC
                     }
                     break;
                 default:
-                    throw new CompileError("Not implemented");
+                    throw new CompileError("WHILE !FailFirst Not implemented");
             }
         }
 

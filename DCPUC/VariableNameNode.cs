@@ -35,6 +35,11 @@ namespace DCPUC
             return variable.constantValue;
         }
 
+        public override string GetConstantToken()
+        {
+            return Hex.hex(GetConstantValue());
+        }
+
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             var scope = enclosingScope;
