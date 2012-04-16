@@ -61,7 +61,7 @@ namespace DCPUC
             dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
             expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
                 | dereference | functionCall | dataLiteralChain;
-            assignment.Rule = (identifier | dereference) + "=" + expression;
+            assignment.Rule = (identifier | dereference) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
@@ -92,10 +92,10 @@ namespace DCPUC
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
             this.RegisterOperators(1, Associativity.Right, "==", "!=");
-            this.RegisterOperators(2, Associativity.Right, "=");
+            this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=");
             this.RegisterOperators(3, Associativity.Left, "+", "-");
-            this.RegisterOperators(4, Associativity.Left, "*", "/");
-            this.RegisterOperators(5, Associativity.Left, "<<", ">>");
+            this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
+            this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^");
             
             this.RegisterOperators(6, Associativity.Left, "[", "]", "<", ">");
         }
