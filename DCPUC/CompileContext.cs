@@ -8,6 +8,8 @@ namespace DCPUC
 {
     public class CompileContext
     {
+        public static String Version { get { return "DCPUC 0.1"; } }
+
         public RootProgramNode rootNode = null;
         public Scope globalScope = new Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());

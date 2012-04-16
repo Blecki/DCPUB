@@ -19,3 +19,4 @@
 [ ] Move all DAT emission to top of program so locations can be predicted and folded
 [ ] Implement http://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm
 [ ] BUG: Variables leak out of IF/WHILE blocks when condition is constant
+[ ] BUG: stack allocated array produce extraneous DAT

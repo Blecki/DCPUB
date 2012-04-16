@@ -32,8 +32,8 @@ namespace DCPUCIDE
         private void compileButton_Click(object sender, EventArgs e)
         {
             outputBox.Clear();
-
-                var context = new DCPUC.CompileContext();
+            var context = new DCPUC.CompileContext();
+            context.options.p = peepholeCB.Checked;
 
                 if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); }))
                 {
@@ -49,6 +49,20 @@ namespace DCPUCIDE
                     foreach (var str in context.instructions)
                         outputBox.AppendText(str.ToString() + "\r\n");
                 }
+
+        }
+
+        private void openFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var fileDialog = new OpenFileDialog();
+            fileDialog.Filter = "DCPUC source (*.dc)|*.dc|Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            var result = fileDialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                var file = System.IO.File.ReadAllText(fileDialog.FileName);
+                inputBox.Clear();
+                inputBox.AppendText(file);
+            }
 
         }
     }
