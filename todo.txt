@@ -3,7 +3,7 @@
 [ ] Struct syntax sugar
 [ ] operator[]
 [ ] Compile options
-[ ] Compound assignment operators
+[*] Compound assignment operators
 [*] Command line interface
 [*] Multiple pass compilation
 [*]	- Pass 1: Build symbol tree. 

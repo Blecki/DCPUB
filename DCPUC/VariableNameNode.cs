@@ -82,7 +82,8 @@ namespace DCPUC
                     if (stackOffset > 0)
                     {
                         context.Add("SET", Scope.TempRegister, "SP");
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), 
+                            "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister +"]", "Fetching variable");
                     }
                     else
                         context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
