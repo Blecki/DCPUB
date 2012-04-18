@@ -10,6 +10,6 @@ namespace DCPUC
         public string @in = null;
         public string @out = null;
         public bool p = false;
-
+        public bool spOffset = false;
     }
 }

@@ -40,6 +40,11 @@ namespace DCPUC
             var first = Child(0).FoldConstants();
             var second = Child(1).FoldConstants();
 
+            if (first.ResultType != second.ResultType) //issue type warning.
+            {
+
+            }
+
             if (first.IsIntegralConstant() && second.IsIntegralConstant())
             {
                 var a = first.GetConstantValue();

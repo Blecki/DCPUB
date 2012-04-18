@@ -14,15 +14,17 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Value", treeNode.ChildNodes[3].FirstChild);
+            AddChild("Value", treeNode.ChildNodes[4].FirstChild);
             declLabel = treeNode.ChildNodes[0].FindTokenAndGetText();
             variable = new Variable();
             variable.name = treeNode.ChildNodes[1].FindTokenAndGetText();
+            variable.typeSpecifier = treeNode.ChildNodes[2].FindTokenAndGetText();
         }
 
         public override string TreeLabel()
         {
-            return declLabel + " " + variable.name + " [loc:" + variable.location.ToString() + "]";
+            return declLabel + " " + variable.name + (variable.typeSpecifier != null ? ":" + variable.typeSpecifier : "") 
+                + " [loc:" + variable.location.ToString() + "]";
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -54,7 +56,7 @@ namespace DCPUC
                 else if (Child(0).IsIntegralConstant()) //Other expressions should fold if they are constant.
                 {
                     variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
-                    context.AddData(variable.staticLabel, Child(0).GetConstantValue());
+                    context.AddData(variable.staticLabel, (ushort)Child(0).GetConstantValue());
                 }
                 else
                     throw new CompileError("Statics must be initialized to a constant value.");

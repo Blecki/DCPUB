@@ -30,7 +30,7 @@ namespace DCPUC
             return false;
         }
 
-        public override ushort GetConstantValue()
+        public override int GetConstantValue()
         {
             return variable.constantValue;
         }
@@ -81,9 +81,15 @@ namespace DCPUC
                     var stackOffset = scope.StackOffset(variable.stackOffset);
                     if (stackOffset > 0)
                     {
-                        context.Add("SET", Scope.TempRegister, "SP");
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), 
-                            "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister +"]", "Fetching variable");
+                        if (context.options.spOffset)
+                            context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                                "[" + Hex.hex(stackOffset) + "+SP]");
+                        else
+                        {
+                            context.Add("SET", Scope.TempRegister, "SP");
+                            context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                                "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                        }
                     }
                     else
                         context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");

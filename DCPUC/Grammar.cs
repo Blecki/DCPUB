@@ -17,8 +17,10 @@ namespace DCPUC
             var comment = new CommentTerminal("comment", "//", "\n", "\r\n");
             NonGrammarTerminals.Add(comment);
 
-            var integerLiteral = new NumberLiteral("integer", NumberOptions.IntOnly | NumberOptions.AllowSign);
+            var integerLiteral = new NumberLiteral("integer",
+                NumberOptions.IntOnly | NumberOptions.AllowSign | NumberOptions.AllowLetterAfter);
             integerLiteral.AddPrefix("0x", NumberOptions.Hex);
+            integerLiteral.AddSuffix("u", TypeCode.UInt16);
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             identifier.AstNodeType = typeof(VariableNameNode);
             
@@ -65,7 +67,9 @@ namespace DCPUC
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
-            variableDeclaration.Rule = (ToTerm("var") | "static" | "const") + identifier + "=" + (expression | dataLiteralChain | blockLiteral);
+            variableDeclaration.Rule =
+                (ToTerm("var") | "static" | "const") + identifier + (ToTerm(":") + identifier).Q()                
+                + "=" + (expression | dataLiteralChain | blockLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
@@ -79,7 +83,7 @@ namespace DCPUC
             whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = identifier + "(" + parameterList + ")";
-            parameterDeclaration.Rule = identifier;
+            parameterDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q();
             parameterListDeclaration.Rule = MakeStarRule(parameterListDeclaration, ToTerm(","), parameterDeclaration);
             functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" + block;
             returnStatement.Rule = ToTerm("return") + expression;

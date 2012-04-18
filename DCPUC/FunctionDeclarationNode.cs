@@ -9,7 +9,7 @@ namespace DCPUC
     public class FunctionDeclarationNode : CompilableNode
     {
         public Function function = null;
-        public List<String> parameters = new List<string>();
+        public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
         public RegisterBank usedRegisters = new RegisterBank();
         protected String footerLabel = null;
 
@@ -18,7 +18,11 @@ namespace DCPUC
             base.Init(context, treeNode);
             AddChild("Block", treeNode.ChildNodes[3]);
             foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
-                parameters.Add(parameter.ChildNodes[0].FindTokenAndGetText());
+            {
+                var name = parameter.ChildNodes[0].FindTokenAndGetText();
+                var type = parameter.ChildNodes[1].FindTokenAndGetText();
+                parameters.Add(new Tuple<string, string>(name, type));
+            }
             function = new Function();
             function.name = treeNode.ChildNodes[1].FindTokenAndGetText();
             function.Node = this;
@@ -44,7 +48,8 @@ namespace DCPUC
             {
                 var variable = new Variable();
                 variable.scope = function.localScope;
-                variable.name = parameters[i];
+                variable.name = parameters[i].Item1;
+                variable.typeSpecifier = parameters[i].Item2;
                 function.localScope.variables.Add(variable);
 
                 if (i < 3)

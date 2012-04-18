@@ -9,11 +9,11 @@ namespace DCPUC
     public class CompilableNode : AstNode
     {
         public bool WasFolded = false;
+        public string ResultType = "void";
 
         public virtual void Emit(CompileContext context, Scope scope) {  }
         public virtual void Compile(CompileContext context, Scope scope, Register target) { }
-        public virtual bool IsConstant() { return false; }
-        public virtual ushort GetConstantValue() { return 0; }
+        public virtual int GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }

@@ -130,9 +130,15 @@ namespace DCPUC
                        var stackOffset = scope.StackOffset(assignTo.stackOffset);
                        if (stackOffset > 0)
                        {
-                           context.Add("SET", Scope.TempRegister, "SP");
-                           context.Add(opcodes[@operator], "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
-                               Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                           if (context.options.spOffset)
+                               context.Add(opcodes[@operator], "[" + Hex.hex(stackOffset) + "SP]",
+                                   Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                           else
+                           {
+                               context.Add("SET", Scope.TempRegister, "SP");
+                               context.Add(opcodes[@operator], "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
+                                   Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                           }
                        }
                        else
                            context.Add(opcodes[@operator], "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));

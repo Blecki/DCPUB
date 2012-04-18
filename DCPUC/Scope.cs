@@ -22,7 +22,8 @@ namespace DCPUC
         public Register location;
         public string staticLabel;
         public bool emitBrackets = true;
-        public ushort constantValue;
+        public int constantValue;
+        public string typeSpecifier = null;
 
         public VariableType type;
     }
