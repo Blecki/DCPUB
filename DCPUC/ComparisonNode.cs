@@ -23,9 +23,9 @@ namespace DCPUC
             return AsString;
         }
 
-        public override CompilableNode FoldConstants()
+        public override CompilableNode FoldConstants(CompileContext context)
         {
-            base.FoldConstants();
+            base.FoldConstants(context);
             if (Child(0).IsIntegralConstant() && Child(1).IsIntegralConstant())
             {
                 var firstValue = Child(0).GetConstantValue();

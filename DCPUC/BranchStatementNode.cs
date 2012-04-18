@@ -48,9 +48,9 @@ namespace DCPUC
             }
         }
 
-        public override CompilableNode FoldConstants()
+        public override CompilableNode FoldConstants(CompileContext context)
         {
-            base.FoldConstants();
+            base.FoldConstants(context);
             FindClauseOrder(Child(0));
             return this;
         }

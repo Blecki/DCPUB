@@ -22,4 +22,7 @@
 [ ] BUG: Variables leak out of IF/WHILE blocks when condition is constant
 [ ] BUG: stack allocated array produce extraneous DAT
 [ ] Preprocessor (Perhaps the constant folding pass can expand defines?)
-[ ] signed/unsigned types
+[*] signed/unsigned types
+[ ] type checking for function parameters and returned values
+[ ] BUG: parameters pushed in wrong order
+[ ] Do not emit errors and warnings directly into assembly stream

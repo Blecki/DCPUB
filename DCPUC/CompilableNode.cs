@@ -26,12 +26,12 @@ namespace DCPUC
                 (child as CompilableNode).GatherSymbols(context, enclosingScope);
         }
 
-        public virtual CompilableNode FoldConstants()
+        public virtual CompilableNode FoldConstants(CompileContext context)
         {
             var childrenCopy = new AstNodeList();
             foreach (var child in ChildNodes)
             {
-                var nChild = (child as CompilableNode).FoldConstants();
+                var nChild = (child as CompilableNode).FoldConstants(context);
                 if (nChild != null) childrenCopy.Add(nChild);
             }
             ChildNodes.Clear();

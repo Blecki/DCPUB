@@ -23,7 +23,7 @@ namespace DCPUC
         public string staticLabel;
         public bool emitBrackets = true;
         public int constantValue;
-        public string typeSpecifier = null;
+        public string typeSpecifier = "unsigned";
 
         public VariableType type;
     }

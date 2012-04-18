@@ -11,5 +11,6 @@ namespace DCPUC
         public string @out = null;
         public bool p = false;
         public bool spOffset = false;
+        public bool signedType = true;
     }
 }

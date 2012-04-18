@@ -68,9 +68,9 @@ namespace DCPUC
             Child(0).GatherSymbols(context, function.localScope);
         }
 
-        public override CompilableNode FoldConstants()
+        public override CompilableNode FoldConstants(CompileContext context)
         {
-            base.FoldConstants();
+            base.FoldConstants(context);
             return null;
         }
 

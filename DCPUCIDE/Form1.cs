@@ -34,6 +34,7 @@ namespace DCPUCIDE
             outputBox.Clear();
             var context = new DCPUC.CompileContext();
             context.options.p = peepholeCB.Checked;
+            context.onWarning += (s) => { outputBox.AppendText(s + "\r\n"); };
 
                 if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); }))
                 {

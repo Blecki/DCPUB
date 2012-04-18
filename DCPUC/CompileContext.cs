@@ -19,7 +19,7 @@ namespace DCPUC
         private int _barrier = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
-
+        public Action<String> onWarning = null;
         
         public String GetLabel()
         {
@@ -43,6 +43,13 @@ namespace DCPUC
             dataElements.Add(new Tuple<string, List<string>>(label, new List<string>(new string[] { Hex.hex(word) })));
         }
 
+        public void AddWarning(Irony.Parsing.SourceSpan location, String message)
+        {
+            if (onWarning != null)
+            {
+                onWarning("Warning: " + message + "\n" + source.Substring(location.Location.Position, location.Length));
+            }
+        }
             
         private static String extractLine(String s, int c)
         {
@@ -112,7 +119,7 @@ namespace DCPUC
 
         public void FoldConstants()
         {
-            rootNode.FoldConstants();
+            rootNode.FoldConstants(this);
             rootNode.AssignRegisters(new RegisterBank(), Register.DISCARD);
         }
 

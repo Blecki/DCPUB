@@ -19,6 +19,7 @@ namespace DCPUC
             variable = new Variable();
             variable.name = treeNode.ChildNodes[1].FindTokenAndGetText();
             variable.typeSpecifier = treeNode.ChildNodes[2].FindTokenAndGetText();
+            if (variable.typeSpecifier == null) variable.typeSpecifier = "unsigned";
         }
 
         public override string TreeLabel()
@@ -30,6 +31,9 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             Child(0).GatherSymbols(context, enclosingScope);
+            if (Child(0).ResultType != variable.typeSpecifier)
+                context.AddWarning(Span, "Conversion of " + Child(0).ResultType + " to " + variable.typeSpecifier + ". Possible loss of data.");
+
 
             enclosingScope.variables.Add(variable);
             variable.scope = enclosingScope;

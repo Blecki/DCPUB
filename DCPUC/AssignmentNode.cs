@@ -22,6 +22,7 @@ namespace DCPUC
             AddChild("LValue", treeNode.ChildNodes[0].ChildNodes[0]);
             AddChild("RValue", treeNode.ChildNodes[2]);
             @operator = treeNode.ChildNodes[1].FindTokenAndGetText();
+            ResultType = "void";
 
             if (opcodes == null)
             {
@@ -31,6 +32,12 @@ namespace DCPUC
                 opcodes.Add("-=", "SUB");
                 opcodes.Add("*=", "MUL");
                 opcodes.Add("/=", "DIV");
+
+                opcodes.Add("+=signed", "ADD");
+                opcodes.Add("-=signed", "SUB");
+                opcodes.Add("*=signed", "MLI");
+                opcodes.Add("/=signed", "DVI");
+
                 opcodes.Add("%=", "MOD");
                 opcodes.Add("<<=", "SHL");
                 opcodes.Add(">>=", "SHR");
@@ -53,6 +60,10 @@ namespace DCPUC
                 assignTo = (Child(0) as VariableNameNode).variable;
                 if (assignTo.type == VariableType.Constant || assignTo.type == VariableType.ConstantReference)
                     throw new CompileError("Can't assign to constants");
+
+                if (assignTo.typeSpecifier != Child(1).ResultType)
+                    context.AddWarning(Span, "Conversion of " + Child(1).ResultType + " to " + assignTo.typeSpecifier + ". Possible loss of data.");
+
             }
             else if (Child(0) is DereferenceNode) 
             {
@@ -112,6 +123,8 @@ namespace DCPUC
 
             if (assignTo == null)
             {
+                //Compound assignment to dereferences are always unsigned operations.
+
                 Child(0).Child(0).Emit(context, scope); //Skip deref node
 
                 context.Add(opcodes[@operator],
@@ -123,6 +136,7 @@ namespace DCPUC
             }
             else if (assignTo.type == VariableType.Local)
             {
+                var opcode = assignTo.typeSpecifier == "signed" ? opcodes[@operator + "signed"] : opcodes[@operator];
                if (assignTo.location != rvalueTargetRegister)
                {
                    if (assignTo.location == Register.STACK)
@@ -131,20 +145,20 @@ namespace DCPUC
                        if (stackOffset > 0)
                        {
                            if (context.options.spOffset)
-                               context.Add(opcodes[@operator], "[" + Hex.hex(stackOffset) + "SP]",
+                               context.Add(opcode, "[" + Hex.hex(stackOffset) + "SP]",
                                    Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                            else
                            {
                                context.Add("SET", Scope.TempRegister, "SP");
-                               context.Add(opcodes[@operator], "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
+                               context.Add(opcode, "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
                                    Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                            }
                        }
                        else
-                           context.Add(opcodes[@operator], "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                           context.Add(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                    }
                    else
-                       context.Add(opcodes[@operator], Scope.GetRegisterLabelFirst((int)assignTo.location),
+                       context.Add(opcode, Scope.GetRegisterLabelFirst((int)assignTo.location),
                            Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
 
                }
@@ -152,7 +166,8 @@ namespace DCPUC
             }
             else if (assignTo.type == VariableType.Static)
             {
-                context.Add(opcodes[@operator], "[" + assignTo.staticLabel + "]", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                var opcode = assignTo.typeSpecifier == "signed" ? opcodes[@operator + "signed"] : opcodes[@operator];
+                context.Add(opcode, "[" + assignTo.staticLabel + "]", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                 if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
             }
             

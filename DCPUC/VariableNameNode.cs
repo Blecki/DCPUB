@@ -53,6 +53,8 @@ namespace DCPUC
 
             if (variable == null) 
                 throw new CompileError("Could not find variable " + variableName);
+
+            ResultType = variable.typeSpecifier;
         }
 
         public override void AssignRegisters(RegisterBank parentState, Register target)
