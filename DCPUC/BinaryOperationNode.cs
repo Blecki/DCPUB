@@ -93,18 +93,18 @@ namespace DCPUC
             return this;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (!Child(1).IsIntegralConstant())
             {
                 secondOperandResult = parentState.FindAndUseFreeRegister();
-                Child(1).AssignRegisters(parentState, secondOperandResult);
+                Child(1).AssignRegisters(context, parentState, secondOperandResult);
             }
 
             firstOperandResult = target;
 
             if (!Child(0).IsIntegralConstant())
-                Child(0).AssignRegisters(parentState, firstOperandResult);
+                Child(0).AssignRegisters(context, parentState, firstOperandResult);
 
             parentState.FreeRegisters(secondOperandResult);
         }

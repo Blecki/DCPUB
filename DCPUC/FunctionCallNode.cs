@@ -32,7 +32,7 @@ namespace DCPUC
             this.enclosingScope = enclosingScope;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = target;
 
@@ -47,13 +47,19 @@ namespace DCPUC
 
             if (function == null) throw new CompileError("Could not find function " + functionName);
             if (function.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments to function");
+            for (int i = 0; i < function.parameterCount; ++i)
+            {
+                if (function.localScope.variables[i].typeSpecifier != Child(i).ResultType)
+                    context.AddWarning(Span, CompileContext.TypeWarning(Child(i).ResultType, function.localScope.variables[i].typeSpecifier));
+            }
+
 
             var startingRegisterState = parentState.SaveRegisterState();
 
             for (int i = 0; i < 3 && i < function.parameterCount; ++i)
-                Child(i).AssignRegisters(parentState, (Register)i);
+                Child(i).AssignRegisters(context, parentState, (Register)i);
             for (int i = 3; i < function.parameterCount; ++i)
-                Child(i).AssignRegisters(parentState, Register.STACK);
+                Child(i).AssignRegisters(context, parentState, Register.STACK);
         }
 
         public override void Emit(CompileContext context, Scope scope)

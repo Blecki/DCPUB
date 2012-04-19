@@ -43,6 +43,11 @@ namespace DCPUC
             dataElements.Add(new Tuple<string, List<string>>(label, new List<string>(new string[] { Hex.hex(word) })));
         }
 
+        public static String TypeWarning(string A, string B)
+        {
+            return "Conversion of " + A + " to " + B + ". Possible loss of data.";
+        }
+
         public void AddWarning(Irony.Parsing.SourceSpan location, String message)
         {
             if (onWarning != null)
@@ -120,7 +125,7 @@ namespace DCPUC
         public void FoldConstants()
         {
             rootNode.FoldConstants(this);
-            rootNode.AssignRegisters(new RegisterBank(), Register.DISCARD);
+            rootNode.AssignRegisters(this, new RegisterBank(), Register.DISCARD);
         }
 
         public void Emit(Action<string> onError)

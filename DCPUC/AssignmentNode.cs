@@ -74,7 +74,7 @@ namespace DCPUC
             Child(1).GatherSymbols(context, enclosingScope);
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (target != Register.DISCARD)
                 throw new CompileError("Assignment should always target discard");
@@ -87,7 +87,7 @@ namespace DCPUC
                     if (assignTo.type != VariableType.Local)
                     {
                         rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                        Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                        Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
                         parentState.FreeMaybeRegister(rvalueTargetRegister);
                     }
                     else
@@ -96,23 +96,23 @@ namespace DCPUC
                             rvalueTargetRegister = assignTo.location;
                         else
                             rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                        Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                        Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
                         if (rvalueTargetRegister != assignTo.location) parentState.FreeMaybeRegister(rvalueTargetRegister);
                     }
                 }
                 else
                 {
                     rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                    Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                    Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
                     parentState.FreeMaybeRegister(rvalueTargetRegister);
                 }
             }
             else 
             {
                 rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                Child(1).AssignRegisters(parentState, rvalueTargetRegister);
+                Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
                 lvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                Child(0).AssignRegisters(parentState, lvalueTargetRegister);
+                Child(0).AssignRegisters(context, parentState, lvalueTargetRegister);
                 parentState.FreeRegisters(lvalueTargetRegister, rvalueTargetRegister);
             }
         }

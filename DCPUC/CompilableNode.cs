@@ -39,7 +39,7 @@ namespace DCPUC
             return this;
         }
 
-        public virtual void AssignRegisters(RegisterBank parentState, Register target)
+        public virtual void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
 
         }

@@ -15,10 +15,10 @@ namespace DCPUC
                 AddChild("Statement", f);
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             foreach (var child in ChildNodes)
-                (child as CompilableNode).AssignRegisters(parentState, Register.DISCARD);
+                (child as CompilableNode).AssignRegisters(context,parentState, Register.DISCARD);
         }
 
         public override void Emit(CompileContext assembly, Scope scope)

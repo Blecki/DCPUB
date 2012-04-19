@@ -17,10 +17,10 @@ namespace DCPUC
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = parentState.FindAndUseFreeRegister();
-            Child(0).AssignRegisters(parentState, this.target);
+            Child(0).AssignRegisters(context, parentState, this.target);
             parentState.FreeMaybeRegister(this.target);
         }
 

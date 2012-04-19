@@ -22,10 +22,10 @@ namespace DCPUC
             return "deref [into:" + target.ToString() + "]";
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = target;
-            Child(0).AssignRegisters(parentState, target);
+            Child(0).AssignRegisters(context, parentState, target);
         }
 
         public override void Emit(CompileContext context, Scope scope)

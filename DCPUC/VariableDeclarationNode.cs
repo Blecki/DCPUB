@@ -89,7 +89,7 @@ namespace DCPUC
             }
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (variable.type == VariableType.Local)
             {
@@ -99,7 +99,7 @@ namespace DCPUC
                     variable.location = Register.STACK;
                     parentState.FreeMaybeRegister(Register.I);
                 }
-                Child(0).AssignRegisters(parentState, variable.location);
+                Child(0).AssignRegisters(context, parentState, variable.location);
             }
         }
 

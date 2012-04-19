@@ -49,7 +49,7 @@ namespace DCPUC
             return this;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             throw new CompileError("Branch node should have handled this.");
         }

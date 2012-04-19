@@ -50,6 +50,7 @@ namespace DCPUC
                 variable.scope = function.localScope;
                 variable.name = parameters[i].Item1;
                 variable.typeSpecifier = parameters[i].Item2;
+                if (variable.typeSpecifier == null) variable.typeSpecifier = "unsigned";
                 function.localScope.variables.Add(variable);
 
                 if (i < 3)
@@ -74,17 +75,17 @@ namespace DCPUC
             return null;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             var localBank = new RegisterBank();
             localBank.functionBank = usedRegisters;
             for (int i = 0; i < 3 && i < function.parameterCount; ++i)
                 localBank.UseRegister((Register)i);
 
-            Child(0).AssignRegisters(localBank, Register.DISCARD);
+            Child(0).AssignRegisters(context, localBank, Register.DISCARD);
 
             foreach (var nestedFunction in function.localScope.functions)
-                nestedFunction.Node.AssignRegisters(parentState, Register.DISCARD);
+                nestedFunction.Node.AssignRegisters(context, parentState, Register.DISCARD);
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)

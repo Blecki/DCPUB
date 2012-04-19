@@ -60,33 +60,33 @@ namespace DCPUC
             foreach (var child in ChildNodes) (child as CompilableNode).GatherSymbols(context, enclosingScope);
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (target != Register.DISCARD) throw new CompileError("Branch not at top level");
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantFail:
-                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(parentState, Register.DISCARD);
+                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, Register.DISCARD);
                     break;
                 case ClauseOrder.ConstantPass:
-                    Child(1).AssignRegisters(parentState, Register.DISCARD);
+                    Child(1).AssignRegisters(context, parentState, Register.DISCARD);
                     break;
                 default:
                     {
                         if (!firstOperand.IsIntegralConstant())
                         {
                             firstOperandTarget = parentState.FindAndUseFreeRegister();
-                            firstOperand.AssignRegisters(parentState, firstOperandTarget);
+                            firstOperand.AssignRegisters(context, parentState, firstOperandTarget);
                         }
                         if (!secondOperand.IsIntegralConstant())
                         {
                             secondOperandTarget = parentState.FindAndUseFreeRegister();
-                            secondOperand.AssignRegisters(parentState, secondOperandTarget);
+                            secondOperand.AssignRegisters(context, parentState, secondOperandTarget);
                         }
                         parentState.FreeRegisters(firstOperandTarget, secondOperandTarget);
 
-                        Child(1).AssignRegisters(parentState, Register.DISCARD);
-                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(parentState, Register.DISCARD);
+                        Child(1).AssignRegisters(context, parentState, Register.DISCARD);
+                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, Register.DISCARD);
                     }
                     break;
             }
