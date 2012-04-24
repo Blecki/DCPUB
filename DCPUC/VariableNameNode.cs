@@ -30,7 +30,7 @@ namespace DCPUC
             return false;
         }
 
-        public override ushort GetConstantValue()
+        public override int GetConstantValue()
         {
             return variable.constantValue;
         }
@@ -42,6 +42,11 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
+            
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
             var scope = enclosingScope;
             while (variable == null && scope != null)
             {
@@ -51,11 +56,13 @@ namespace DCPUC
                 if (variable == null) scope = scope.parent;
             }
 
-            if (variable == null) 
+            if (variable == null)
                 throw new CompileError("Could not find variable " + variableName);
+
+            ResultType = variable.typeSpecifier;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = target;
         }
@@ -81,8 +88,8 @@ namespace DCPUC
                     var stackOffset = scope.StackOffset(variable.stackOffset);
                     if (stackOffset > 0)
                     {
-                        context.Add("SET", Scope.TempRegister, "SP");
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]", "Fetching variable");
+                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                            "[" + Hex.hex(stackOffset) + "+SP]");
                     }
                     else
                         context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");

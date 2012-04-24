@@ -44,13 +44,19 @@ namespace DCPUC
                 if (@operator == "==") comparisonInstruction = "IFE";
                 if (@operator == "!=") comparisonInstruction = "IFN";
                 if (@operator == ">") comparisonInstruction = "IFG";
+                if (@operator == "<") comparisonInstruction = "IFL";
+                if (@operator == ">" && (firstOperand.ResultType == "signed" || secondOperand.ResultType == "signed"))
+                    comparisonInstruction = "IFA";
+                if (@operator == "<" && (firstOperand.ResultType == "signed" || secondOperand.ResultType == "signed"))
+                    comparisonInstruction = "IFU";
+
                 clauseOrder = ClauseOrder.FailFirst;
             }
         }
 
-        public override CompilableNode FoldConstants()
+        public override CompilableNode FoldConstants(CompileContext context)
         {
-            base.FoldConstants();
+            base.FoldConstants(context);
             FindClauseOrder(Child(0));
             return this;
         }
@@ -60,33 +66,47 @@ namespace DCPUC
             foreach (var child in ChildNodes) (child as CompilableNode).GatherSymbols(context, enclosingScope);
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void  ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+         	 base.ResolveTypes(context, enclosingScope);
+            if (Child(0) is ComparisonNode)
+            {
+                firstOperand = Child(0).Child(0);
+                secondOperand = Child(0).Child(1);
+                if (firstOperand.ResultType != secondOperand.ResultType)
+                    context.AddWarning(Span, "Comparison between " + firstOperand.ResultType + " and " +
+                        secondOperand.ResultType + ". Comparison might be invalid.");
+            }
+
+        }
+
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (target != Register.DISCARD) throw new CompileError("Branch not at top level");
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantFail:
-                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(parentState, Register.DISCARD);
+                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, Register.DISCARD);
                     break;
                 case ClauseOrder.ConstantPass:
-                    Child(1).AssignRegisters(parentState, Register.DISCARD);
+                    Child(1).AssignRegisters(context, parentState, Register.DISCARD);
                     break;
                 default:
                     {
-                        if (!firstOperand.IsIntegralConstant())
-                        {
-                            firstOperandTarget = parentState.FindAndUseFreeRegister();
-                            firstOperand.AssignRegisters(parentState, firstOperandTarget);
-                        }
                         if (!secondOperand.IsIntegralConstant())
                         {
                             secondOperandTarget = parentState.FindAndUseFreeRegister();
-                            secondOperand.AssignRegisters(parentState, secondOperandTarget);
+                            secondOperand.AssignRegisters(context, parentState, secondOperandTarget);
+                        }
+                        if (!firstOperand.IsIntegralConstant())
+                        {
+                            firstOperandTarget = parentState.FindAndUseFreeRegister();
+                            firstOperand.AssignRegisters(context, parentState, firstOperandTarget);
                         }
                         parentState.FreeRegisters(firstOperandTarget, secondOperandTarget);
 
-                        Child(1).AssignRegisters(parentState, Register.DISCARD);
-                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(parentState, Register.DISCARD);
+                        Child(1).AssignRegisters(context, parentState, Register.DISCARD);
+                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, Register.DISCARD);
                     }
                     break;
             }
@@ -94,10 +114,10 @@ namespace DCPUC
 
         public override void Emit(CompileContext context, Scope scope)
         {
-            if (!firstOperand.IsIntegralConstant())
-                firstOperand.Emit(context, scope);
             if (!secondOperand.IsIntegralConstant())
                 secondOperand.Emit(context, scope);
+            if (!firstOperand.IsIntegralConstant())
+                firstOperand.Emit(context, scope);
 
             context.Add(comparisonInstruction,
                 firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)firstOperandTarget),

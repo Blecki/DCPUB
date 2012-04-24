@@ -9,14 +9,20 @@ namespace DCPUC
     public class CompilableNode : AstNode
     {
         public bool WasFolded = false;
+        public string ResultType = "void";
 
         public virtual void Emit(CompileContext context, Scope scope) {  }
         public virtual void Compile(CompileContext context, Scope scope, Register target) { }
-        public virtual bool IsConstant() { return false; }
-        public virtual ushort GetConstantValue() { return 0; }
+        public virtual int GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
+
+        public virtual void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            foreach (var child in ChildNodes)
+                (child as CompilableNode).ResolveTypes(context, enclosingScope);
+        }
 
         public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
 
@@ -26,12 +32,12 @@ namespace DCPUC
                 (child as CompilableNode).GatherSymbols(context, enclosingScope);
         }
 
-        public virtual CompilableNode FoldConstants()
+        public virtual CompilableNode FoldConstants(CompileContext context)
         {
             var childrenCopy = new AstNodeList();
             foreach (var child in ChildNodes)
             {
-                var nChild = (child as CompilableNode).FoldConstants();
+                var nChild = (child as CompilableNode).FoldConstants(context);
                 if (nChild != null) childrenCopy.Add(nChild);
             }
             ChildNodes.Clear();
@@ -39,7 +45,7 @@ namespace DCPUC
             return this;
         }
 
-        public virtual void AssignRegisters(RegisterBank parentState, Register target)
+        public virtual void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
 
         }

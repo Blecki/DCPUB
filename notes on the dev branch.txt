@@ -1,0 +1,6 @@
+The dev branch of this project might emit invalid assembly. Specifically, 
+it might use the MUI and DVI instruction to perform signed arithmetic. These 
+instructions don't exist yet. 
+
+I probably won't be putting more time into this project until Notch releases 
+a new DCPU spec. At least, don't expect any big features.

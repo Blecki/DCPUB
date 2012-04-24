@@ -12,6 +12,11 @@ namespace DCPUC
         public Register firstOperandResult = Register.STACK;
         public Register secondOperandResult = Register.STACK;
 
+        public override string TreeLabel()
+        {
+            return AsString + " " + ResultType;
+        }
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -26,6 +31,12 @@ namespace DCPUC
                 opcodes.Add("-", "SUB");
                 opcodes.Add("*", "MUL");
                 opcodes.Add("/", "DIV");
+
+                opcodes.Add("+signed", "ADD");
+                opcodes.Add("-signed", "SUB");
+                opcodes.Add("*signed", "MLI");
+                opcodes.Add("/signed", "DVI");
+
                 opcodes.Add("%", "MOD");
                 opcodes.Add("<<", "SHL");
                 opcodes.Add(">>", "SHR");
@@ -33,47 +44,71 @@ namespace DCPUC
                 opcodes.Add("|", "BOR");
                 opcodes.Add("^", "XOR");
             }
+
         }
 
-        public override CompilableNode FoldConstants()
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            var first = Child(0).FoldConstants();
-            var second = Child(1).FoldConstants();
+            base.GatherSymbols(context, enclosingScope);
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            base.ResolveTypes(context, enclosingScope);
+            if (Child(0).ResultType != Child(1).ResultType)
+            {
+                context.AddWarning(this.Span, "Conversion between types. Possible loss of data.");
+                //Promote to signed?
+
+                if (AsString == "+" || AsString == "-" || AsString == "*" || AsString == "/") ResultType = "signed";
+                else ResultType = "unsigned";
+            }
+            else
+                ResultType = Child(0).ResultType;
+        }
+
+        public override CompilableNode FoldConstants(CompileContext context)
+        {
+            var first = Child(0).FoldConstants(context);
+            var second = Child(1).FoldConstants(context);
+
+            
 
             if (first.IsIntegralConstant() && second.IsIntegralConstant())
             {
                 var a = first.GetConstantValue();
                 var b = second.GetConstantValue();
+                var promote = first.ResultType == "signed" || second.ResultType == "signed";
 
-                if (AsString == "+") a = (ushort)(a + b);
-                if (AsString == "-") a = (ushort)(a - b);
-                if (AsString == "*") a = (ushort)(a * b);
-                if (AsString == "/") a = (ushort)(a / b);
-                if (AsString == "%") a = (ushort)(a % b);
-                if (AsString == "<<") a = (ushort)(a << b);
-                if (AsString == ">>") a = (ushort)(a >> b);
-                if (AsString == "&") a = (ushort)(a & b);
-                if (AsString == "|") a = (ushort)(a | b);
-                if (AsString == "^") a = (ushort)(a ^ b);
+                if (AsString == "+") if (promote) a = (int)((short)a + (short)b); else a = (int)((ushort)a + (ushort)b);
+                if (AsString == "-") if (promote) a = (int)((short)a - (short)b); else a = (int)((ushort)a - (ushort)b);
+                if (AsString == "*") if (promote) a = (int)((short)a * (short)b); else a = (int)((ushort)a * (ushort)b);
+                if (AsString == "/") if (promote) a = (int)((short)a / (short)b); else a = (int)((ushort)a / (ushort)b);
+                if (AsString == "%") a = (int)((ushort)a % (ushort)b);
+                if (AsString == "<<") a = (int)((ushort)a << (ushort)b);
+                if (AsString == ">>") a = (int)((ushort)a >> (ushort)b);
+                if (AsString == "&") a = (int)((ushort)a & (ushort)b);
+                if (AsString == "|") a = (int)((ushort)a | (ushort)b);
+                if (AsString == "^") a = (int)((ushort)a ^ (ushort)b);
 
-                return new NumberLiteralNode { Value = a, WasFolded = true };
+                return new NumberLiteralNode { Value = a, WasFolded = true, ResultType = ResultType };
             }
 
             return this;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (!Child(1).IsIntegralConstant())
             {
                 secondOperandResult = parentState.FindAndUseFreeRegister();
-                Child(1).AssignRegisters(parentState, secondOperandResult);
+                Child(1).AssignRegisters(context, parentState, secondOperandResult);
             }
 
             firstOperandResult = target;
 
             if (!Child(0).IsIntegralConstant())
-                Child(0).AssignRegisters(parentState, firstOperandResult);
+                Child(0).AssignRegisters(context, parentState, firstOperandResult);
 
             parentState.FreeRegisters(secondOperandResult);
         }
@@ -97,15 +132,15 @@ namespace DCPUC
                     if (secondOperandResult == Register.STACK)
                     {
                         context.Add("SET", Scope.TempRegister, "POP");
-                        context.Add(opcodes[AsString], "PEEK", Scope.TempRegister);
+                        context.Add(ResultType == "signed" ? opcodes[AsString+"signed"] : opcodes[AsString], "PEEK", Scope.TempRegister);
                         scope.stackDepth -= 1;
                     }
                     else
-                        context.Add(opcodes[AsString], "PEEK", Scope.GetRegisterLabelSecond((int)secondOperandResult));
+                        context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString], "PEEK", Scope.GetRegisterLabelSecond((int)secondOperandResult));
                 }
                 else
                 {
-                    context.Add(opcodes[AsString],
+                    context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString],
                         Scope.GetRegisterLabelFirst((int)firstOperandResult),
                         Scope.GetRegisterLabelSecond((int)secondOperandResult));
                     if (secondOperandResult == Register.STACK) scope.stackDepth -= 1;
@@ -114,9 +149,9 @@ namespace DCPUC
             else
             {
                 if (firstOperandResult == Register.STACK)
-                    context.Add(opcodes[AsString], "PEEK", Child(1).GetConstantToken());
+                    context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString], "PEEK", Child(1).GetConstantToken());
                 else
-                    context.Add(opcodes[AsString], Scope.GetRegisterLabelFirst((int)firstOperandResult),
+                    context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString], Scope.GetRegisterLabelFirst((int)firstOperandResult),
                         Child(1).GetConstantToken());
             }
         }
