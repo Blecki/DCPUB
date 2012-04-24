@@ -85,8 +85,7 @@ namespace DCPUCCL
                 context.Initialize(options);
                 if (context.Parse(file, Console.WriteLine))
                 {
-                    context.GatherSymbols(Console.WriteLine);
-                    context.FoldConstants();
+                    context.Compile(Console.WriteLine);
                     context.Emit(Console.WriteLine);
 
                     var writer = new System.IO.StreamWriter(options.@out, false);

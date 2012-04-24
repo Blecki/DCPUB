@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class ReturnStatementNode : CompilableNode
     {
-        Register target; 
+        Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -17,11 +17,18 @@ namespace DCPUC
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = parentState.FindAndUseFreeRegister();
-            Child(0).AssignRegisters(parentState, this.target);
+            Child(0).AssignRegisters(context, parentState, this.target);
             parentState.FreeMaybeRegister(this.target);
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            base.ResolveTypes(context, enclosingScope);
+            if (Child(0).ResultType != enclosingScope.activeFunction.ResultType)
+                context.AddWarning(Span, CompileContext.TypeWarning(Child(0).ResultType, enclosingScope.activeFunction.ResultType));
         }
 
         public override void Emit(CompileContext context, Scope scope)

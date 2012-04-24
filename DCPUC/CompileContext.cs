@@ -19,7 +19,7 @@ namespace DCPUC
         private int _barrier = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
-
+        public Action<String> onWarning = null;
         
         public String GetLabel()
         {
@@ -43,6 +43,18 @@ namespace DCPUC
             dataElements.Add(new Tuple<string, List<string>>(label, new List<string>(new string[] { Hex.hex(word) })));
         }
 
+        public static String TypeWarning(string A, string B)
+        {
+            return "Conversion of " + A + " to " + B + ". Possible loss of data.";
+        }
+
+        public void AddWarning(Irony.Parsing.SourceSpan location, String message)
+        {
+            if (onWarning != null)
+            {
+                onWarning("Warning: " + message + "\n" + source.Substring(location.Location.Position, location.Length));
+            }
+        }
             
         private static String extractLine(String s, int c)
         {
@@ -91,7 +103,7 @@ namespace DCPUC
             return true;
         }
 
-        public void GatherSymbols(Action<string> onError)
+        public void Compile(Action<string> onError)
         {
             var end_of_program = new Variable();
             end_of_program.location = Register.STATIC;
@@ -103,6 +115,9 @@ namespace DCPUC
             try
             {
                 rootNode.GatherSymbols(this, globalScope);
+                rootNode.ResolveTypes(this, globalScope);
+                rootNode.FoldConstants(this);
+                rootNode.AssignRegisters(this, new RegisterBank(), Register.DISCARD);
             }
             catch (CompileError e)
             {
@@ -110,16 +125,8 @@ namespace DCPUC
             }
         }
 
-        public void FoldConstants()
-        {
-            rootNode.FoldConstants();
-            rootNode.AssignRegisters(new RegisterBank(), Register.DISCARD);
-        }
-
         public void Emit(Action<string> onError)
         {
-            
-
             try
             {
                 rootNode.CompileFunction(this);

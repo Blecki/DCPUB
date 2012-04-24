@@ -9,16 +9,20 @@ namespace DCPUC
     public class FunctionDeclarationNode : CompilableNode
     {
         public Function function = null;
-        public List<String> parameters = new List<string>();
+        public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
         public RegisterBank usedRegisters = new RegisterBank();
         protected String footerLabel = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Block", treeNode.ChildNodes[3]);
+            AddChild("Block", treeNode.ChildNodes[4]);
             foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
-                parameters.Add(parameter.ChildNodes[0].FindTokenAndGetText());
+            {
+                var name = parameter.ChildNodes[0].FindTokenAndGetText();
+                var type = parameter.ChildNodes[1].FindTokenAndGetText();
+                parameters.Add(new Tuple<string, string>(name, type));
+            }
             function = new Function();
             function.name = treeNode.ChildNodes[1].FindTokenAndGetText();
             function.Node = this;
@@ -26,6 +30,9 @@ namespace DCPUC
             function.localScope = new Scope();
             function.localScope.type = ScopeType.Function;
             function.localScope.activeFunction = this;
+            function.returnType = treeNode.ChildNodes[3].FindTokenAndGetText();
+            if (function.returnType == null) function.returnType = "unsigned";
+            ResultType = function.returnType;
         }
 
         public override string TreeLabel()
@@ -44,7 +51,9 @@ namespace DCPUC
             {
                 var variable = new Variable();
                 variable.scope = function.localScope;
-                variable.name = parameters[i];
+                variable.name = parameters[i].Item1;
+                variable.typeSpecifier = parameters[i].Item2;
+                if (variable.typeSpecifier == null) variable.typeSpecifier = "unsigned";
                 function.localScope.variables.Add(variable);
 
                 if (i < 3)
@@ -63,23 +72,29 @@ namespace DCPUC
             Child(0).GatherSymbols(context, function.localScope);
         }
 
-        public override CompilableNode FoldConstants()
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            base.FoldConstants();
+            foreach (var child in ChildNodes)
+                (child as CompilableNode).ResolveTypes(context, function.localScope);
+        }
+
+        public override CompilableNode FoldConstants(CompileContext context)
+        {
+            base.FoldConstants(context);
             return null;
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             var localBank = new RegisterBank();
             localBank.functionBank = usedRegisters;
             for (int i = 0; i < 3 && i < function.parameterCount; ++i)
                 localBank.UseRegister((Register)i);
 
-            Child(0).AssignRegisters(localBank, Register.DISCARD);
+            Child(0).AssignRegisters(context, localBank, Register.DISCARD);
 
             foreach (var nestedFunction in function.localScope.functions)
-                nestedFunction.Node.AssignRegisters(parentState, Register.DISCARD);
+                nestedFunction.Node.AssignRegisters(context, parentState, Register.DISCARD);
         }
 
         public override void Compile(CompileContext context, Scope scope, Register target)

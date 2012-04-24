@@ -21,9 +21,9 @@ namespace DCPUC
             return "while " + base.TreeLabel();
         }
 
-        public override CompilableNode FoldConstants()
+        public override CompilableNode FoldConstants(CompileContext context)
         {
-            base.FoldConstants();
+            base.FoldConstants(context);
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantPass:

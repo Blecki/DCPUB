@@ -14,7 +14,7 @@ namespace DCPUC
         {
             base.Init(context, treeNode);
             AddChild("Expression", treeNode.ChildNodes[1]);
-            
+            ResultType = "unsigned";
         }
 
         public override string TreeLabel()
@@ -22,10 +22,10 @@ namespace DCPUC
             return "deref [into:" + target.ToString() + "]";
         }
 
-        public override void AssignRegisters(RegisterBank parentState, Register target)
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = target;
-            Child(0).AssignRegisters(parentState, target);
+            Child(0).AssignRegisters(context, parentState, target);
         }
 
         public override void Emit(CompileContext context, Scope scope)
@@ -42,32 +42,6 @@ namespace DCPUC
             }
         }
 
-        public override void Compile(CompileContext assembly, Scope scope, Register target)
-        {
-            var destRegister = target == Register.STACK ? scope.FindAndUseFreeRegister() : (int)target;
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)destRegister);
-            if (target == Register.STACK)
-            {
-                if (destRegister == (int)Register.STACK)
-                    assembly.Add("SET", "PEEK", "[PEEK]");
-                else
-                {
-                    assembly.Add("SET", "PUSH", "[" + Scope.GetRegisterLabelSecond(destRegister) + "]");
-                    scope.stackDepth += 1;
-                    scope.FreeMaybeRegister(destRegister);
-                }
-            }
-            else
-            {
-                assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + Scope.GetRegisterLabelSecond(destRegister) + "]");
-                if (destRegister == (int)Register.STACK)
-                    scope.stackDepth -= 1;
-                else if (destRegister != (int)target)
-                    scope.FreeMaybeRegister(destRegister);
-            }
-
-        }
     }
-
     
 }

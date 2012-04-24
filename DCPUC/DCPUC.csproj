@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompileOptions.cs" />
+    <Compile Include="StructDeclarationNode.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Hex.cs" />
