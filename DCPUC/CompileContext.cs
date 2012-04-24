@@ -103,7 +103,7 @@ namespace DCPUC
             return true;
         }
 
-        public void GatherSymbols(Action<string> onError)
+        public void Compile(Action<string> onError)
         {
             var end_of_program = new Variable();
             end_of_program.location = Register.STATIC;
@@ -115,6 +115,9 @@ namespace DCPUC
             try
             {
                 rootNode.GatherSymbols(this, globalScope);
+                rootNode.ResolveTypes(this, globalScope);
+                rootNode.FoldConstants(this);
+                rootNode.AssignRegisters(this, new RegisterBank(), Register.DISCARD);
             }
             catch (CompileError e)
             {
@@ -122,16 +125,8 @@ namespace DCPUC
             }
         }
 
-        public void FoldConstants()
-        {
-            rootNode.FoldConstants(this);
-            rootNode.AssignRegisters(this, new RegisterBank(), Register.DISCARD);
-        }
-
         public void Emit(Action<string> onError)
         {
-            
-
             try
             {
                 rootNode.CompileFunction(this);

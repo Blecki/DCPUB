@@ -61,8 +61,6 @@ namespace DCPUC
                 if (assignTo.type == VariableType.Constant || assignTo.type == VariableType.ConstantReference)
                     throw new CompileError("Can't assign to constants");
 
-                if (assignTo.typeSpecifier != Child(1).ResultType)
-                    context.AddWarning(Span, "Conversion of " + Child(1).ResultType + " to " + assignTo.typeSpecifier + ". Possible loss of data.");
 
             }
             else if (Child(0) is DereferenceNode) 
@@ -72,6 +70,14 @@ namespace DCPUC
             else
                 throw new CompileError("Illegal assignment");
             Child(1).GatherSymbols(context, enclosingScope);
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            Child(0).ResolveTypes(context, enclosingScope);
+            Child(1).ResolveTypes(context, enclosingScope);
+            if (Child(0).ResultType != Child(1).ResultType)
+                context.AddWarning(Span, CompileContext.TypeWarning(Child(1).ResultType, Child(0).ResultType));
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -144,15 +150,8 @@ namespace DCPUC
                        var stackOffset = scope.StackOffset(assignTo.stackOffset);
                        if (stackOffset > 0)
                        {
-                           if (context.options.spOffset)
-                               context.Add(opcode, "[" + Hex.hex(stackOffset) + "SP]",
-                                   Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-                           else
-                           {
-                               context.Add("SET", Scope.TempRegister, "SP");
-                               context.Add(opcode, "[" + Hex.hex(stackOffset) + "+" + Scope.TempRegister + "]",
-                                   Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-                           }
+                           context.Add(opcode, "[" + Hex.hex(stackOffset) + "SP]",
+                               Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                        }
                        else
                            context.Add(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));

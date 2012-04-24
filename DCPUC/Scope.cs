@@ -35,6 +35,20 @@ namespace DCPUC
         public Scope localScope;
         public String label;
         public int parameterCount = 0;
+        public String returnType = "void";
+    }
+
+    public class Member
+    {
+        public String name;
+        public String typeSpecifier;
+    }
+
+    public class Struct
+    {
+        public String name;
+        public List<Member> members = new List<Member>();
+        public StructDeclarationNode Node;
     }
 
     public enum Register
@@ -75,6 +89,7 @@ namespace DCPUC
         internal int parentDepth = 0;
         public List<Variable> variables = new List<Variable>();
         public List<Function> functions = new List<Function>();
+        public List<Struct> structs = new List<Struct>();
         public int stackDepth = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         public FunctionDeclarationNode activeFunction = null;

@@ -16,7 +16,7 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Block", treeNode.ChildNodes[3]);
+            AddChild("Block", treeNode.ChildNodes[4]);
             foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
             {
                 var name = parameter.ChildNodes[0].FindTokenAndGetText();
@@ -30,6 +30,9 @@ namespace DCPUC
             function.localScope = new Scope();
             function.localScope.type = ScopeType.Function;
             function.localScope.activeFunction = this;
+            function.returnType = treeNode.ChildNodes[3].FindTokenAndGetText();
+            if (function.returnType == null) function.returnType = "unsigned";
+            ResultType = function.returnType;
         }
 
         public override string TreeLabel()
@@ -67,6 +70,12 @@ namespace DCPUC
             }
 
             Child(0).GatherSymbols(context, function.localScope);
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            foreach (var child in ChildNodes)
+                (child as CompilableNode).ResolveTypes(context, function.localScope);
         }
 
         public override CompilableNode FoldConstants(CompileContext context)

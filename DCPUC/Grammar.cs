@@ -40,7 +40,7 @@ namespace DCPUC
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
             var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>";
-            var comparisonOperator = ToTerm("==") | "!=" | ">";
+            var comparisonOperator = ToTerm("==") | "!=" | ">" | "<";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
             var statement = new NonTerminal("Statement");
@@ -56,6 +56,9 @@ namespace DCPUC
             var parameterListDeclaration = new NonTerminal("Parameter Declaration List");
             var returnStatement = new NonTerminal("Return", typeof(ReturnStatementNode));
             var functionCall = new NonTerminal("Function Call", typeof(FunctionCallNode));
+            var structDefinition = new NonTerminal("Struct", typeof(StructDeclarationNode));
+            var memberDeclaration = new NonTerminal("Member", typeof(MemberNode));
+            var memberList = new NonTerminal("Member List");
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
             blockLiteral.Rule = ToTerm("[") + integerLiteral + "]";
@@ -73,7 +76,7 @@ namespace DCPUC
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
-                | functionDeclaration | (functionCall + ";")
+                | functionDeclaration | structDefinition | (functionCall + ";")
                 | (returnStatement + ";");
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
@@ -85,8 +88,14 @@ namespace DCPUC
             functionCall.Rule = identifier + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q();
             parameterListDeclaration.Rule = MakeStarRule(parameterListDeclaration, ToTerm(","), parameterDeclaration);
-            functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" + block;
+            functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" 
+                + (ToTerm(":") + identifier).Q()
+                + block;
             returnStatement.Rule = ToTerm("return") + expression;
+            memberDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q() + ";";
+            memberList.Rule = MakeStarRule(memberList, memberDeclaration);
+            structDefinition.Rule = ToTerm("struct") + identifier + "{" + memberList + "}";
+
 
             this.Root = statementList;
 

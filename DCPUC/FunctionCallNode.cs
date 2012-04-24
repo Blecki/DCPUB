@@ -23,7 +23,7 @@ namespace DCPUC
 
         public override string TreeLabel()
         {
-            return "call " + functionName + " [into:" + target.ToString() + "]";
+            return "call " + functionName + " " + ResultType + " [into:" + target.ToString() + "]";
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -32,10 +32,9 @@ namespace DCPUC
             this.enclosingScope = enclosingScope;
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            this.target = target;
-
+            base.ResolveTypes(context, enclosingScope);
             var func_scope = enclosingScope;
             while (function == null && func_scope != null)
             {
@@ -53,6 +52,14 @@ namespace DCPUC
                     context.AddWarning(Span, CompileContext.TypeWarning(Child(i).ResultType, function.localScope.variables[i].typeSpecifier));
             }
 
+            ResultType = function.returnType;
+        }
+
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        {
+            this.target = target;
+
+            
 
             var startingRegisterState = parentState.SaveRegisterState();
 

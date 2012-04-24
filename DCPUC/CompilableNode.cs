@@ -18,6 +18,12 @@ namespace DCPUC
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
 
+        public virtual void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            foreach (var child in ChildNodes)
+                (child as CompilableNode).ResolveTypes(context, enclosingScope);
+        }
+
         public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
 
         public virtual void GatherSymbols(CompileContext context, Scope enclosingScope) 

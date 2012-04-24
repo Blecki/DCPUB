@@ -1,83 +1,64 @@
 DCPUC, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game 0x10c. 
 
 This compiler targets DCPU assembly. http://0x10c.com/doc/dcpu-16.txt
+Updated for the new spec at http://dcpu.com/highnerd/dcpu16.txt
+
+NOTE THAT THIS LANGUAGE MAKES NO ATTEMPT TO SUPPORT HARDWARE FEATURES LIKE INTERRUPTS OR HARDWARE DEVICES. But, it DOES provide inline assembly.
+
+I know of no emulators that support the new spec. 
 
 The output of this compiler has been tested with this emulator https://github.com/mappum/DCPU-16 and may output the 'BRK' instruction, which is a feature of that emulator and not of the official DCPU-16 spec.
 
 There is a simple GUI compiler included (DCPUCIDE). Try compiling this program:
 
-function fib(n) 
+function fib(n:unsigned):unsigned
 {
-   if (n == 0) return 0;
-   if (n == 1) return 1;
-   return fib(n-1) + fib(n-2);
+   if (n < 2u) return n;
+   return fib(n-1u) + fib(n-2u);
 }
 
-var a = fib(6);
+var a:unsigned = fib(6u);
 
 For reference
-
-SET PUSH, 0x0006
-JSR LABEL0_fib
-SET PUSH, A
-BRK ;Non-standard
-:LABEL0_fib
-SET PUSH, 0x0000
-SET A, SP
-SET PUSH, [0x0003+A]
-SET A, 0x0
-IFE POP, POP
-SET A, 0x1
-SET PUSH, A
-IFE POP, 0x0
-SET PC, LABEL1END
-SET PUSH, 0x0000
-SET A, POP
-SET B, POP
-ADD SP, 0x0001
-SET PC, B
-:LABEL1END
-SET PUSH, 0x0001
-SET A, SP
-SET PUSH, [0x0003+A]
-SET A, 0x0
-IFE POP, POP
-SET A, 0x1
-SET PUSH, A
-IFE POP, 0x0
-SET PC, LABEL2END
-SET PUSH, 0x0001
-SET A, POP
-SET B, POP
-ADD SP, 0x0001
-SET PC, B
-:LABEL2END
-SET PUSH, 0x0002
-SET A, SP
-SET PUSH, [0x0003+A]
-SET A, POP
-SUB A, POP
-SET PUSH, A
-JSR LABEL0_fib
-SET PUSH, A
-SET PUSH, 0x0001
-SET A, SP
-SET PUSH, [0x0004+A]
-SET A, POP
-SUB A, POP
-SET PUSH, A
-JSR LABEL0_fib
-SET PUSH, A
-SET A, POP
-ADD A, POP
-SET PUSH, A
-SET A, POP
-SET B, POP
-ADD SP, 0x0001
-SET PC, B
-SET B, POP
-ADD SP, 0x0001
-SET PC, B
+   SET A, 0x0006
+JSR L1fib
+   SET X, A
+:L0main_footer
+BRK
+:L1fib
+   SET PUSH, X
+   SET PUSH, Y
+   SET X, A
+   IFL X, 0x0002
+   SET PC, L3THEN
+   SET PC, L4END
+:L3THEN
+   SET X, A
+   SET A, X
+   SET PC, L2fib_footer
+:L4END
+   SET PUSH, A
+   SET A, PEEK
+   SUB A, 0x0001
+JSR L1fib
+   SET J, A
+   SET A, POP
+   SET X, J
+   SET PUSH, A
+   SET A, PEEK
+   SUB A, 0x0002
+JSR L1fib
+   SET J, A
+   SET A, POP
+   SET Y, J
+   ADD X, Y
+   SET A, X
+   SET PC, L2fib_footer
+:L2fib_footer
+   SET Y, POP
+   SET X, POP
+   SET PC, POP
+:ENDOFPROGRAM
 
 
 Have fun, and read the language spec!

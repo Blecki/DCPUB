@@ -50,7 +50,11 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
+        }
 
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            base.ResolveTypes(context, enclosingScope);
             if (Child(0).ResultType != Child(1).ResultType)
             {
                 context.AddWarning(this.Span, "Conversion between types. Possible loss of data.");

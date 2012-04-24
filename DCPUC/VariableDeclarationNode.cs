@@ -31,9 +31,6 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             Child(0).GatherSymbols(context, enclosingScope);
-            if (Child(0).ResultType != variable.typeSpecifier)
-                context.AddWarning(Span, "Conversion of " + Child(0).ResultType + " to " + variable.typeSpecifier + ". Possible loss of data.");
-
 
             enclosingScope.variables.Add(variable);
             variable.scope = enclosingScope;
@@ -87,6 +84,13 @@ namespace DCPUC
                 else
                     throw new CompileError("Consts must be initialized to a constant value.");
             }
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            base.ResolveTypes(context, enclosingScope);
+            if (Child(0).ResultType != variable.typeSpecifier)
+                context.AddWarning(Span, "Conversion of " + Child(0).ResultType + " to " + variable.typeSpecifier + ". Possible loss of data.");
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
