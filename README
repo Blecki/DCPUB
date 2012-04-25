@@ -2,12 +2,14 @@ DCPUC, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game
 
 This compiler targets DCPU assembly. http://0x10c.com/doc/dcpu-16.txt
 Updated for the new spec at http://dcpu.com/highnerd/dcpu16.txt
+Updated for http://dcpu.com/highnerd/dcpu16_1_3.txt (And for something I overlooked in the previous one)
 
 NOTE THAT THIS LANGUAGE MAKES NO ATTEMPT TO SUPPORT HARDWARE FEATURES LIKE INTERRUPTS OR HARDWARE DEVICES. But, it DOES provide inline assembly.
+Nor does it emit any instructions that use the EX register. A library implementing larger sized types wouldn't have any trouble using it, though.
 
 I know of no emulators that support the new spec. 
 
-The output of this compiler has been tested with this emulator https://github.com/mappum/DCPU-16 and may output the 'BRK' instruction, which is a feature of that emulator and not of the official DCPU-16 spec.
+//The output of this compiler has been tested with this emulator https://github.com/mappum/DCPU-16 and may output the 'BRK' instruction, which is a feature of that emulator and not of the official DCPU-16 spec.
 
 There is a simple GUI compiler included (DCPUCIDE). Try compiling this program:
 

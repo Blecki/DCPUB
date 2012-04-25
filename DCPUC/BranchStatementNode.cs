@@ -119,6 +119,12 @@ namespace DCPUC
             if (!firstOperand.IsIntegralConstant())
                 firstOperand.Emit(context, scope);
 
+            if (!firstOperand.IsIntegralConstant() && firstOperandTarget == Register.STACK)
+            {
+                firstOperandTarget = Register.J;
+                context.Add("SET", Scope.TempRegister, "POP");
+            }
+
             context.Add(comparisonInstruction,
                 firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)firstOperandTarget),
                 secondOperand.IsIntegralConstant() ? secondOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)secondOperandTarget));
