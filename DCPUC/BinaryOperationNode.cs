@@ -38,6 +38,7 @@ namespace DCPUC
                 opcodes.Add("/signed", "DVI");
 
                 opcodes.Add("%", "MOD");
+                opcodes.Add("%signed", "MDI");
                 opcodes.Add("<<", "SHL");
                 opcodes.Add(">>", "SHR");
                 opcodes.Add("&", "AND");
@@ -60,7 +61,8 @@ namespace DCPUC
                 context.AddWarning(this.Span, "Conversion between types. Possible loss of data.");
                 //Promote to signed?
 
-                if (AsString == "+" || AsString == "-" || AsString == "*" || AsString == "/") ResultType = "signed";
+                if (AsString == "+" || AsString == "-" || AsString == "*" || AsString == "/" || AsString == "%") 
+                    ResultType = "signed";
                 else ResultType = "unsigned";
             }
             else
@@ -84,7 +86,7 @@ namespace DCPUC
                 if (AsString == "-") if (promote) a = (int)((short)a - (short)b); else a = (int)((ushort)a - (ushort)b);
                 if (AsString == "*") if (promote) a = (int)((short)a * (short)b); else a = (int)((ushort)a * (ushort)b);
                 if (AsString == "/") if (promote) a = (int)((short)a / (short)b); else a = (int)((ushort)a / (ushort)b);
-                if (AsString == "%") a = (int)((ushort)a % (ushort)b);
+                if (AsString == "%") if (promote) a = (int)((short)a % (short)b); else a = (int)((ushort)a % (ushort)b);
                 if (AsString == "<<") a = (int)((ushort)a << (ushort)b);
                 if (AsString == ">>") a = (int)((ushort)a >> (ushort)b);
                 if (AsString == "&") a = (int)((ushort)a & (ushort)b);
