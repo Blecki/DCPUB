@@ -59,13 +59,16 @@ namespace DCPUC
             var structDefinition = new NonTerminal("Struct", typeof(StructDeclarationNode));
             var memberDeclaration = new NonTerminal("Member", typeof(MemberNode));
             var memberList = new NonTerminal("Member List");
+            var registerBinding = new NonTerminal("Register Binding", typeof(RegisterBindingNode));
+            var registerBindingList = new NonTerminal("Register Binding List");
+            var addressOf = new NonTerminal("Address Of", typeof(AddressOfNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
             blockLiteral.Rule = ToTerm("[") + integerLiteral + "]";
             dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral | characterLiteral));
             dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
             expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
-                | dereference | functionCall | dataLiteralChain;
+                | dereference | functionCall | dataLiteralChain | addressOf;
             assignment.Rule = (identifier | dereference) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
@@ -80,7 +83,11 @@ namespace DCPUC
                 | (returnStatement + ";");
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
-            inlineASM.Rule = ToTerm("asm") + "{" + new FreeTextLiteral("inline asm", "}") + "}";
+            addressOf.Rule = ToTerm("&") + identifier;
+
+            registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
+            registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
+            inlineASM.Rule = ToTerm("asm") + (ToTerm("(") + registerBindingList + ")").Q() + "{" + new FreeTextLiteral("inline asm", "}") + "}";
             ifStatement.Rule = ToTerm("if") + "(" + (expression | comparison) + ")" + statement;
             ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;
             whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;

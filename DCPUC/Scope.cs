@@ -24,6 +24,7 @@ namespace DCPUC
         public bool emitBrackets = true;
         public int constantValue;
         public string typeSpecifier = "unsigned";
+        public bool addressTaken = false;
 
         public VariableType type;
     }

@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    public class VariableNameNode : CompilableNode
+    public class AddressOfNode : CompilableNode
     {
         public Variable variable = null;
         public String variableName;
@@ -15,32 +15,25 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            variableName = treeNode.FindTokenAndGetText();
+            variableName = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
         public override string TreeLabel()
         {
-            return "varref " + variableName + " [into:" + target.ToString() + "]";
+            return "addof " + variableName + " [into:" + target.ToString() + "]";
         }
 
         public override bool IsIntegralConstant()
         {
-            if (variable.type == VariableType.Constant)
-                return true;
             return false;
         }
 
-        public override int GetConstantValue()
-        {
-            return variable.constantValue;
-        }
-
-        public override string GetConstantToken()
-        {
-            return Hex.hex(GetConstantValue());
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             var scope = enclosingScope;
             while (variable == null && scope != null)
@@ -54,12 +47,11 @@ namespace DCPUC
             if (variable == null)
                 throw new CompileError("Could not find variable " + variableName);
 
-        }
+            ResultType = "unsigned";
+            variable.addressTaken = true;
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
-        {
-            
-            ResultType = variable.typeSpecifier;
+            if (variable.type == VariableType.Constant) throw new CompileError("Integral constants have no address.");
+            if (variable.type == VariableType.ConstantReference) throw new CompileError("Can't take address of constant reference.");
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -71,37 +63,32 @@ namespace DCPUC
         {
             if (variable.type == VariableType.Constant)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
+                //context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
             }
             else if (variable.type == VariableType.ConstantReference)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
+                //context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
             }
             else if (variable.type == VariableType.Static)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
+                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
             }
             else if (variable.type == VariableType.Local)
             {
                 if (variable.location == Register.STACK)
                 {
                     var stackOffset = scope.StackOffset(variable.stackOffset);
-                    if (stackOffset > 0)
+                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "SP");
+                    if (stackOffset != 0)
                     {
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
-                            "[" + Hex.hex(stackOffset) + "+SP]");
+                        if (target == Register.STACK)
+                            context.Add("ADD", "PEEK", Hex.hex(stackOffset));
+                        else
+                            context.Add("ADD", Scope.GetRegisterLabelFirst((int)target), Hex.hex(stackOffset));
                     }
-                    else
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
-                }
-                else if (variable.location == target)
-                {
-                    //context.Add(";SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
                 }
                 else
-                {
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
-                }
+                    throw new CompileError("Variable should be on stack");
             }
 
             if (target == Register.STACK) scope.stackDepth += 1;
