@@ -124,7 +124,22 @@ namespace DCPUC
 
             var localScope = function.localScope.Push();
 
+            for (int i = 0; i < Math.Min(3, function.parameterCount); ++i)
+            {
+                if (function.localScope.variables[i].addressTaken)
+                {
+                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)function.localScope.variables[i].location));
+                    function.localScope.variables[i].location = Register.STACK;
+                    function.localScope.variables[i].stackOffset = localScope.stackDepth;
+                    localScope.stackDepth += 1;
+                }
+            }
+
             Child(0).Emit(context, localScope);
+
+            if (localScope.stackDepth - function.localScope.stackDepth > 0)
+                context.Add("ADD", "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth), "Cleanup stack"); 
+
             context.Add(":" + footerLabel, "", "");
             context.Barrier();
 

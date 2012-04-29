@@ -30,7 +30,7 @@ namespace DCPUC
 
             Child(0).Emit(context, localScope);
             context.Add(":" + footerLabel, "", "");
-            context.Add("BRK", "", "");
+            context.Add("SUB", "PC", "1");
 
             context.Barrier();
 

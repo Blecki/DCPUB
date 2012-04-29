@@ -97,12 +97,14 @@ namespace DCPUC
         {
             if (variable.type == VariableType.Local)
             {
+                variable.location = Register.STACK;
+                /*
                 variable.location = parentState.FindAndUseFreeRegister();
                 if (variable.location == Register.I)
                 {
                     variable.location = Register.STACK;
                     parentState.FreeMaybeRegister(Register.I);
-                }
+                }*/
                 Child(0).AssignRegisters(context, parentState, variable.location);
             }
         }
