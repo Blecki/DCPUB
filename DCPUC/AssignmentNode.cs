@@ -150,7 +150,7 @@ namespace DCPUC
                        var stackOffset = scope.StackOffset(assignTo.stackOffset);
                        if (stackOffset > 0)
                        {
-                           context.Add(opcode, "[" + Hex.hex(stackOffset) + "SP]",
+                           context.Add(opcode, "[" + Hex.hex(stackOffset)  + "+SP]",
                                Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
                        }
                        else
