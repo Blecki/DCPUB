@@ -42,11 +42,6 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            
-        }
-
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
-        {
             var scope = enclosingScope;
             while (variable == null && scope != null)
             {
@@ -59,6 +54,11 @@ namespace DCPUC
             if (variable == null)
                 throw new CompileError("Could not find variable " + variableName);
 
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            
             ResultType = variable.typeSpecifier;
         }
 
