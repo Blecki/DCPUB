@@ -36,6 +36,13 @@ namespace DCPUC
             foreach (var member in treeNode.ChildNodes[2].ChildNodes)
                 AddChild("member", member);
             @struct.Node = this;
+
+            int offset = 0;
+            foreach (var child in ChildNodes)
+            {
+                (child as MemberNode).member.offset = offset;
+                offset += 1;
+            }
         }
 
         public override string TreeLabel()

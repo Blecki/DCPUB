@@ -62,14 +62,15 @@ namespace DCPUC
             var registerBinding = new NonTerminal("Register Binding", typeof(RegisterBindingNode));
             var registerBindingList = new NonTerminal("Register Binding List");
             var addressOf = new NonTerminal("Address Of", typeof(AddressOfNode));
+            var memberAccess = new NonTerminal("Member Access", typeof(MemberAccessNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
             blockLiteral.Rule = ToTerm("[") + integerLiteral + "]";
             dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral | characterLiteral));
             dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
             expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
-                | dereference | functionCall | dataLiteralChain | addressOf;
-            assignment.Rule = (identifier | dereference) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
+                | dereference | functionCall | dataLiteralChain | addressOf | memberAccess;
+            assignment.Rule = (identifier | dereference | memberAccess) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
@@ -84,6 +85,7 @@ namespace DCPUC
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             addressOf.Rule = ToTerm("&") + identifier;
+            memberAccess.Rule = expression + "." + identifier;
 
             registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);

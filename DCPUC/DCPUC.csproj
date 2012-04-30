@@ -40,8 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssignableNode.cs" />
     <Compile Include="CompileOptions.cs" />
     <Compile Include="AddressOfNode.cs" />
+    <Compile Include="MemberAccessNode.cs" />
     <Compile Include="StructDeclarationNode.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />

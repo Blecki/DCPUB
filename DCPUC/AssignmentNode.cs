@@ -33,8 +33,6 @@ namespace DCPUC
                 opcodes.Add("*=", "MUL");
                 opcodes.Add("/=", "DIV");
 
-                opcodes.Add("+=signed", "ADD");
-                opcodes.Add("-=signed", "SUB");
                 opcodes.Add("*=signed", "MLI");
                 opcodes.Add("/=signed", "DVI");
 
@@ -49,7 +47,7 @@ namespace DCPUC
 
         public override string TreeLabel()
         {
-            return @operator + " " + (dereferenceLvalue ? "* " : "") + "[l:" + lvalueTargetRegister.ToString() + " r:" + rvalueTargetRegister.ToString() + "]";
+            return @operator + " " + "[r:" + rvalueTargetRegister.ToString() + "]";
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -57,18 +55,11 @@ namespace DCPUC
             Child(0).GatherSymbols(context, enclosingScope);
             if (Child(0) is VariableNameNode)
             {
-                assignTo = (Child(0) as VariableNameNode).variable;
+                var assignTo = (Child(0) as VariableNameNode).variable;
                 if (assignTo.type == VariableType.Constant || assignTo.type == VariableType.ConstantReference)
                     throw new CompileError("Can't assign to constants");
-
-
             }
-            else if (Child(0) is DereferenceNode) 
-            {
-                dereferenceLvalue = true;
-            }
-            else
-                throw new CompileError("Illegal assignment");
+            
             Child(1).GatherSymbols(context, enclosingScope);
         }
 
@@ -78,6 +69,7 @@ namespace DCPUC
             Child(1).ResolveTypes(context, enclosingScope);
             if (Child(0).ResultType != Child(1).ResultType)
                 context.AddWarning(Span, CompileContext.TypeWarning(Child(1).ResultType, Child(0).ResultType));
+            ResultType = Child(0).ResultType;
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -85,92 +77,26 @@ namespace DCPUC
             if (target != Register.DISCARD)
                 throw new CompileError("Assignment should always target discard");
 
-            if (assignTo != null)
-            {
-                lvalueTargetRegister = assignTo.location;
-                if (@operator == "=")
-                {
-                    if (assignTo.type != VariableType.Local)
-                    {
-                        rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                        Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
-                        parentState.FreeMaybeRegister(rvalueTargetRegister);
-                    }
-                    else
-                    {
-                        if (assignTo.location != Register.STACK)
-                            rvalueTargetRegister = assignTo.location;
-                        else
-                            rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                        Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
-                        if (rvalueTargetRegister != assignTo.location) parentState.FreeMaybeRegister(rvalueTargetRegister);
-                    }
-                }
-                else
-                {
-                    rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                    Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
-                    parentState.FreeMaybeRegister(rvalueTargetRegister);
-                }
-            }
-            else 
-            {
-                rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
-                lvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                Child(0).AssignRegisters(context, parentState, lvalueTargetRegister);
-                parentState.FreeRegisters(lvalueTargetRegister, rvalueTargetRegister);
-            }
+            rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+            (Child(0) as AssignableNode).IsAssignedTo = true;
+            Child(0).AssignRegisters(context, parentState, Register.DISCARD);
+            Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
+            parentState.FreeMaybeRegister(rvalueTargetRegister);
+
         }
         
         public override void Emit(CompileContext context, Scope scope)
         {
             Child(1).Emit(context, scope);
 
-            if (assignTo == null)
-            {
-                //Compound assignment to dereferences are always unsigned operations.
+            var opcode = "";
+            if (opcodes.ContainsKey(@operator + ResultType)) opcode = opcodes[@operator + ResultType];
+            else opcode = opcodes[@operator];
 
-                Child(0).Child(0).Emit(context, scope); //Skip deref node
+            (Child(0) as AssignableNode).EmitAssignment(context, scope, rvalueTargetRegister, opcode);
+            if (rvalueTargetRegister == Register.STACK)
+                scope.stackDepth -= 1;
 
-                context.Add(opcodes[@operator],
-                    (dereferenceLvalue ? "[" : "") + Scope.GetRegisterLabelSecond((int)lvalueTargetRegister) + (dereferenceLvalue ? "]" : ""),
-                     Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-
-                if (lvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
-                if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
-            }
-            else if (assignTo.type == VariableType.Local)
-            {
-                var opcode = assignTo.typeSpecifier == "signed" ? opcodes[@operator + "signed"] : opcodes[@operator];
-               if (assignTo.location != rvalueTargetRegister)
-               {
-                   if (assignTo.location == Register.STACK)
-                   {
-                       var stackOffset = scope.StackOffset(assignTo.stackOffset);
-                       if (stackOffset > 0)
-                       {
-                           context.Add(opcode, "[" + Hex.hex(stackOffset)  + "+SP]",
-                               Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-                       }
-                       else
-                           context.Add(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-                   }
-                   else
-                       context.Add(opcode, Scope.GetRegisterLabelFirst((int)assignTo.location),
-                           Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-
-               }
-                if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
-            }
-            else if (assignTo.type == VariableType.Static)
-            {
-                var opcode = assignTo.typeSpecifier == "signed" ? opcodes[@operator + "signed"] : opcodes[@operator];
-                context.Add(opcode, "[" + assignTo.staticLabel + "]", Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
-                if (rvalueTargetRegister == Register.STACK) scope.stackDepth -= 1;
-            }
-            
-           
         }
     }
 
