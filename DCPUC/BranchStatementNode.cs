@@ -52,6 +52,15 @@ namespace DCPUC
 
                 clauseOrder = ClauseOrder.FailFirst;
             }
+            else
+            {
+                clauseOrder = ClauseOrder.FailFirst;
+                comparisonInstruction = "IFN";
+                firstOperand = conditionNode;
+                var nln = new NumberLiteralNode();
+                nln.Value = 0;
+                secondOperand = nln;
+            }
         }
 
         public override CompilableNode FoldConstants(CompileContext context)

@@ -127,6 +127,7 @@ namespace DCPUC
                     scope.stackDepth += size;
                     context.Add("SUB", "SP", Hex.hex(size));
                     context.Add("SET", Scope.GetRegisterLabelFirst((int)variable.location), "SP");
+                    variable.stackOffset = scope.stackDepth;
                     if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }
                 else

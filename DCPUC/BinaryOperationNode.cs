@@ -17,13 +17,10 @@ namespace DCPUC
             return AsString + " " + ResultType;
         }
 
-        public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
-        {
-            base.Init(context, treeNode);
-            AddChild("Parameter", treeNode.ChildNodes[0]);
-            AddChild("Parameter", treeNode.ChildNodes[2]);
-            this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
+        public void SetOp(string op) { AsString = op; }
 
+        public void initOps()
+        {
             if (opcodes == null)
             {
                 opcodes = new Dictionary<string, string>();
@@ -45,6 +42,16 @@ namespace DCPUC
                 opcodes.Add("|", "BOR");
                 opcodes.Add("^", "XOR");
             }
+        }
+
+        public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
+        {
+            base.Init(context, treeNode);
+            AddChild("Parameter", treeNode.ChildNodes[0]);
+            AddChild("Parameter", treeNode.ChildNodes[2]);
+            this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
+
+            
 
         }
 
@@ -117,6 +124,8 @@ namespace DCPUC
 
         public override void Emit(CompileContext context, Scope scope)
         {
+            initOps();
+
             if (Child(0).IsIntegralConstant())
             {
                 context.Add("SET", Scope.GetRegisterLabelFirst((int)firstOperandResult), Child(0).GetConstantToken());

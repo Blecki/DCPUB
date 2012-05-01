@@ -37,9 +37,19 @@ namespace DCPUC
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantPass:
-                    return Child(1);
+                    {
+                        Child(1).WasFolded = true;
+                        return Child(1);
+                    }
                 case ClauseOrder.ConstantFail:
-                    return ChildNodes.Count > 2 ? Child(2) : null;
+                    {
+                        if (ChildNodes.Count > 2)
+                        {
+                            Child(2).WasFolded = true;
+                            return Child(2);
+                        }
+                        return null;
+                    }
                 default:
                     return this;
             }

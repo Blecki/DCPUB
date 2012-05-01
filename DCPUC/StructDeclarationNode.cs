@@ -43,6 +43,7 @@ namespace DCPUC
                 (child as MemberNode).member.offset = offset;
                 offset += 1;
             }
+
         }
 
         public override string TreeLabel()
@@ -54,6 +55,7 @@ namespace DCPUC
         {
             foreach (var child in ChildNodes)
                 @struct.members.Add((child as MemberNode).member);
+            @struct.size = @struct.members.Count;
             enclosingScope.structs.Add(@struct);
         }
 
