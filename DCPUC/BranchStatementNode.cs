@@ -91,14 +91,14 @@ namespace DCPUC
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-            if (target != Register.DISCARD) throw new CompileError("Branch not at top level");
+            //if (target != Register.DISCARD) throw new CompileError("Branch not at top level");
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantFail:
-                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, Register.DISCARD);
+                    if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, target);
                     break;
                 case ClauseOrder.ConstantPass:
-                    Child(1).AssignRegisters(context, parentState, Register.DISCARD);
+                    Child(1).AssignRegisters(context, parentState, target);
                     break;
                 default:
                     {
@@ -114,8 +114,8 @@ namespace DCPUC
                         }
                         parentState.FreeRegisters(firstOperandTarget, secondOperandTarget);
 
-                        Child(1).AssignRegisters(context, parentState, Register.DISCARD);
-                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, Register.DISCARD);
+                        Child(1).AssignRegisters(context, parentState, target);
+                        if (ChildNodes.Count > 2) Child(2).AssignRegisters(context, parentState, target);
                     }
                     break;
             }
@@ -141,11 +141,11 @@ namespace DCPUC
             if (secondOperandTarget == Register.STACK) scope.stackDepth -= 1;
         }
 
-        public static void EmitBlock(CompileContext context, Scope scope, CompilableNode block)
+        public static void EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
         {
             var blockScope = scope.Push();
             block.Emit(context, blockScope);
-            if (blockScope.stackDepth - scope.stackDepth > 0)
+            if (restoreStack && blockScope.stackDepth - scope.stackDepth > 0)
                 context.Add("ADD", "SP", Hex.hex(blockScope.stackDepth - scope.stackDepth));
         }
         

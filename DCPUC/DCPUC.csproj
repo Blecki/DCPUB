@@ -44,6 +44,7 @@
     <Compile Include="CompileOptions.cs" />
     <Compile Include="AddressOfNode.cs" />
     <Compile Include="BlockLiteralNode.cs" />
+    <Compile Include="TernarySelectionNode.cs" />
     <Compile Include="IndexOperatorNode.cs" />
     <Compile Include="SizeofNode.cs" />
     <Compile Include="MemberAccessNode.cs" />

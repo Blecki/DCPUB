@@ -65,13 +65,15 @@ namespace DCPUC
             var memberAccess = new NonTerminal("Member Access", typeof(MemberAccessNode));
             var @sizeof = new NonTerminal("sizeof", typeof(SizeofNode));
             var indexOperator = new NonTerminal("index", typeof(IndexOperatorNode));
+            var ternaryOperator = new NonTerminal("?:", typeof(TernarySelectionNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
             blockLiteral.Rule = ToTerm("[") + expression + "]";
             dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral | characterLiteral));
             dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
             expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
-                | dereference | functionCall | dataLiteralChain | addressOf | memberAccess | @sizeof | indexOperator;
+                | dereference | functionCall | dataLiteralChain | addressOf | memberAccess | @sizeof | indexOperator
+                | ternaryOperator;
             assignment.Rule = (identifier | dereference | memberAccess | indexOperator) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
@@ -90,6 +92,7 @@ namespace DCPUC
             memberAccess.Rule = expression + "." + identifier;
             @sizeof.Rule = ToTerm("sizeof") + "(" + identifier + ")";
             indexOperator.Rule = expression + "[" + expression + "]";
+            ternaryOperator.Rule = (expression | comparison) + "?" + expression + ":" + expression;
 
             registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
@@ -114,7 +117,7 @@ namespace DCPUC
 
             this.RegisterBracePair("[", "]");
             this.Delimiters = "{}[](),:;+-*/%&|^!~<>=.";
-            this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":");
+            this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
             this.RegisterOperators(1, Associativity.Right, "==", "!=");

@@ -2,7 +2,7 @@
 [ ] - Struct sample
 [ ] Comparison Operators
 [*] Struct syntax sugar
-[ ] operator[]
+[*] operator[]
 [ ] Compile options
 [*] Compound assignment operators
 [*] Command line interface
