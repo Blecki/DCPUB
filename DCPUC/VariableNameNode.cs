@@ -6,11 +6,17 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    public class VariableNameNode : CompilableNode
+    public class VariableNameNode : CompilableNode, AssignableNode
     {
         public Variable variable = null;
         public String variableName;
         Register target;
+        public bool IsAssignedTo { get; set; }
+
+        public VariableNameNode()
+        {
+            IsAssignedTo = false;
+        }
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -105,6 +111,29 @@ namespace DCPUC
             }
 
             if (target == Register.STACK) scope.stackDepth += 1;
+        }
+
+        public void EmitAssignment(CompileContext context, Scope scope, Register from, String opcode)
+        {
+            if (variable.type == VariableType.Constant || variable.type == VariableType.ConstantReference)
+                throw new CompileError("Can't assign to constant values");
+
+            if (variable.type == VariableType.Local)
+            {
+                if (variable.location == Register.STACK)
+                {
+                    var stackOffset = scope.StackOffset(variable.stackOffset);
+                    if (stackOffset > 0)
+                        context.Add(opcode, "[SP+" + Hex.hex(stackOffset) + "]", Scope.GetRegisterLabelSecond((int)from));
+                    else
+                        context.Add(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)from));
+                }
+                else
+                    context.Add(opcode, Scope.GetRegisterLabelFirst((int)variable.location), Scope.GetRegisterLabelSecond((int)from));
+            }
+            else if (variable.type == VariableType.Static)
+                context.Add(opcode, "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond((int)from));
+            
         }
     }
 

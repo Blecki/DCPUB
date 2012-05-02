@@ -106,7 +106,8 @@ namespace DCPUC
         public void Compile(Action<string> onError)
         {
             var end_of_program = new Variable();
-            end_of_program.location = Register.STATIC;
+            end_of_program.location = Register.CONST;
+            end_of_program.type = VariableType.ConstantReference;
             end_of_program.name = "__endofprogram";
             end_of_program.staticLabel = "ENDOFPROGRAM";
             end_of_program.emitBrackets = false;
