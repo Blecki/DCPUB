@@ -91,6 +91,12 @@ namespace DCPUC
             base.ResolveTypes(context, enclosingScope);
             if (Child(0).ResultType != variable.typeSpecifier)
                 context.AddWarning(Span, "Conversion of " + Child(0).ResultType + " to " + variable.typeSpecifier + ". Possible loss of data.");
+            if (!Scope.IsBuiltIn(variable.typeSpecifier))
+            {
+                variable.structType = enclosingScope.FindType(variable.typeSpecifier);
+                if (variable.structType == null)
+                    throw new CompileError("Could not find type " + variable.typeSpecifier);
+            }
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -121,6 +127,7 @@ namespace DCPUC
                     scope.stackDepth += size;
                     context.Add("SUB", "SP", Hex.hex(size));
                     context.Add("SET", Scope.GetRegisterLabelFirst((int)variable.location), "SP");
+                    variable.stackOffset = scope.stackDepth;
                     if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }
                 else

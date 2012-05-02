@@ -6,7 +6,7 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    public class DereferenceNode : CompilableNode
+    public class DereferenceNode : CompilableNode, AssignableNode
     {
         Register target;
 
@@ -24,8 +24,12 @@ namespace DCPUC
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-            this.target = target;
-            Child(0).AssignRegisters(context, parentState, target);
+            if (IsAssignedTo)
+                this.target = parentState.FindAndUseFreeRegister();
+            else
+                this.target = target;
+            Child(0).AssignRegisters(context, parentState, this.target);
+            if (IsAssignedTo) parentState.FreeMaybeRegister(this.target);
         }
 
         public override void Emit(CompileContext context, Scope scope)
@@ -42,6 +46,26 @@ namespace DCPUC
             }
         }
 
+
+        public bool IsAssignedTo { get; set; }
+
+        public DereferenceNode()
+        {
+            IsAssignedTo = false;
+        }
+
+        void AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, String opcode)
+        {
+            Child(0).Emit(context, scope);
+            if (target == Register.STACK)
+            {
+                context.Add("SET", "J", "POP");
+                target = Register.J;
+                scope.stackDepth -= 1;
+            }
+            context.Add(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "]",
+                Scope.GetRegisterLabelSecond((int)from));
+        }
     }
     
 }

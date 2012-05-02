@@ -62,20 +62,27 @@ namespace DCPUC
             var registerBinding = new NonTerminal("Register Binding", typeof(RegisterBindingNode));
             var registerBindingList = new NonTerminal("Register Binding List");
             var addressOf = new NonTerminal("Address Of", typeof(AddressOfNode));
+            var memberAccess = new NonTerminal("Member Access", typeof(MemberAccessNode));
+            var @sizeof = new NonTerminal("sizeof", typeof(SizeofNode));
+            var indexOperator = new NonTerminal("index", typeof(IndexOperatorNode));
+            var ternaryOperator = new NonTerminal("?:", typeof(TernarySelectionNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
-            blockLiteral.Rule = ToTerm("[") + integerLiteral + "]";
-            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral | characterLiteral));
-            dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
-            expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
-                | dereference | functionCall | dataLiteralChain | addressOf;
-            assignment.Rule = (identifier | dereference) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
+            blockLiteral.Rule = ToTerm("[") + expression + "]";
+            dataLiteral.Rule = MakePlusRule(dataLiteral, ToTerm(","), (numberLiteral | stringLiteral | blockLiteral));
+            dataLiteralChain.Rule = ToTerm("{") + dataLiteral + ToTerm("}");
+
+            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
+                | dereference | functionCall | dataLiteralChain | addressOf | memberAccess | @sizeof | indexOperator
+                | ternaryOperator;
+
+            assignment.Rule = (identifier | dereference | memberAccess | indexOperator) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule =
                 (ToTerm("var") | "static" | "const") + identifier + (ToTerm(":") + identifier).Q()                
-                + "=" + (expression | dataLiteralChain | blockLiteral);
+                + "=" + (expression | blockLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
@@ -84,6 +91,10 @@ namespace DCPUC
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             addressOf.Rule = ToTerm("&") + identifier;
+            memberAccess.Rule = expression + "." + identifier;
+            @sizeof.Rule = ToTerm("sizeof") + "(" + identifier + ")";
+            indexOperator.Rule = expression + "[" + expression + "]";
+            ternaryOperator.Rule = (expression | comparison) + "?" + expression + ":" + expression;
 
             registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
@@ -107,8 +118,9 @@ namespace DCPUC
             this.Root = statementList;
 
             this.RegisterBracePair("[", "]");
+            this.RegisterBracePair("{", "}");
             this.Delimiters = "{}[](),:;+-*/%&|^!~<>=.";
-            this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":");
+            this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
             this.RegisterOperators(1, Associativity.Right, "==", "!=");
@@ -117,7 +129,7 @@ namespace DCPUC
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
             this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^");
             
-            this.RegisterOperators(6, Associativity.Left, "[", "]", "<", ">");
+            this.RegisterOperators(6, Associativity.Left, "{", "}", "[", "]", "<", ">");
         }
 
     }

@@ -6,29 +6,29 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
-    public class IfStatementNode : BranchStatementNode
+    public class TernarySelectionNode : BranchStatementNode
     {
+        public Register target;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            if (treeNode.Term.Name == "IfElse")
-            {
-                AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1].FirstChild);
-                AddChild("then", treeNode.ChildNodes[0].ChildNodes[2]);
-                AddChild("ELSE", treeNode.ChildNodes[2]);
-            }
-            else
-            {
-                AddChild("Expression", treeNode.ChildNodes[1].FirstChild);
-                AddChild("Block", treeNode.ChildNodes[2]);
-                if (treeNode.ChildNodes.Count == 5) AddChild("Else", treeNode.ChildNodes[4]);
-            }
-            this.AsString = "If";
+            AddChild("condition", treeNode.ChildNodes[0].FirstChild);
+            AddChild("then", treeNode.ChildNodes[1]);
+            AddChild("ELSE", treeNode.ChildNodes[2]);
+            
+            this.AsString = "?:";
         }
 
         public override string TreeLabel()
         {
-            return "if " + base.TreeLabel();
+            return "?: " + base.TreeLabel();
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            base.ResolveTypes(context, enclosingScope);
+            ResultType = Child(1).ResultType;
         }
 
         public override CompilableNode FoldConstants(CompileContext context)
@@ -55,6 +55,12 @@ namespace DCPUC
             }
         }
 
+        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        {
+            this.target = target;
+            base.AssignRegisters(context, parentState, target);
+        }
+
         public override void Emit(CompileContext context, Scope scope)
         {
             base.Emit(context, scope);
@@ -66,11 +72,11 @@ namespace DCPUC
                         var endLabel = context.GetLabel() + "END";
 
                         context.Add("SET", "PC", thenLabel);
-                        if (ChildNodes.Count == 3) EmitBlock(context, scope, Child(2));
+                        if (ChildNodes.Count == 3) EmitBlock(context, scope, Child(2), false);
                         context.Add("SET", "PC", endLabel);
                         context.Add(":" + thenLabel, "", "");
 
-                        EmitBlock(context, scope, Child(1));
+                        EmitBlock(context, scope, Child(1), false);
                         context.Add(":" + endLabel, "", "");
                     }
                     break;

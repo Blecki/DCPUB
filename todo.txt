@@ -1,7 +1,8 @@
 [ ] Sample Programs
+[ ] - Struct sample
 [ ] Comparison Operators
-[ ] Struct syntax sugar
-[ ] operator[]
+[*] Struct syntax sugar
+[*] operator[]
 [ ] Compile options
 [*] Compound assignment operators
 [*] Command line interface
@@ -26,7 +27,14 @@
 [*] function return types
 [*] type checking for function parameters and returned values
 [ ] BUG: parameters pushed in wrong order
-[ ] Do not emit errors and warnings directly into assembly stream
+[*] Do not emit errors and warnings directly into assembly stream
 [ ] Pushing stack parameters before ABC parameters may allow stack parameters to use more registers (Or at least access ABC parameters more efficiently)
 [ ] BUG: Divide by 0 in folded constants crashes compiler
 [ ] Default type should (probably) be signed [Though many operations result in unsigned types.]
+[ ] Don't emit warnings for folded constant conversions that don't lose data.
+[*] 'sizeof' operator
+[ ] Freestore/heap implementation
+[ ] Document structs
+[*] Allow any constant expression in array declarations
+[ ] Ternary ?: operator
+[ ] pre/post inc/dec operators

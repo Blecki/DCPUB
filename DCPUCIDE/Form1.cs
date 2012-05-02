@@ -74,7 +74,7 @@ namespace DCPUCIDE
 
         TreeNode buildAstTree(DCPUC.CompilableNode node)
         {
-            var tree_node = new TreeNode(node.TreeLabel());
+            var tree_node = new TreeNode(node.TreeLabel() + (node.WasFolded ? " FOLDED" : ""));
             foreach (var child in node.ChildNodes)
             {
                 tree_node.Nodes.Add(buildAstTree(child as DCPUC.CompilableNode));

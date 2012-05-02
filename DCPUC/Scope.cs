@@ -25,6 +25,7 @@ namespace DCPUC
         public int constantValue;
         public string typeSpecifier = "unsigned";
         public bool addressTaken = false;
+        public Struct structType = null;
 
         public VariableType type;
     }
@@ -43,6 +44,8 @@ namespace DCPUC
     {
         public String name;
         public String typeSpecifier;
+        public Struct referencedStruct;
+        public int offset;
     }
 
     public class Struct
@@ -50,6 +53,7 @@ namespace DCPUC
         public String name;
         public List<Member> members = new List<Member>();
         public StructDeclarationNode Node;
+        public int size;
     }
 
     public enum Register
@@ -159,5 +163,18 @@ namespace DCPUC
 
         internal void FreeMaybeRegister(int r) { if (IsRegister((Register)r)) FreeRegister(r); }
 
+        internal static bool IsBuiltIn(String s)
+        {
+            if (s == "signed" || s == "unsigned") return true;
+            return false;
+        }
+
+        public Struct FindType(string s)
+        {
+            foreach (var @struct in structs)
+                if (@struct.name == s) return @struct;
+            if (parent != null) return parent.FindType(s);
+            return null;
+        }
     }
 }
