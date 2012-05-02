@@ -69,18 +69,20 @@ namespace DCPUC
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
             blockLiteral.Rule = ToTerm("[") + expression + "]";
-            dataLiteral.Rule = MakePlusRule(dataLiteral, (numberLiteral | stringLiteral | blockLiteral | characterLiteral));
-            dataLiteralChain.Rule = ToTerm("&") + dataLiteral;
-            expression.Rule = numberLiteral | characterLiteral | binaryOperation | parenExpression | identifier
+            dataLiteral.Rule = MakePlusRule(dataLiteral, ToTerm(","), (numberLiteral | stringLiteral | blockLiteral));
+            dataLiteralChain.Rule = ToTerm("{") + dataLiteral + ToTerm("}");
+
+            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
                 | dereference | functionCall | dataLiteralChain | addressOf | memberAccess | @sizeof | indexOperator
                 | ternaryOperator;
+
             assignment.Rule = (identifier | dereference | memberAccess | indexOperator) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule =
                 (ToTerm("var") | "static" | "const") + identifier + (ToTerm(":") + identifier).Q()                
-                + "=" + (expression | dataLiteralChain | blockLiteral);
+                + "=" + (expression | blockLiteral);
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
@@ -116,6 +118,7 @@ namespace DCPUC
             this.Root = statementList;
 
             this.RegisterBracePair("[", "]");
+            this.RegisterBracePair("{", "}");
             this.Delimiters = "{}[](),:;+-*/%&|^!~<>=.";
             this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
@@ -126,7 +129,7 @@ namespace DCPUC
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
             this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^");
             
-            this.RegisterOperators(6, Associativity.Left, "[", "]", "<", ">");
+            this.RegisterOperators(6, Associativity.Left, "{", "}", "[", "]", "<", ">");
         }
 
     }

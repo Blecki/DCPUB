@@ -24,7 +24,7 @@ namespace DCPUC
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            foreach (var child in treeNode.ChildNodes[1].ChildNodes)
+            foreach (var child in treeNode.ChildNodes[0].ChildNodes)
             {
                 if (child.Term.Name == "BlockLiteral")
                 {
