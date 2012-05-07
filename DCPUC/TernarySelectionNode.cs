@@ -61,9 +61,9 @@ namespace DCPUC
             base.AssignRegisters(context, parentState, target);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            base.Emit(context, scope);
+            var r = base.Emit(context, scope);
             switch (clauseOrder)
             {
                 case ClauseOrder.FailFirst: //Only actual valid order.
@@ -71,18 +71,19 @@ namespace DCPUC
                         var thenLabel = context.GetLabel() + "THEN";
                         var endLabel = context.GetLabel() + "END";
 
-                        context.Add("SET", "PC", thenLabel);
-                        if (ChildNodes.Count == 3) EmitBlock(context, scope, Child(2), false);
-                        context.Add("SET", "PC", endLabel);
-                        context.Add(":" + thenLabel, "", "");
+                        r.AddInstruction(Assembly.Instructions.SET, "PC", thenLabel);
+                        if (ChildNodes.Count == 3) r.AddChild(EmitBlock(context, scope, Child(2), false));
+                        r.AddInstruction(Assembly.Instructions.SET, "PC", endLabel);
+                        r.AddLabel(thenLabel);
 
-                        EmitBlock(context, scope, Child(1), false);
-                        context.Add(":" + endLabel, "", "");
+                        r.AddChild(EmitBlock(context, scope, Child(1), false));
+                        r.AddLabel(endLabel);
                     }
                     break;
                 default:
                     throw new CompileError("IF !FailFirst Not implemented");
             }
+            return r;
 
         }
 

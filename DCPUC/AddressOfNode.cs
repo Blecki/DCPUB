@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUC.Assembly;
 
 namespace DCPUC
 {
@@ -59,8 +60,10 @@ namespace DCPUC
             this.target = target;
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            Node r = null;
+
             if (variable.type == VariableType.Constant)
             {
                 //context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
@@ -71,20 +74,21 @@ namespace DCPUC
             }
             else if (variable.type == VariableType.Static)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
+                r = Assembly.Instruction.Make(Instructions.SET, Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
             }
             else if (variable.type == VariableType.Local)
             {
+                r = new Node();
                 if (variable.location == Register.STACK)
                 {
                     var stackOffset = scope.StackOffset(variable.stackOffset);
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "SP");
+                    r.AddInstruction(Instructions.SET, Scope.GetRegisterLabelFirst((int)target), "SP");
                     if (stackOffset != 0)
                     {
                         if (target == Register.STACK)
-                            context.Add("ADD", "PEEK", Hex.hex(stackOffset));
+                            r.AddInstruction(Instructions.ADD, "PEEK", Hex.hex(stackOffset));
                         else
-                            context.Add("ADD", Scope.GetRegisterLabelFirst((int)target), Hex.hex(stackOffset));
+                            r.AddInstruction(Instructions.ADD, Scope.GetRegisterLabelFirst((int)target), Hex.hex(stackOffset));
                     }
                 }
                 else
@@ -92,6 +96,7 @@ namespace DCPUC
             }
 
             if (target == Register.STACK) scope.stackDepth += 1;
+            return r;
         }
     }
 

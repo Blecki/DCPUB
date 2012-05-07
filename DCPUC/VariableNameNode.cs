@@ -58,7 +58,7 @@ namespace DCPUC
             }
 
             if (variable == null)
-                throw new CompileError("Could not find variable " + variableName);
+                throw new CompileError(this, "Could not find variable " + variableName);
 
         }
 
@@ -73,19 +73,20 @@ namespace DCPUC
             this.target = target;
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            var r = new Assembly.Node();
             if (variable.type == VariableType.Constant)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
+                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
             }
             else if (variable.type == VariableType.ConstantReference)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
+                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
             }
             else if (variable.type == VariableType.Static)
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
+                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), "[" + variable.staticLabel + "]");
             }
             else if (variable.type == VariableType.Local)
             {
@@ -94,11 +95,11 @@ namespace DCPUC
                     var stackOffset = scope.StackOffset(variable.stackOffset);
                     if (stackOffset > 0)
                     {
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                        r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target),
                             "[" + Hex.hex(stackOffset) + "+SP]");
                     }
                     else
-                        context.Add("SET", Scope.GetRegisterLabelFirst((int)target), "PEEK", "Fetching variable");
+                        r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), "PEEK");
                 }
                 else if (variable.location == target)
                 {
@@ -106,17 +107,19 @@ namespace DCPUC
                 }
                 else
                 {
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), Scope.GetRegisterLabelSecond((int)variable.location));
                 }
             }
 
             if (target == Register.STACK) scope.stackDepth += 1;
+            return r;
         }
 
-        public void EmitAssignment(CompileContext context, Scope scope, Register from, String opcode)
+        public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
+            var r = new Assembly.Node();
             if (variable.type == VariableType.Constant || variable.type == VariableType.ConstantReference)
-                throw new CompileError("Can't assign to constant values");
+                throw new CompileError(this, "Can't assign to constant values");
 
             if (variable.type == VariableType.Local)
             {
@@ -124,16 +127,16 @@ namespace DCPUC
                 {
                     var stackOffset = scope.StackOffset(variable.stackOffset);
                     if (stackOffset > 0)
-                        context.Add(opcode, "[SP+" + Hex.hex(stackOffset) + "]", Scope.GetRegisterLabelSecond((int)from));
+                        r.AddInstruction(opcode, "[SP+" + Hex.hex(stackOffset) + "]", Scope.GetRegisterLabelSecond((int)from));
                     else
-                        context.Add(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)from));
+                        r.AddInstruction(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)from));
                 }
                 else
-                    context.Add(opcode, Scope.GetRegisterLabelFirst((int)variable.location), Scope.GetRegisterLabelSecond((int)from));
+                    r.AddInstruction(opcode, Scope.GetRegisterLabelFirst((int)variable.location), Scope.GetRegisterLabelSecond((int)from));
             }
             else if (variable.type == VariableType.Static)
-                context.Add(opcode, "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond((int)from));
-            
+                r.AddInstruction(opcode, "[" + variable.staticLabel + "]", Scope.GetRegisterLabelSecond((int)from));
+            return r;
         }
     }
 

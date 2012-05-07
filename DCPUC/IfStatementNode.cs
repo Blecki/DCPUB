@@ -8,6 +8,8 @@ namespace DCPUC
 {
     public class IfStatementNode : BranchStatementNode
     {
+        private Irony.Parsing.SourceSpan headerSpan;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -16,14 +18,19 @@ namespace DCPUC
                 AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1].FirstChild);
                 AddChild("then", treeNode.ChildNodes[0].ChildNodes[2]);
                 AddChild("ELSE", treeNode.ChildNodes[2]);
+                headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
+                    treeNode.ChildNodes[0].ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
             }
             else
             {
                 AddChild("Expression", treeNode.ChildNodes[1].FirstChild);
                 AddChild("Block", treeNode.ChildNodes[2]);
                 if (treeNode.ChildNodes.Count == 5) AddChild("Else", treeNode.ChildNodes[4]);
+                headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
+                    treeNode.ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
             }
             this.AsString = "If";
+
         }
 
         public override string TreeLabel()
@@ -55,9 +62,10 @@ namespace DCPUC
             }
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            base.Emit(context, scope);
+            var r = base.Emit(context, scope);
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
             switch (clauseOrder)
             {
                 case ClauseOrder.FailFirst: //Only actual valid order.
@@ -65,18 +73,19 @@ namespace DCPUC
                         var thenLabel = context.GetLabel() + "THEN";
                         var endLabel = context.GetLabel() + "END";
 
-                        context.Add("SET", "PC", thenLabel);
-                        if (ChildNodes.Count == 3) EmitBlock(context, scope, Child(2));
-                        context.Add("SET", "PC", endLabel);
-                        context.Add(":" + thenLabel, "", "");
+                        r.AddInstruction(Assembly.Instructions.SET, "PC", thenLabel);
+                        if (ChildNodes.Count == 3) r.AddChild(EmitBlock(context, scope, Child(2)));
+                        r.AddInstruction(Assembly.Instructions.SET, "PC", endLabel);
+                        r.AddLabel(thenLabel);
 
-                        EmitBlock(context, scope, Child(1));
-                        context.Add(":" + endLabel, "", "");
+                        r.AddChild(EmitBlock(context, scope, Child(1)));
+                        r.AddLabel(endLabel);
                     }
                     break;
                 default:
                     throw new CompileError("IF !FailFirst Not implemented");
             }
+            return r;
 
         }
 

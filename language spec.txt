@@ -10,7 +10,7 @@ assignment = expression + "=" + expression
 function call = identifier(parameters)
 block = { statements }
 expression = binary operation [+-*/%<<>>&^|] | number literal | data literal | function call
-data literal = & (number | character | string | array)+
+data literal = { (number | character | string | array)+ }
 array = "[" + number + "]"
 
 Like C, all statements are terminated with ';'.
@@ -22,7 +22,7 @@ In conditionals, 0 = false, anything else = true. So far, only ==, !=, > and < a
 All functions return a value. If a function does not have a return statement, then whatever is left in A when it returns will be assumed to be the return value. Function return types follow the function header, like this 'function foo(a,b,c):unsigned {}'. The return type is optional and defaults to unsigned.
 The unary * operator 'dereferences' whatever it is applied to. It will return the value at the value of it's operand. It is the same as the [] syntax in the DCPU-16 spec, or a pointer in C. It can also be assigned to. For example, var video = 0x8000; *video = 72; will write the character 'H' to address 0x8000, the first word of video memory.
 
-Data literals are static literals stored in program ram. A chain of strings ("in quotes"), number literals, or [numbers in brackets] separated only by spaces is a data literal. Data literals will be placed somewhere in memory, and your code will get the address of the data. In the example var a = "string"; the value of a will be the address at which "string" is stored. [N] will create a literal with N elements, all of which will be initiated to 0.
+Data literals are static literals stored in program ram. A chain of strings ("in quotes"), number literals, or [numbers in brackets] separated by commas and within { } is a data literal. For example, {"Hello world!" 0}. Data literals will be placed somewhere in memory, and your code will get the address of the data. In the example var a = {"string"}; the value of a will be the address at which "string" is stored. [N] will create a literal with N elements, all of which will be initiated to 0.
 [N] which is not part of a data literal is interpretted as a stack allocated array. For example, var a = [10]; will make space for 10 elements on the stack, and assign their address to a. The first element will be at *a, the second at *(a+1), etc.
 
 Variables

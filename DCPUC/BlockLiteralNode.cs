@@ -26,9 +26,9 @@ namespace DCPUC
         public override CompilableNode FoldConstants(CompileContext context)
         {
             base.FoldConstants(context);
-            if (!Child(0).IsIntegralConstant()) throw new CompileError("Block must have a constant size.");
+            if (!Child(0).IsIntegralConstant()) throw new CompileError(Child(0), "Block must have a constant size.");
             dataSize = Child(0).GetConstantValue();
-            if (dataSize <= 0) throw new CompileError("Block size must be > 0");
+            if (dataSize <= 0) throw new CompileError(Child(0), "Block size must be > 0");
  	        //if (!PartOfDataLiteral) context.AddData(dataLabel, MakeData());
             return this;
         }

@@ -64,12 +64,7 @@ namespace DCPUC
             return null;
         }
 
-        public override void Compile(CompileContext context, Scope scope, Register target)
-        {
-            throw new CompileError("Struct was not removed by Fold pass");
-        }
-
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             throw new CompileError("Struct was not removed by fold pass");
         }

@@ -11,7 +11,7 @@ namespace DCPUC
         public bool WasFolded = false;
         public string ResultType = "void";
 
-        public virtual void Emit(CompileContext context, Scope scope) {  }
+        public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
         public virtual void Compile(CompileContext context, Scope scope, Register target) { }
         public virtual int GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
@@ -55,16 +55,7 @@ namespace DCPUC
             return 0;
         }
 
-        public static Scope BeginBlock(Scope scope)
-        {
-            return scope.Push(new Scope());
-        }
 
-        public static void EndBlock(CompileContext context, Scope scope)
-        {
-            if (scope.stackDepth - scope.parentDepth > 0) 
-                context.Add("ADD", "SP", Hex.hex(scope.stackDepth - scope.parentDepth), "End block");
-        }
 
         /*
         public void InsertLibrary(List<string> library)

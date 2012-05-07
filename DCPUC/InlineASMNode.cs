@@ -50,11 +50,13 @@ namespace DCPUC
             Child(0).ResolveTypes(context, enclosingScope);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            var r = new Assembly.Node();
+            r.AddChild(new Assembly.Annotation("Inline assembly"));
             if (preserveTarget)
             {
-                context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)targetRegister));
+                r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond((int)targetRegister));
                 scope.stackDepth += 1;
                 //If that register was used by a variable, we might have to move the variable.
                 if (variableSharingRegister != null && Scope.IsRegister(variableSharingRegister.location))
@@ -63,18 +65,21 @@ namespace DCPUC
                     variableSharingRegister.stackOffset = scope.stackDepth;
                 }
             }
-            Child(0).Emit(context, scope);
+            r.AddChild(Child(0).Emit(context, scope));
+            return r;
         }
 
-        public void Restore(CompileContext context, Scope scope)
+        public Assembly.Node Restore(CompileContext context, Scope scope)
         {
+            var r = new Assembly.Node();
             if (preserveTarget)
             {
-                context.Add("SET", Scope.GetRegisterLabelSecond((int)targetRegister), "POP");
+                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelSecond((int)targetRegister), "POP");
                 scope.stackDepth -= 1;
                 if (variableSharingRegister != null && Scope.IsRegister(variableSharingRegister.location))
                     variableSharingRegister.location = targetRegister;
             }
+            return r;
         }
     }
 
@@ -100,20 +105,19 @@ namespace DCPUC
                     parentState.FreeRegister((Child(i) as RegisterBindingNode).targetRegister);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var lines = rawAssembly.Split(new String[2]{"\n", "\r"}, StringSplitOptions.RemoveEmptyEntries);
+            var r = new Assembly.Node();
 
             for (var i = 0; i < ChildNodes.Count; ++i)
-                Child(i).Emit(context, scope);
+                r.AddChild(Child(i).Emit(context, scope));
 
-            context.Barrier();
-            foreach (var str in lines)
-                context.Add(str + " ;", "", "");
-            context.Barrier();
+            r.AddChild(new Assembly.Inline { code = rawAssembly });
 
             for (var i = ChildNodes.Count - 1; i >= 0; --i)
-                (Child(i) as RegisterBindingNode).Restore(context, scope);
+                r.AddChild((Child(i) as RegisterBindingNode).Restore(context, scope));
+
+            return r;
         }
     }
 

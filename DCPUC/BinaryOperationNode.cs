@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class BinaryOperationNode : CompilableNode
     {
-        private static Dictionary<String, String> opcodes = null;
+        private static Dictionary<String, Assembly.Instructions> opcodes = null;
         public Register firstOperandResult = Register.STACK;
         public Register secondOperandResult = Register.STACK;
 
@@ -23,24 +23,22 @@ namespace DCPUC
         {
             if (opcodes == null)
             {
-                opcodes = new Dictionary<string, string>();
-                opcodes.Add("+", "ADD");
-                opcodes.Add("-", "SUB");
-                opcodes.Add("*", "MUL");
-                opcodes.Add("/", "DIV");
+                opcodes = new Dictionary<string, Assembly.Instructions>();
+                opcodes.Add("+", Assembly.Instructions.ADD);
+                opcodes.Add("-", Assembly.Instructions.SUB);
+                opcodes.Add("*", Assembly.Instructions.MUL);
+                opcodes.Add("/", Assembly.Instructions.DIV);
 
-                opcodes.Add("+signed", "ADD");
-                opcodes.Add("-signed", "SUB");
-                opcodes.Add("*signed", "MLI");
-                opcodes.Add("/signed", "DVI");
+                opcodes.Add("*signed", Assembly.Instructions.MLI);
+                opcodes.Add("/signed", Assembly.Instructions.DVI);
 
-                opcodes.Add("%", "MOD");
-                opcodes.Add("%signed", "MDI");
-                opcodes.Add("<<", "SHL");
-                opcodes.Add(">>", "SHR");
-                opcodes.Add("&", "AND");
-                opcodes.Add("|", "BOR");
-                opcodes.Add("^", "XOR");
+                opcodes.Add("%", Assembly.Instructions.MOD);
+                opcodes.Add("%signed", Assembly.Instructions.MDI);
+                opcodes.Add("<<", Assembly.Instructions.SHL);
+                opcodes.Add(">>", Assembly.Instructions.SHR);
+                opcodes.Add("&", Assembly.Instructions.AND);
+                opcodes.Add("|", Assembly.Instructions.BOR);
+                opcodes.Add("^", Assembly.Instructions.XOR);
             }
         }
 
@@ -92,15 +90,26 @@ namespace DCPUC
                 if (AsString == "+") if (promote) a = (int)((short)a + (short)b); else a = (int)((ushort)a + (ushort)b);
                 if (AsString == "-") if (promote) a = (int)((short)a - (short)b); else a = (int)((ushort)a - (ushort)b);
                 if (AsString == "*") if (promote) a = (int)((short)a * (short)b); else a = (int)((ushort)a * (ushort)b);
-                if (AsString == "/") if (promote) a = (int)((short)a / (short)b); else a = (int)((ushort)a / (ushort)b);
-                if (AsString == "%") if (promote) a = (int)((short)a % (short)b); else a = (int)((ushort)a % (ushort)b);
+
+                if (AsString == "/")
+                {
+                    if (b == 0) throw new CompileError(second, "Division by zero in constant expression");
+                    if (promote) a = (int)((short)a / (short)b); else a = (int)((ushort)a / (ushort)b);
+                }
+
+                if (AsString == "%")
+                {
+                    if (b == 0) throw new CompileError(second, "Division by zero in constant expression");
+                    if (promote) a = (int)((short)a % (short)b); else a = (int)((ushort)a % (ushort)b);
+                }
+
                 if (AsString == "<<") a = (int)((ushort)a << (ushort)b);
                 if (AsString == ">>") a = (int)((ushort)a >> (ushort)b);
                 if (AsString == "&") a = (int)((ushort)a & (ushort)b);
                 if (AsString == "|") a = (int)((ushort)a | (ushort)b);
                 if (AsString == "^") a = (int)((ushort)a ^ (ushort)b);
 
-                return new NumberLiteralNode { Value = a, WasFolded = true, ResultType = ResultType };
+                return new NumberLiteralNode { Value = a, WasFolded = true, ResultType = ResultType, Span = Span };
             }
 
             return this;
@@ -122,36 +131,40 @@ namespace DCPUC
             parentState.FreeRegisters(secondOperandResult);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             initOps();
 
+            var r = new Assembly.Node();
+
             if (Child(0).IsIntegralConstant())
             {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)firstOperandResult), Child(0).GetConstantToken());
+                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)firstOperandResult), Child(0).GetConstantToken());
                 if (firstOperandResult == Register.STACK) scope.stackDepth += 1;
             }
             else
-                Child(0).Emit(context, scope);
+                r.AddChild(Child(0).Emit(context, scope));
+
+            var opcode = ResultType == "signed" && opcodes.ContainsKey(AsString+"signed") ? opcodes[AsString + "signed"] : opcodes[AsString];
 
             if (!Child(1).IsIntegralConstant())
             {
-                Child(1).Emit(context, scope);
+                r.AddChild(Child(1).Emit(context, scope));
 
                 if (firstOperandResult == Register.STACK)
                 {
                     if (secondOperandResult == Register.STACK)
                     {
-                        context.Add("SET", Scope.TempRegister, "POP");
-                        context.Add(ResultType == "signed" ? opcodes[AsString+"signed"] : opcodes[AsString], "PEEK", Scope.TempRegister);
+                        r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
+                        r.AddInstruction(opcode, "PEEK", Scope.TempRegister);
                         scope.stackDepth -= 1;
                     }
                     else
-                        context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString], "PEEK", Scope.GetRegisterLabelSecond((int)secondOperandResult));
+                        r.AddInstruction(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)secondOperandResult));
                 }
                 else
                 {
-                    context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString],
+                    r.AddInstruction(opcode, 
                         Scope.GetRegisterLabelFirst((int)firstOperandResult),
                         Scope.GetRegisterLabelSecond((int)secondOperandResult));
                     if (secondOperandResult == Register.STACK) scope.stackDepth -= 1;
@@ -160,11 +173,12 @@ namespace DCPUC
             else
             {
                 if (firstOperandResult == Register.STACK)
-                    context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString], "PEEK", Child(1).GetConstantToken());
+                    r.AddInstruction(opcode, "PEEK", Child(1).GetConstantToken());
                 else
-                    context.Add(ResultType == "signed" ? opcodes[AsString + "signed"] : opcodes[AsString], Scope.GetRegisterLabelFirst((int)firstOperandResult),
-                        Child(1).GetConstantToken());
+                    r.AddInstruction(opcode, Scope.GetRegisterLabelFirst((int)firstOperandResult), Child(1).GetConstantToken());
             }
+
+            return r;
         }
     }
 }

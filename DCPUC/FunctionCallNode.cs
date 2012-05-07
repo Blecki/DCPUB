@@ -69,13 +69,15 @@ namespace DCPUC
                 Child(i).AssignRegisters(context, parentState, Register.STACK);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            var r = new Assembly.Node();
+            if (target == Register.DISCARD) r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             for (int i = 0; i < 3; ++i)
             {
                 if (scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)i), "Saving register");
+                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond((int)i));
                     scope.stackDepth += 1;
                     if (scope.activeFunction.function.parameterCount > i)
                     {
@@ -84,42 +86,43 @@ namespace DCPUC
                     }
                 }
                 if (ChildNodes.Count > i)
-                    Child(i).Emit(context, scope); //Should already be targetting i.
+                    r.AddChild(Child(i).Emit(context, scope));
             }
 
-            for (int i = 3; i < ChildNodes.Count; ++i)
+            for (int i = ChildNodes.Count - 1; i >= 3; --i)
             {
-                Child(i).Emit(context, scope);
+                r.AddChild(Child(i).Emit(context, scope));
                 scope.stackDepth += 1;
             }
 
-            context.Add("JSR", function.label, "", "Calling function");
+            r.AddInstruction(Assembly.Instructions.JSR, function.label);
 
             if (ChildNodes.Count > 3) //Need to remove parameters from stack
             {
-                context.Add("ADD", "SP", Hex.hex(ChildNodes.Count - 3), "Remove parameters");
+                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(ChildNodes.Count - 3));
                 scope.stackDepth -= (ChildNodes.Count - 3);
             }
 
             var saveA = scope.activeFunction.usedRegisters.registers[0] == RegisterState.Used;
-            if (saveA && target != Register.DISCARD) context.Add("SET", Scope.TempRegister, "A");
+            if (saveA && target != Register.DISCARD) r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "A");
 
             for (int i = 2; i >= 0; --i)
                 if (scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    context.Add("SET", Scope.GetRegisterLabelFirst(i), "POP");
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst(i), "POP");
                     scope.stackDepth -= 1;
                     if (scope.activeFunction.function.parameterCount > i)
                         scope.activeFunction.function.localScope.variables[i].location = (Register)i;
                 }
 
-            if (target == Register.A && !saveA) return;
-            else if (Scope.IsRegister(target)) context.Add("SET", Scope.GetRegisterLabelFirst((int)target), saveA ? Scope.TempRegister : "A");
+            if (target == Register.A && !saveA) return r;
+            else if (Scope.IsRegister(target)) r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), saveA ? Scope.TempRegister : "A");
             else if (target == Register.STACK)
             {
-                context.Add("SET", "PUSH", saveA ? Scope.TempRegister : "A", "Put return value on stack");
+                r.AddInstruction(Assembly.Instructions.SET, "PUSH", saveA ? Scope.TempRegister : "A");
                 scope.stackDepth += 1;
             }
+            return r;
         }
 
         

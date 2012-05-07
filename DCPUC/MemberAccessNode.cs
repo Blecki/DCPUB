@@ -52,44 +52,48 @@ namespace DCPUC
             if (IsAssignedTo) parentState.FreeMaybeRegister(this.target);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            Child(0).Emit(context, scope);
+            var r = new Assembly.Node();
+            r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                context.Add("SET", Scope.TempRegister, "POP");
+                r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
                 if (member.offset > 0)
-                    context.Add("SET", "PUSH", "[" + Scope.TempRegister + " + " + Hex.hex(member.offset) + "]");
+                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", "[" + Scope.TempRegister + " + " + Hex.hex(member.offset) + "]");
                 else
-                    context.Add("SET", "PUSH", "[" + Scope.TempRegister + "]");
+                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", "[" + Scope.TempRegister + "]");
             }
             else
             {
                 if (member.offset > 0)
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target),
                         "[" + Scope.GetRegisterLabelFirst((int)target) + " + " + Hex.hex(member.offset) + "]");
                 else
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target),
                         "[" + Scope.GetRegisterLabelFirst((int)target) + "]");
             }
+            return r;
         }
 
-        void AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, String opcode)
+        Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
+            var r = new Assembly.Node();
             //assume value is already in 'from'.
-            Child(0).Emit(context, scope);
+            r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                context.Add("SET", Scope.TempRegister, "POP");
+                r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
                 target = Register.J;
                 scope.stackDepth -= 1;
             }
             if (member.offset > 0)
-                context.Add(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "+" + Hex.hex(member.offset) + "]",
+                r.AddInstruction(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "+" + Hex.hex(member.offset) + "]",
                     Scope.GetRegisterLabelSecond((int)from));
             else
-                context.Add(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "]",
+                r.AddInstruction(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "]",
                     Scope.GetRegisterLabelSecond((int)from));
+            return r;
         }
     }
 

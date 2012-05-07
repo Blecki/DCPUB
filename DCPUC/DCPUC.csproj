@@ -40,6 +40,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assembly\Annotation.cs" />
+    <Compile Include="Assembly\Function.cs" />
+    <Compile Include="Assembly\StaticData.cs" />
+    <Compile Include="Assembly\Inline.cs" />
+    <Compile Include="Assembly\EmissionStream.cs" />
+    <Compile Include="Assembly\Instructions.cs" />
+    <Compile Include="Assembly\Label.cs" />
+    <Compile Include="Assembly\Node.cs" />
+    <Compile Include="Assembly\Instruction.cs" />
     <Compile Include="AssignableNode.cs" />
     <Compile Include="CompileOptions.cs" />
     <Compile Include="AddressOfNode.cs" />
@@ -52,7 +61,6 @@
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Hex.cs" />
-    <Compile Include="Instruction.cs" />
     <Compile Include="AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>

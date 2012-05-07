@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class AssignmentNode : CompilableNode
     {
-        private static Dictionary<String, String> opcodes = null;
+        private static Dictionary<String, Assembly.Instructions> opcodes = null;
 
         public Register rvalueTargetRegister = Register.STACK;
         public Register lvalueTargetRegister = Register.STACK;
@@ -26,22 +26,22 @@ namespace DCPUC
 
             if (opcodes == null)
             {
-                opcodes = new Dictionary<string, string>();
-                opcodes.Add("=", "SET");
-                opcodes.Add("+=", "ADD");
-                opcodes.Add("-=", "SUB");
-                opcodes.Add("*=", "MUL");
-                opcodes.Add("/=", "DIV");
+                opcodes = new Dictionary<string, Assembly.Instructions>();
+                opcodes.Add("=", Assembly.Instructions.SET);
+                opcodes.Add("+=", Assembly.Instructions.ADD);
+                opcodes.Add("-=", Assembly.Instructions.SUB);
+                opcodes.Add("*=", Assembly.Instructions.MUL);
+                opcodes.Add("/=", Assembly.Instructions.DIV);
 
-                opcodes.Add("*=signed", "MLI");
-                opcodes.Add("/=signed", "DVI");
+                opcodes.Add("*=signed", Assembly.Instructions.MLI);
+                opcodes.Add("/=signed", Assembly.Instructions.DVI);
 
-                opcodes.Add("%=", "MOD");
-                opcodes.Add("<<=", "SHL");
-                opcodes.Add(">>=", "SHR");
-                opcodes.Add("&=", "AND");
-                opcodes.Add("|=", "BOR");
-                opcodes.Add("^=", "XOR");
+                opcodes.Add("%=", Assembly.Instructions.MOD);
+                opcodes.Add("<<=", Assembly.Instructions.SHL);
+                opcodes.Add(">>=", Assembly.Instructions.SHR);
+                opcodes.Add("&=", Assembly.Instructions.AND);
+                opcodes.Add("|=", Assembly.Instructions.BOR);
+                opcodes.Add("^=", Assembly.Instructions.XOR);
             }
         }
 
@@ -85,18 +85,20 @@ namespace DCPUC
 
         }
         
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            Child(1).Emit(context, scope);
+            var r = new Assembly.Node();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            r.AddChild(Child(1).Emit(context, scope));
 
-            var opcode = "";
+            var opcode = Assembly.Instructions.SET;
             if (opcodes.ContainsKey(@operator + ResultType)) opcode = opcodes[@operator + ResultType];
             else opcode = opcodes[@operator];
 
-            (Child(0) as AssignableNode).EmitAssignment(context, scope, rvalueTargetRegister, opcode);
+            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, rvalueTargetRegister, opcode));
             if (rvalueTargetRegister == Register.STACK)
                 scope.stackDepth -= 1;
-
+            return r;
         }
     }
 
