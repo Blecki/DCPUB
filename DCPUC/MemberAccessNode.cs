@@ -78,7 +78,7 @@ namespace DCPUC
 
         Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.ExpressionNode();
             //assume value is already in 'from'.
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)

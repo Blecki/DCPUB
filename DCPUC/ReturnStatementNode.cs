@@ -33,7 +33,7 @@ namespace DCPUC
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             r.AddChild(Child(0).Emit(context, scope));
             if (target != Register.A) r.AddInstruction(Assembly.Instructions.SET, "A", Scope.GetRegisterLabelSecond((int)target));

@@ -131,7 +131,7 @@ namespace DCPUCIDE
 
                 var emitter = new TextBoxStream(codeOutputBox);
                 codeOutputBox.Clear();
-                assembly.Emit(emitter);
+                if (assembly != null) assembly.Emit(emitter);
             }
 
             if (errorCount == 0)

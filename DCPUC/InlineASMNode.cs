@@ -107,7 +107,7 @@ namespace DCPUC
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.StatementNode();
 
             for (var i = 0; i < ChildNodes.Count; ++i)
                 r.AddChild(Child(i).Emit(context, scope));

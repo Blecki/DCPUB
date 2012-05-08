@@ -30,5 +30,24 @@ namespace DCPUC.Assembly
             foreach (var child in children) child.Emit(stream);
             if (children.Count > 1) stream.indentDepth -= 1;
         }
+
+        public virtual List<Node> CollapseTree() 
+        {
+            var result = new List<Node>();
+            foreach (var child in children) result.AddRange(child.CollapseTree());
+            children = result;
+            return new List<Node>(new Node[]{this}); 
+        }
+    }
+
+    public class StatementNode : Node { }
+
+    public class ExpressionNode : Node 
+    {
+        public override List<Node> CollapseTree()
+        {
+            base.CollapseTree();
+            return children;
+        }
     }
 }

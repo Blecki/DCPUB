@@ -123,7 +123,7 @@ namespace DCPUC
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.StatementNode();
             if (!secondOperand.IsIntegralConstant())
                 r.AddChild(secondOperand.Emit(context, scope));
             if (!firstOperand.IsIntegralConstant())
@@ -146,7 +146,7 @@ namespace DCPUC
 
         public static Assembly.Node EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.StatementNode();
             var blockScope = scope.Push();
             r.AddChild(block.Emit(context, blockScope));
             if (restoreStack && blockScope.stackDepth - scope.stackDepth > 0)

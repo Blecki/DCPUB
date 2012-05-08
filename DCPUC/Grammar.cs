@@ -103,7 +103,7 @@ namespace DCPUC
             ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;
             whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
-            functionCall.Rule = identifier + "(" + parameterList + ")";
+            functionCall.Rule = (identifier | memberAccess) + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q();
             parameterListDeclaration.Rule = MakeStarRule(parameterListDeclaration, ToTerm(","), parameterDeclaration);
             functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" 

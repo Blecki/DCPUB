@@ -135,7 +135,7 @@ namespace DCPUC
         {
             initOps();
 
-            var r = new Assembly.Node();
+            var r = new Assembly.ExpressionNode();
 
             if (Child(0).IsIntegralConstant())
             {

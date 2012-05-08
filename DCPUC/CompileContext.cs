@@ -137,6 +137,7 @@ namespace DCPUC
                 foreach (var dataItem in dataElements)
                     r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 });
                 r.AddLabel("ENDOFPROGRAM");
+                r.CollapseTree();
                 return r;
             }
             catch (DCPUC.CompileError c)

@@ -64,8 +64,7 @@ namespace DCPUC
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            
-            ResultType = variable.typeSpecifier;
+            if (variable != null) ResultType = variable.typeSpecifier;
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -75,7 +74,7 @@ namespace DCPUC
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.ExpressionNode();
             if (variable.type == VariableType.Constant)
             {
                 r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));

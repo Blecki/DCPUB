@@ -87,8 +87,8 @@ namespace DCPUC
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.Node();
-            r.AddInstruction(Assembly.Instructions.ADD, Scope.GetRegisterLabelFirst((int)target), dataLabel);
+            var r = new Assembly.ExpressionNode();
+            r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), dataLabel);
             if (target == Register.STACK) scope.stackDepth += 1;
             return r;
         }
