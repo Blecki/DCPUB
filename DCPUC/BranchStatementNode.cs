@@ -17,7 +17,7 @@ namespace DCPUC
         }
 
         public ClauseOrder clauseOrder = ClauseOrder.ConstantFail;
-        public String comparisonInstruction = "IFE";
+        public Assembly.Instructions comparisonInstruction = Assembly.Instructions.IFE;
         public CompilableNode firstOperand = null;
         public CompilableNode secondOperand = null;
         public Register firstOperandTarget = Register.STACK;
@@ -41,21 +41,21 @@ namespace DCPUC
                 var @operator = conditionNode.AsString;
                 firstOperand = conditionNode.Child(0);
                 secondOperand = conditionNode.Child(1);
-                if (@operator == "==") comparisonInstruction = "IFE";
-                if (@operator == "!=") comparisonInstruction = "IFN";
-                if (@operator == ">") comparisonInstruction = "IFG";
-                if (@operator == "<") comparisonInstruction = "IFL";
+                if (@operator == "==") comparisonInstruction = Assembly.Instructions.IFE;
+                if (@operator == "!=") comparisonInstruction = Assembly.Instructions.IFN;
+                if (@operator == ">") comparisonInstruction = Assembly.Instructions.IFG;
+                if (@operator == "<") comparisonInstruction = Assembly.Instructions.IFL;
                 if (@operator == ">" && (firstOperand.ResultType == "signed" || secondOperand.ResultType == "signed"))
-                    comparisonInstruction = "IFA";
+                    comparisonInstruction = Assembly.Instructions.IFA;
                 if (@operator == "<" && (firstOperand.ResultType == "signed" || secondOperand.ResultType == "signed"))
-                    comparisonInstruction = "IFU";
+                    comparisonInstruction = Assembly.Instructions.IFU;
 
                 clauseOrder = ClauseOrder.FailFirst;
             }
             else
             {
                 clauseOrder = ClauseOrder.FailFirst;
-                comparisonInstruction = "IFN";
+                comparisonInstruction = Assembly.Instructions.IFN;
                 firstOperand = conditionNode;
                 var nln = new NumberLiteralNode();
                 nln.Value = 0;
@@ -121,32 +121,37 @@ namespace DCPUC
             }
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            var r = new Assembly.StatementNode();
             if (!secondOperand.IsIntegralConstant())
-                secondOperand.Emit(context, scope);
+                r.AddChild(secondOperand.Emit(context, scope));
             if (!firstOperand.IsIntegralConstant())
-                firstOperand.Emit(context, scope);
+                r.AddChild(firstOperand.Emit(context, scope));
 
             if (!firstOperand.IsIntegralConstant() && firstOperandTarget == Register.STACK)
             {
                 firstOperandTarget = Register.J;
-                context.Add("SET", Scope.TempRegister, "POP");
+                r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
             }
 
-            context.Add(comparisonInstruction,
+            r.AddInstruction(comparisonInstruction,
                 firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)firstOperandTarget),
                 secondOperand.IsIntegralConstant() ? secondOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)secondOperandTarget));
             if (firstOperandTarget == Register.STACK) scope.stackDepth -= 1;
             if (secondOperandTarget == Register.STACK) scope.stackDepth -= 1;
+
+            return r;
         }
 
-        public static void EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
+        public static Assembly.Node EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
         {
+            var r = new Assembly.StatementNode();
             var blockScope = scope.Push();
-            block.Emit(context, blockScope);
+            r.AddChild(block.Emit(context, blockScope));
             if (restoreStack && blockScope.stackDepth - scope.stackDepth > 0)
-                context.Add("ADD", "SP", Hex.hex(blockScope.stackDepth - scope.stackDepth));
+                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(blockScope.stackDepth - scope.stackDepth));
+            return r;
         }
         
 

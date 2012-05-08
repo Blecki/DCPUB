@@ -66,17 +66,14 @@ namespace DCPUC
             this.target = target;
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            context.Add("SET", Scope.GetRegisterLabelFirst((int)target), GetConstantToken());
+            var r = new Assembly.ExpressionNode();
+            r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), GetConstantToken());
             if (target == Register.STACK) scope.stackDepth += 1;
+            return r;
         }
 
-        public override void Compile(CompileContext assembly, Scope scope, Register target) 
-        {
-            assembly.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(Value));
-            if (target == Register.STACK) scope.stackDepth += 1;
-        }
     }
 
     

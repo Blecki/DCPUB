@@ -1,40 +1,18 @@
+[ ] Document structs
 [ ] Sample Programs
 [ ] - Struct sample
 [ ] Comparison Operators
-[*] Struct syntax sugar
-[*] operator[]
 [ ] Compile options
-[*] Compound assignment operators
-[*] Command line interface
-[*] Multiple pass compilation
-[*]	- Pass 1: Build symbol tree. 
-[*]	- Pass 2: Resolve symbols.
-[*]	- Pass 3: Fold constants and prune.
-[*]	- Pass 3b: Assign registers
-[*]	- Pass 4: Emit assembly
 [ ] Support multiple calling conventions
-[*] Implement callee register protection
-[*] Function header/footer rather than multiple return points
 [ ] Don't transform strings to bytes
 [ ] 'length of' operator, applies to datalists and stack-allocated arrays (resolves at compile time)
 [ ] Don't halt on errors (May not be possible with parser errors)
 [ ] Move all DAT emission to top of program so locations can be predicted and folded
 [ ] Implement http://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm
 [ ] BUG: Variables leak out of IF/WHILE blocks when condition is constant UPDATE: Apparently I neglected to implement branch block scopes at all.
-[ ] BUG: stack allocated array produce extraneous DAT
 [ ] Preprocessor (Perhaps the constant folding pass can expand defines?)
-[*] signed/unsigned types
-[*] function return types
-[*] type checking for function parameters and returned values
-[ ] BUG: parameters pushed in wrong order
-[*] Do not emit errors and warnings directly into assembly stream
-[ ] Pushing stack parameters before ABC parameters may allow stack parameters to use more registers (Or at least access ABC parameters more efficiently)
-[ ] BUG: Divide by 0 in folded constants crashes compiler
 [ ] Default type should (probably) be signed [Though many operations result in unsigned types.]
 [ ] Don't emit warnings for folded constant conversions that don't lose data.
-[*] 'sizeof' operator
 [ ] Freestore/heap implementation
-[ ] Document structs
-[*] Allow any constant expression in array declarations
-[ ] Ternary ?: operator
 [ ] pre/post inc/dec operators
+[ ] improved error reporting

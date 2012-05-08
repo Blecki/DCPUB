@@ -24,18 +24,18 @@ namespace DCPUC
             Child(0).GatherSymbols(context, function.localScope);
         }
 
-        public override void CompileFunction(CompileContext context)
+        public override Assembly.Node CompileFunction(CompileContext context)
         {
+            var r = new Assembly.Node();
             var localScope = function.localScope.Push();
 
-            Child(0).Emit(context, localScope);
-            context.Add(":" + footerLabel, "", "");
-            context.Add("SUB", "PC", "1");
-
-            context.Barrier();
+            r.AddChild(Child(0).Emit(context, localScope));
+            r.AddLabel(footerLabel);
+            r.AddInstruction(Assembly.Instructions.SUB, "PC", "1");
 
             foreach (var nestedFunction in function.localScope.functions)
-                nestedFunction.Node.CompileFunction(context);
+                r.AddChild(nestedFunction.Node.CompileFunction(context));
+            return r;
         }
 
     }

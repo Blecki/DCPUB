@@ -31,21 +31,15 @@ namespace DCPUC
                 context.AddWarning(Span, CompileContext.TypeWarning(Child(0).ResultType, enclosingScope.activeFunction.ResultType));
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            Child(0).Emit(context, scope);
-            if (target != Register.A) context.Add("SET", "A", Scope.GetRegisterLabelSecond((int)target));
-            scope.activeFunction.CompileReturn(context, scope);
+            var r = new Assembly.StatementNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            r.AddChild(Child(0).Emit(context, scope));
+            if (target != Register.A) r.AddInstruction(Assembly.Instructions.SET, "A", Scope.GetRegisterLabelSecond((int)target));
+            r.AddChild(scope.activeFunction.CompileReturn(context, scope));
+            return r;
         }
 
-        public override void Compile(CompileContext assembly, Scope scope, Register target)
-        {
-            var reg = scope.FindAndUseFreeRegister();
-            (ChildNodes[0] as CompilableNode).Compile(assembly, scope, (Register)reg);
-            if (reg != (int)Register.A) assembly.Add("SET", "A", Scope.GetRegisterLabelSecond(reg));
-            scope.FreeMaybeRegister(reg);
-            if (reg == (int)Register.STACK) scope.stackDepth -= 1;
-            scope.activeFunction.CompileReturn(assembly, scope);
-        }
     }
 }
