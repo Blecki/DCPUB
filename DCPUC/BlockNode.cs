@@ -21,16 +21,12 @@ namespace DCPUC
                 (child as CompilableNode).AssignRegisters(context,parentState, Register.DISCARD);
         }
 
-        public override void Emit(CompileContext assembly, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            var r = new Assembly.StatementNode();
             foreach (var child in ChildNodes)
-            {
-                assembly.Barrier();
-                //assembly.AddSource(child.Span);
-                (child as CompilableNode).Emit(assembly, scope);
-            }
-
-
+                r.AddChild((child as CompilableNode).Emit(context, scope));
+            return r;
         }
 
     }

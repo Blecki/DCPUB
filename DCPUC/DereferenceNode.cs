@@ -32,18 +32,16 @@ namespace DCPUC
             if (IsAssignedTo) parentState.FreeMaybeRegister(this.target);
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            Child(0).Emit(context, scope);
+            var r = new Assembly.Node();
+            r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
-            {
-                context.Add("SET", "PEEK", "[PEEK]");
-            }
+                r.AddInstruction(Assembly.Instructions.SET, "PEEK", "[PEEK]");
             else
-            {
-                context.Add("SET", Scope.GetRegisterLabelFirst((int)target),
+                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target),
                     "[" + Scope.GetRegisterLabelSecond((int)target) + "]");
-            }
+            return r;
         }
 
 
@@ -54,17 +52,19 @@ namespace DCPUC
             IsAssignedTo = false;
         }
 
-        void AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, String opcode)
+        Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
-            Child(0).Emit(context, scope);
+            var r = new Assembly.ExpressionNode();
+            r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                context.Add("SET", "J", "POP");
+                r.AddInstruction(Assembly.Instructions.SET, "J", "POP");
                 target = Register.J;
                 scope.stackDepth -= 1;
             }
-            context.Add(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "]",
+            r.AddInstruction(opcode, "[" + Scope.GetRegisterLabelFirst((int)target) + "]",
                 Scope.GetRegisterLabelSecond((int)from));
+            return r;
         }
     }
     

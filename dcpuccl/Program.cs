@@ -86,11 +86,11 @@ namespace DCPUCCL
                 if (context.Parse(file, Console.WriteLine))
                 {
                     context.Compile(Console.WriteLine);
-                    context.Emit(Console.WriteLine);
+                    var assembly = context.Emit(Console.WriteLine);
 
                     var writer = new System.IO.StreamWriter(options.@out, false);
-                    foreach (var instruction in context.instructions)
-                        writer.WriteLine(instruction.ToString());
+                    var stream = new FileEmissionStream(writer);
+                    assembly.Emit(stream);
                     writer.Close();
 
                     Console.WriteLine("Done.");

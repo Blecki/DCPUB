@@ -49,6 +49,8 @@ namespace DCPUCIDE
             outputDock = MakeDockContent(outputBox, "output", DockState.DockBottomAutoHide);
             outputDock.Show(dockPanel);
             outputDock.CloseButtonVisible = false;
+            outputBox.Font = new System.Drawing.Font("Fixedsys Excelsior 2.00", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            outputBox.ScrollBars = ScrollBars.Vertical;
 
             codeOutputBox.Multiline = true;
             codeOutputBox.ReadOnly = true;
@@ -110,12 +112,15 @@ namespace DCPUCIDE
             codeOutputBox.Clear();
             var context = new DCPUC.CompileContext();
             context.options.p = false;// peepholeCB.Checked;
-            context.onWarning += (s) => { outputBox.AppendText(s + "\r\n"); };
+            var errorCount = 0;
+            var warningCount = 0;
+            context.onWarning += (s) => { warningCount += 1;
+                outputBox.AppendText(s + "\r\n"); };
 
-            if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); }))
+            if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); errorCount += 1; }))
             {
-                context.Compile(outputBox.AppendText);
-                context.Emit((s) => { outputBox.AppendText(s); });
+                context.Compile((s) => { outputBox.AppendText(s); errorCount += 1; });
+                var assembly = context.Emit((s) => { outputBox.AppendText(s); errorCount += 1; });
 
                 astBox.Nodes.Clear();
                 astBox.Nodes.Add(buildAstTree(context.rootNode));
@@ -124,9 +129,15 @@ namespace DCPUCIDE
                 foreach (var substruct in context.rootNode.function.localScope.structs)
                     astBox.Nodes.Add(buildAstTree(substruct.Node));
 
-                foreach (var str in context.instructions)
-                    codeOutputBox.AppendText(str.ToString() + "\r\n");
+                var emitter = new TextBoxStream(codeOutputBox);
+                codeOutputBox.Clear();
+                if (assembly != null) assembly.Emit(emitter);
             }
+
+            if (errorCount == 0)
+                statusLabel.Text = "Compile succeeded";
+            else
+                statusLabel.Text = "Compile failed (" + errorCount + " errors)";
         }
 
         private void saveFileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -136,5 +147,6 @@ namespace DCPUCIDE
             stream.Write(inputBox.Text);
             stream.Close();
         }
+
     }
 }

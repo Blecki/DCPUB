@@ -12,10 +12,15 @@ namespace DCPUC
         public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
         public RegisterBank usedRegisters = new RegisterBank();
         protected String footerLabel = null;
+        private Irony.Parsing.SourceSpan headerSpan;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
+
+            headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
+                treeNode.ChildNodes[2].Span.EndPosition - this.Span.Location.Position);
+
             AddChild("Block", treeNode.ChildNodes[4]);
             foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
             {
@@ -47,7 +52,7 @@ namespace DCPUC
             enclosingScope.functions.Add(function);
             function.localScope.parent = enclosingScope;
 
-            for (int i = 0; i < parameters.Count; ++i)
+            for (int i = parameters.Count - 1; i >= 0; --i)
             {
                 var variable = new Variable();
                 variable.scope = function.localScope;
@@ -102,23 +107,32 @@ namespace DCPUC
             throw new CompileError("Function was not removed by Fold pass");
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             throw new CompileError("Function was not removed by fold pass");
         }
 
-        public virtual void CompileFunction(CompileContext context)
+        public virtual Assembly.Node CompileFunction(CompileContext context)
         {
+            var r = new Assembly.Function
+            {
+                functionName = function.name,
+                entranceLabel = function.label,
+                parameterCount = function.parameterCount
+            };
+
             function.localScope.stackDepth += 1;
 
-            context.Add(":" + function.label, "", "");
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.headerSpan)));
+
+            r.AddLabel(function.label);
 
             //Save registers
             //ABC saved by caller
             for (int i = Math.Min(3, function.parameterCount); i < 7; ++i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond(i));
+                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond(i));
                     function.localScope.stackDepth += 1;
                 }
 
@@ -128,38 +142,40 @@ namespace DCPUC
             {
                 if (function.localScope.variables[i].addressTaken)
                 {
-                    context.Add("SET", "PUSH", Scope.GetRegisterLabelSecond((int)function.localScope.variables[i].location));
+                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond((int)function.localScope.variables[i].location));
                     function.localScope.variables[i].location = Register.STACK;
                     function.localScope.variables[i].stackOffset = localScope.stackDepth;
                     localScope.stackDepth += 1;
                 }
             }
 
-            Child(0).Emit(context, localScope);
+            r.AddChild(Child(0).Emit(context, localScope));
 
             if (localScope.stackDepth - function.localScope.stackDepth > 0)
-                context.Add("ADD", "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth), "Cleanup stack"); 
+                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth));
 
-            context.Add(":" + footerLabel, "", "");
-            context.Barrier();
+            r.AddLabel(footerLabel);
 
             //Restore registers
             for (int i = 6; i >= Math.Min(3, function.parameterCount); --i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
-                    context.Add("SET", Scope.GetRegisterLabelSecond(i), "POP");
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelSecond(i), "POP");
 
-            context.Add("SET", "PC", "POP");
-            context.Barrier();
+            r.AddInstruction(Assembly.Instructions.SET, "PC", "POP");
 
             foreach (var nestedFunction in function.localScope.functions)
-                nestedFunction.Node.CompileFunction(context);
+                r.AddChild(nestedFunction.Node.CompileFunction(context));
+
+            return r;
         }
 
-        internal virtual void CompileReturn(CompileContext context, Scope localScope)
+        internal virtual Assembly.Node CompileReturn(CompileContext context, Scope localScope)
         {
+            var r = new Assembly.Node();
             if (localScope.stackDepth - function.localScope.stackDepth > 0)
-                context.Add("ADD", "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth), "Cleanup stack"); 
-            context.Add("SET", "PC", footerLabel, "Return");
+                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth)); 
+            r.AddInstruction(Assembly.Instructions.SET, "PC", footerLabel);
+            return r;
         }
     }
 }

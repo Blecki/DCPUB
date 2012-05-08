@@ -60,7 +60,7 @@ namespace DCPUC
                     context.AddData(variable.staticLabel, (ushort)Child(0).GetConstantValue());
                 }
                 else
-                    throw new CompileError("Statics must be initialized to a constant value.");
+                    throw new CompileError(this, "Statics must be initialized to a constant value.");
             }
             else if (declLabel == "const")
             {
@@ -82,7 +82,7 @@ namespace DCPUC
                     variable.type = VariableType.Constant;
                 }
                 else
-                    throw new CompileError("Consts must be initialized to a constant value.");
+                    throw new CompileError(this, "Consts must be initialized to a constant value.");
             }
         }
 
@@ -95,7 +95,7 @@ namespace DCPUC
             {
                 variable.structType = enclosingScope.FindType(variable.typeSpecifier);
                 if (variable.structType == null)
-                    throw new CompileError("Could not find type " + variable.typeSpecifier);
+                    throw new CompileError(this, "Could not find type " + variable.typeSpecifier);
             }
         }
 
@@ -115,8 +115,10 @@ namespace DCPUC
             }
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+            var r = new Assembly.StatementNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             variable.stackOffset = scope.stackDepth;
             
             if (variable.type == VariableType.Local)
@@ -125,14 +127,15 @@ namespace DCPUC
                 {
                     var size = (Child(0) as BlockLiteralNode).dataSize;
                     scope.stackDepth += size;
-                    context.Add("SUB", "SP", Hex.hex(size));
-                    context.Add("SET", Scope.GetRegisterLabelFirst((int)variable.location), "SP");
+                    r.AddInstruction(Assembly.Instructions.SUB, "SP", Hex.hex(size));
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)variable.location), "SP");
                     variable.stackOffset = scope.stackDepth;
                     if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }
                 else
-                    Child(0).Emit(context, scope);
+                    r.AddChild(Child(0).Emit(context, scope));
             }
+            return r;
         }
     }
 }

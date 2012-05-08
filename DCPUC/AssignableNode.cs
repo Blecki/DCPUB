@@ -8,6 +8,6 @@ namespace DCPUC
     public interface AssignableNode
     {
         bool IsAssignedTo { set; }
-        void EmitAssignment(CompileContext context, Scope scope, Register from, String opcode);
+        Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode);
     }
 }

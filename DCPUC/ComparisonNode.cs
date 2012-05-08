@@ -54,15 +54,11 @@ namespace DCPUC
             throw new CompileError("Branch node should have handled this.");
         }
 
-        public override void Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             throw new CompileError("Branch node should have handled this.");
         }
 
-        public override void Compile(CompileContext assembly, Scope scope, Register target)
-        {
-            throw new CompileError("Comparisons in general expressions are not implemented");
-        }
     }
 
     

@@ -15,8 +15,6 @@ namespace DCPUC
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
         private List<Tuple<string, List<string>>> dataElements = new List<Tuple<string, List<string>>>();
         private int nextLabelID = 0;
-        public List<Instruction> instructions = new List<Instruction>();
-        private int _barrier = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
         public Action<String> onWarning = null;
@@ -24,6 +22,11 @@ namespace DCPUC
         public String GetLabel()
         {
             return "L" + nextLabelID++;
+        }
+
+        public String GetSourceSpan(Irony.Parsing.SourceSpan span)
+        {
+            return source.Substring(span.Location.Position, span.Length + 1);
         }
 
         public void AddData(string label, List<ushort> data)
@@ -122,104 +125,44 @@ namespace DCPUC
             }
             catch (CompileError e)
             {
-                onError(e.Message);
+                ReportError(onError, e);
             }
         }
 
-        public void Emit(Action<string> onError)
+        public Assembly.Node Emit(Action<string> onError)
         {
             try
             {
-                rootNode.CompileFunction(this);
+                var r = rootNode.CompileFunction(this);
                 foreach (var dataItem in dataElements)
-                {
-                    var datString = "";
-                    foreach (var item in dataItem.Item2)
-                    {
-                        datString += item;
-                        datString += ", ";
-                    }
-                    Add(":" + dataItem.Item1, "DAT", datString.Substring(0, datString.Length - 2));
-                }
-                Add(":ENDOFPROGRAM", "", "");
+                    r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 });
+                r.AddLabel("ENDOFPROGRAM");
+                r.CollapseTree();
+                return r;
             }
             catch (DCPUC.CompileError c)
             {
-                onError(c.Message);
-                return;
+                ReportError(onError, c);
+                return null;
             }
 
         }
 
-        public void AddSource(Irony.Parsing.SourceSpan span)
+        private void ReportError(Action<string> onError, CompileError c)
         {
-            var instruction = new Instruction { ins = ";" + source.Substring(span.Location.Position, span.Length) };
-            instructions.Add(instruction);
-        }
-
-        public void Add(string ins, string a, string b, string comment = null)
-        {
-            var instruction = new Instruction();
-            instruction.ins = ins;
-            instruction.a = a;
-            instruction.b = b;
-            instruction.comment = comment;
-
-            //instructions.Add(instruction);
-            //return;
-            /*
-            if (options.p && instructions.Count > _barrier)
+            var errorString = "";
+            var codeLine = "";
+            if (c.span.HasValue)
             {
-                bool ignore = false;
-                var lastIns = instructions[instructions.Count - 1];
-
-                //SET A, POP
-                //SET PUSH, A
-                if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.b == "POP" && instruction.a == "PUSH" && instruction.b == lastIns.a)
-                {
-                    instructions.RemoveAt(instructions.Count - 1);
-                    ignore = true;
-                }
-                //SET A, !POP
-                //SET !PUSH, A
-                else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.a == instruction.b && lastIns.b != "POP" && instruction.a != "PUSH")
-                {
-                    if (lastIns.b == instruction.a) instructions.RemoveAt(instructions.Count - 1);
-                    else lastIns.a = instruction.a;
-                    ignore = true;
-                }
-                //SET PUSH, A
-                //SET A, POP
-                else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.b == instruction.a && lastIns.a == "PUSH" && instruction.b == "pop")
-                {
-                    instructions.RemoveAt(instructions.Count - 1);
-                    ignore = true;
-                }
-                //SET PUSH, A
-                //SET A, PEEK
-                else if (lastIns.ins == "SET" && instruction.ins == "SET" && lastIns.b == instruction.a && lastIns.a == "PUSH" && instruction.b == "PEEK")
-                {
-                    ignore = true;
-                }
-                //SET A, ?             -> IFN|IFE|IFG ?, A
-                //IFN|IFE|IFG ?, A
-                else if (lastIns.ins == "SET" && (instruction.ins == "IFN" || instruction.ins == "IFE" || instruction.ins == "IFG")
-                    && lastIns.a == instruction.b)
-                {
-                    lastIns.ins = instruction.ins;
-                    lastIns.a = instruction.a;
-                    ignore = true;
-                }
-
-                if (!ignore) instructions.Add(instruction);
+                errorString = "Error on line " + c.span.Value.Location.Line + ": " + c.Message;
+                codeLine = extractLine(source, c.span.Value.Location.Line);
+                errorString += "\r\n" + codeLine + "\r\n" + new String(' ', c.span.Value.Location.Column) + "^";
             }
-            else*/
-                instructions.Add(instruction);
-
+            else
+                errorString = c.Message;
+            onError(errorString);
+            return;
         }
-
-        public void Barrier() { _barrier = instructions.Count; }
-
 
     }
 }
