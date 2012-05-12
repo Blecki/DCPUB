@@ -1,0 +1,59 @@
+function fib(n) 
+{
+	if (2 > n) return n;
+	return fib(n-1) + fib(n-2);
+}
+
+var a = fib(6);
+
+/*	Before peepholes
+
+; var a = fib(6);
+      SET A, 0x0006
+      JSR L1fib
+      SET PUSH, A
+   :L0main_footer
+   SUB PC, 1
+;DCPUC FUNCTION fib L1fib 1
+; function fib(n)
+      :L1fib
+      SET PUSH, X
+      SET PUSH, Y
+            SET X, A
+            IFA 0x0002, X
+; if (2 > n)
+            SET PC, L3THEN
+            SET PC, L4END
+            :L3THEN
+; return n;
+               SET X, A
+               SET A, X
+               SET PC, L2fib_footer
+            :L4END
+; return fib(n-1) + fib(n-2);
+            SET PUSH, A
+            SET A, PEEK
+            SUB A, 0x0001
+            JSR L1fib
+            SET J, A
+            SET A, POP
+            SET X, J
+            SET PUSH, A
+            SET A, PEEK
+            SUB A, 0x0002
+            JSR L1fib
+            SET J, A
+            SET A, POP
+            SET Y, J
+            ADD X, Y
+            SET A, X
+            SET PC, L2fib_footer
+      :L2fib_footer
+      SET Y, POP
+      SET X, POP
+      SET PC, POP
+;END FUNCTION
+
+   :ENDOFPROGRAM
+
+*/

@@ -15,7 +15,9 @@ namespace DCPUC
             this.LanguageFlags |= Irony.Parsing.LanguageFlags.CreateAst;
 
             var comment = new CommentTerminal("comment", "//", "\n", "\r\n");
+            var blockComment = new CommentTerminal("comment", "/*", "*/");
             NonGrammarTerminals.Add(comment);
+            NonGrammarTerminals.Add(blockComment);
 
             var integerLiteral = new NumberLiteral("integer",
                 NumberOptions.IntOnly | NumberOptions.AllowSign | NumberOptions.AllowLetterAfter);

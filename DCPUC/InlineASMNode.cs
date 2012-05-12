@@ -56,7 +56,8 @@ namespace DCPUC
             r.AddChild(new Assembly.Annotation("Inline assembly"));
             if (preserveTarget)
             {
-                r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond((int)targetRegister));
+                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), 
+                    Operand(Scope.GetRegisterLabelSecond((int)targetRegister)));
                 scope.stackDepth += 1;
                 //If that register was used by a variable, we might have to move the variable.
                 if (variableSharingRegister != null && Scope.IsRegister(variableSharingRegister.location))
@@ -74,7 +75,8 @@ namespace DCPUC
             var r = new Assembly.Node();
             if (preserveTarget)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelSecond((int)targetRegister), "POP");
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond((int)targetRegister)), 
+                    Operand("POP"));
                 scope.stackDepth -= 1;
                 if (variableSharingRegister != null && Scope.IsRegister(variableSharingRegister.location))
                     variableSharingRegister.location = targetRegister;

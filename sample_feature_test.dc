@@ -29,9 +29,9 @@ function fibonacci(n)
 }
 
 if (fibonacci(6) == 8)
-	print(&"Fibonacci passed" 10 0);
+	print({"Fibonacci passed", 10, 0});
 else
-	print(&"Fibonacci failed" 10 0);
+	print({"Fibonacci failed", 10, 0});
 	
 //This test function spills onto the stack.
 function spill(a,b,c,d, e,f,g,h)
@@ -40,7 +40,9 @@ function spill(a,b,c,d, e,f,g,h)
 }
 
 if (spill(1,2,3,4,5,6,7,8) == -21)
-	print(&"Spill passed" 10 0);
+	print({"Spill passed", 10, 0});
 else
+	print({"Spill failed", 10, 0});
+lse
 	print(&"Spill failed" 10 0);
 

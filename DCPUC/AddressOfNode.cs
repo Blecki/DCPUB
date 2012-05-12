@@ -12,7 +12,6 @@ namespace DCPUC
         public Variable variable = null;
         public Function function = null;
         public String variableName;
-        Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -91,20 +90,20 @@ namespace DCPUC
                 }
                 else if (variable.type == VariableType.Static)
                 {
-                    r.AddInstruction(Instructions.SET, Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
+                    r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(variable.staticLabel));
                 }
                 else if (variable.type == VariableType.Local)
                 {
                     if (variable.location == Register.STACK)
                     {
                         var stackOffset = scope.StackOffset(variable.stackOffset);
-                        r.AddInstruction(Instructions.SET, Scope.GetRegisterLabelFirst((int)target), "SP");
+                        r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("SP"));
                         if (stackOffset != 0)
                         {
                             if (target == Register.STACK)
-                                r.AddInstruction(Instructions.ADD, "PEEK", Hex.hex(stackOffset));
+                                r.AddInstruction(Instructions.ADD, Operand("PEEK"), Constant((ushort)stackOffset));
                             else
-                                r.AddInstruction(Instructions.ADD, Scope.GetRegisterLabelFirst((int)target), Hex.hex(stackOffset));
+                                r.AddInstruction(Instructions.ADD, Operand(Scope.GetRegisterLabelFirst((int)target)), Constant((ushort)stackOffset));
                         }
                     }
                     else
@@ -113,7 +112,7 @@ namespace DCPUC
             }
             else if (function != null)
             {
-                r.AddInstruction(Instructions.SET, Scope.GetRegisterLabelFirst((int)target), function.label);
+                r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(function.label));
             }
 
             if (target == Register.STACK) scope.stackDepth += 1;

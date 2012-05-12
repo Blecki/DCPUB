@@ -73,9 +73,9 @@ namespace DCPUC
                         var thenLabel = context.GetLabel() + "THEN";
                         var endLabel = context.GetLabel() + "END";
 
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", thenLabel);
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
                         if (ChildNodes.Count == 3) r.AddChild(EmitBlock(context, scope, Child(2)));
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", endLabel);
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
                         r.AddLabel(thenLabel);
 
                         r.AddChild(EmitBlock(context, scope, Child(1)));

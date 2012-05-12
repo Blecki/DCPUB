@@ -21,8 +21,8 @@ namespace DCPUC
 
         internal Register FindFreeRegister()
         {
-            for (int i = 3; i < 8; ++i) if (registers[i] == RegisterState.Free) return (Register)i;
-            for (int i = 0; i < 3; ++i) if (registers[i] == RegisterState.Free) return (Register)i;
+            for (int i = 0; i < 8; ++i) if (registers[i] == RegisterState.Free) return (Register)i;
+            //for (int i = 0; i < 3; ++i) if (registers[i] == RegisterState.Free) return (Register)i;
             return Register.STACK;
         }
 

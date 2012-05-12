@@ -10,9 +10,8 @@ namespace DCPUC
     {
         Function function;
         String functionName;
-        Register target;
         Scope enclosingScope;
-
+        RegisterState[] activeRegisters = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -64,12 +63,12 @@ namespace DCPUC
                 }
 
                 if (function == null) throw new CompileError("Could not find function " + functionName);
-                if (function.parameterCount != ChildNodes.Count) throw new CompileError("Incorrect number of arguments to function");
+                if (function.parameterCount != ChildNodes.Count - 1) throw new CompileError("Incorrect number of arguments to function");
 
                 for (int i = 0; i < function.parameterCount; ++i)
                 {
-                    if (function.localScope.variables[i].typeSpecifier != Child(i).ResultType)
-                        context.AddWarning(Span, CompileContext.TypeWarning(Child(i).ResultType, function.localScope.variables[i].typeSpecifier));
+                    if (function.localScope.variables[i].typeSpecifier != Child(i + 1).ResultType)
+                        context.AddWarning(Span, CompileContext.TypeWarning(Child(i + 1).ResultType, function.localScope.variables[i].typeSpecifier));
                 }
 
                 ResultType = function.returnType;
@@ -80,7 +79,7 @@ namespace DCPUC
         {
             this.target = target;
 
-            var startingRegisterState = parentState.SaveRegisterState();
+            activeRegisters = parentState.SaveRegisterState();
 
             if (function == null) Child(0).AssignRegisters(context, parentState, Register.STACK);
 
@@ -101,16 +100,23 @@ namespace DCPUC
             else
                 r = new Assembly.ExpressionNode();
 
+            int[] needsRestored = {0, 0, 0};
+
             for (int i = 0; i < 3; ++i)
             {
-                if (scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
+                if (i != (int)target && activeRegisters[i] == RegisterState.Used)//scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond((int)i));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond((int)i)));
                     scope.stackDepth += 1;
-                    if (scope.activeFunction.function.parameterCount > i)
+                    needsRestored[i] = 1;
+
+                    if (scope.activeFunction.function.parameterCount > i 
+                        && scope.activeFunction.function.localScope.variables[i].location != Register.STACK)
                     {
                         scope.activeFunction.function.localScope.variables[i].location = Register.STACK;
                         scope.activeFunction.function.localScope.variables[i].stackOffset = scope.stackDepth - 1;
+                        needsRestored[i] = 2;
+
                     }
                 }
                 if (ChildNodes.Count > i + 1)
@@ -126,38 +132,46 @@ namespace DCPUC
             if (function == null)
             {
                 r.AddChild(Child(0).Emit(context, scope));
-                r.AddInstruction(Assembly.Instructions.JSR, "POP");
+                r.AddInstruction(Assembly.Instructions.JSR, Operand("POP"));
             }
             else
             {
-                r.AddInstruction(Assembly.Instructions.JSR, function.label);
+                r.AddInstruction(Assembly.Instructions.JSR, Label(function.label));
             }
 
             if (ChildNodes.Count > 4) //Need to remove parameters from stack
             {
-                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(ChildNodes.Count - 4));
+                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 4)));
                 scope.stackDepth -= (ChildNodes.Count - 4);
             }
 
-            var saveA = scope.activeFunction.usedRegisters.registers[0] == RegisterState.Used;
-            if (saveA && target != Register.DISCARD) r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "A");
+            var pushTemp = false;
+            //if (saveA && target != Register.DISCARD) r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "A");
+            if (target != Register.A)
+            {
+                if (target == Register.STACK)
+                {
+                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("A"));
+                    scope.stackDepth += 1;
+                    pushTemp = true;
+                }
+                else
+                {
+                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("A"));
+                }
+            }
 
             for (int i = 2; i >= 0; --i)
-                if (scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
+                if (needsRestored[i] > 0)//i != (int)target && activeRegisters[i] == RegisterState.Used)//scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst(i), "POP");
+                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst(i)), Operand("POP"));
                     scope.stackDepth -= 1;
-                    if (scope.activeFunction.function.parameterCount > i)
+                    if (needsRestored[i] == 2 && scope.activeFunction.function.parameterCount > i)
                         scope.activeFunction.function.localScope.variables[i].location = (Register)i;
                 }
 
-            if (target == Register.A && !saveA) return r;
-            else if (Scope.IsRegister(target)) r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), saveA ? Scope.TempRegister : "A");
-            else if (target == Register.STACK)
-            {
-                r.AddInstruction(Assembly.Instructions.SET, "PUSH", saveA ? Scope.TempRegister : "A");
-                scope.stackDepth += 1;
-            }
+            if (pushTemp) r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.TempRegister));
+           
             return r;
         }
 

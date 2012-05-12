@@ -102,6 +102,7 @@ namespace DCPUCIDE
                 inputBox.Clear();
                 inputBox.AppendText(file);
                 Text = fileDialog.FileName;
+                documentPath = fileDialog.FileName;
             }
 
         }
@@ -111,7 +112,10 @@ namespace DCPUCIDE
             outputBox.Clear();
             codeOutputBox.Clear();
             var context = new DCPUC.CompileContext();
-            context.options.p = false;// peepholeCB.Checked;
+            var options = new DCPUC.CompileOptions();
+            options.p = false;
+            context.Initialize(options);
+            
             var errorCount = 0;
             var warningCount = 0;
             context.onWarning += (s) => { warningCount += 1;

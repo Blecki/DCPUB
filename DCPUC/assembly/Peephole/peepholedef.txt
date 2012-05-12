@@ -1,0 +1,6 @@
+﻿; Peephole optimization definitions
+;
+; Format: SET A, B / SET C, A : A B, C / D E, F => A E, C
+
+;Simple assign-back
+SET A, B / SET B, A : A B, C / D E, F => A B, C

@@ -87,6 +87,7 @@ namespace DCPUC
         
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
+
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             r.AddChild(Child(1).Emit(context, scope));
