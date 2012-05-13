@@ -29,5 +29,10 @@ namespace DCPUC.Assembly
             r.secondOperand = secondOperand;
             return r;
         }
+
+        public override int InstructionCount()
+        {
+            return 1;
+        }
     }
 }

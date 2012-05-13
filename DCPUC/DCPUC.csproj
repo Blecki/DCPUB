@@ -50,6 +50,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Assembly\Operand.cs" />
+    <Compile Include="Assembly\Peephole\InstructionMatcher.cs" />
     <Compile Include="Assembly\Peephole\Grammar.cs" />
     <Compile Include="Assembly\Inline.cs">
       <SubType>Code</SubType>
@@ -66,11 +67,14 @@
     <Compile Include="Assembly\Node.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\PeepholePattern.cs" />
-    <Compile Include="Assembly\Peephole\Peepholes.cs" />
-    <Compile Include="Assembly\Peephole\ReplacementSet.cs" />
+    <Compile Include="Assembly\Peephole\Matcher.cs" />
+    <Compile Include="Assembly\Peephole\Replacement.cs" />
     <Compile Include="Assembly\Peephole\Rule.cs" />
-    <Compile Include="Assembly\Peephole\RuleSet.cs" />
+    <Compile Include="Assembly\Peephole\WholeInstructionMatcher.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Assembly\Peephole\OperandMatcher.cs" />
+    <Compile Include="Assembly\Peephole\Peepholes.cs" />
     <Compile Include="Assembly\StaticData.cs">
       <SubType>Code</SubType>
     </Compile>

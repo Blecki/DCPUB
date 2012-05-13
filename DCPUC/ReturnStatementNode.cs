@@ -47,7 +47,7 @@ namespace DCPUC
                     firstParameter.location = Register.STACK;
                     firstParameter.stackOffset = scope.stackDepth;
                     scope.stackDepth += 1;
-                    r.AddChild(new Assembly.Annotation("Moving first parameter to stack for duration of return"));
+                    //r.AddChild(new Assembly.Annotation("Moving first parameter to stack for duration of return"));
                     r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand("A"));
                 }
                 else

@@ -51,5 +51,21 @@ namespace DCPUC.Assembly
             if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference) s += "]";
             return s;
         }
+
+        public static Operand fromString(String s)
+        {
+            return new Operand { semantics = OperandSemantics.Label, label = s };
+        }
+
+        public Operand Clone()
+        {
+            return new Operand
+            {
+                register = register,
+                semantics = semantics,
+                constant = constant,
+                label = label
+            };
+        }
     }
 }

@@ -44,6 +44,11 @@ namespace DCPUC.Assembly
             children = result;
             return new List<Node>(new Node[]{this}); 
         }
+
+        public virtual int InstructionCount()
+        {
+            return children.Sum((node) => { return node.InstructionCount(); });
+        }
     }
 
     public class StatementNode : Node 
@@ -51,34 +56,9 @@ namespace DCPUC.Assembly
         public override List<Node> CollapseTree()
         {
             var r = base.CollapseTree();
-
-            /*PeepholePattern.InitializePeepholes();
-
-            for (int i = 0; i < children.Count;)
-            {
-                foreach (var pattern in PeepholePattern.patterns)
-                {
-                    if (children.Count - i < pattern.Length) continue;
-                    var iList = new List<Instruction>();
-                    for (int x = 0; x < pattern.Length; ++x)
-                    {
-                        if (!(children[i + x] is Instruction)) goto TryNextPattern;
-                        else iList.Add(children[i + x] as Instruction);
-                    }
-
-                    if (pattern.Match(iList))
-                    {
-                        children.RemoveRange(i, pattern.Length);
-                        children.InsertRange(i, pattern.Replace(iList));
-                        goto TryNextChild;
-                    }
-                    TryNextPattern: ;
-                }
-
-                i += 1;
-                TryNextChild: ;
-            }
-            */
+            Peephole.Peepholes.InitializePeepholes();
+            if (Peephole.Peepholes.root != null)
+                Peephole.Peepholes.root.ProcessAssembly(children);
             return r;
         }
     }

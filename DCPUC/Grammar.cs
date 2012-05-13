@@ -125,13 +125,13 @@ namespace DCPUC
             this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
-            this.RegisterOperators(1, Associativity.Right, "==", "!=");
+            this.RegisterOperators(1, Associativity.Right, "==", "!=", ">", "<");
             this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=");
             this.RegisterOperators(3, Associativity.Left, "+", "-");
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
             this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^");
             
-            this.RegisterOperators(6, Associativity.Left, "{", "}", "[", "]", "<", ">");
+            this.RegisterOperators(6, Associativity.Left, "{", "}", "[", "]");
         }
 
     }
