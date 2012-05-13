@@ -19,6 +19,7 @@ namespace DCPUC
             variable = new Variable();
             variable.name = treeNode.ChildNodes[1].FindTokenAndGetText();
             variable.typeSpecifier = treeNode.ChildNodes[2].FindTokenAndGetText();
+            variable.assignedBy = this;
             if (variable.typeSpecifier == null) variable.typeSpecifier = "unsigned";
         }
 
@@ -127,8 +128,9 @@ namespace DCPUC
                 {
                     var size = (Child(0) as BlockLiteralNode).dataSize;
                     scope.stackDepth += size;
-                    r.AddInstruction(Assembly.Instructions.SUB, "SP", Hex.hex(size));
-                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)variable.location), "SP");
+                    r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)size));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)variable.location)), 
+                        Operand("SP"));
                     variable.stackOffset = scope.stackDepth;
                     if (variable.location == Register.STACK) scope.stackDepth += 1;
                 }

@@ -13,6 +13,7 @@ namespace DCPUC
         public RegisterBank usedRegisters = new RegisterBank();
         protected String footerLabel = null;
         private Irony.Parsing.SourceSpan headerSpan;
+        private int registersPreserved = 0;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -102,11 +103,6 @@ namespace DCPUC
                 nestedFunction.Node.AssignRegisters(context, parentState, Register.DISCARD);
         }
 
-        public override void Compile(CompileContext context, Scope scope, Register target)
-        {
-            throw new CompileError("Function was not removed by Fold pass");
-        }
-
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             throw new CompileError("Function was not removed by fold pass");
@@ -129,11 +125,12 @@ namespace DCPUC
 
             //Save registers
             //ABC saved by caller
-            for (int i = Math.Min(3, function.parameterCount); i < 7; ++i)
+            for (int i = 3/*Math.Min(3, function.parameterCount)*/; i < 7; ++i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond(i));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond(i)));
                     function.localScope.stackDepth += 1;
+                    registersPreserved += 1;
                 }
 
             var localScope = function.localScope.Push();
@@ -142,7 +139,8 @@ namespace DCPUC
             {
                 if (function.localScope.variables[i].addressTaken)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, "PUSH", Scope.GetRegisterLabelSecond((int)function.localScope.variables[i].location));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), 
+                        Operand(Scope.GetRegisterLabelSecond((int)function.localScope.variables[i].location)));
                     function.localScope.variables[i].location = Register.STACK;
                     function.localScope.variables[i].stackOffset = localScope.stackDepth;
                     localScope.stackDepth += 1;
@@ -152,16 +150,17 @@ namespace DCPUC
             r.AddChild(Child(0).Emit(context, localScope));
 
             if (localScope.stackDepth - function.localScope.stackDepth > 0)
-                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth));
+                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), 
+                    Constant((ushort)(localScope.stackDepth - function.localScope.stackDepth)));
 
             r.AddLabel(footerLabel);
 
             //Restore registers
-            for (int i = 6; i >= Math.Min(3, function.parameterCount); --i)
+            for (int i = 6; i >= 3/*Math.Min(3, function.parameterCount)*/; --i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
-                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelSecond(i), "POP");
+                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond(i)), Operand("POP"));
 
-            r.AddInstruction(Assembly.Instructions.SET, "PC", "POP");
+            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));
 
             foreach (var nestedFunction in function.localScope.functions)
                 r.AddChild(nestedFunction.Node.CompileFunction(context));
@@ -171,10 +170,11 @@ namespace DCPUC
 
         internal virtual Assembly.Node CompileReturn(CompileContext context, Scope localScope)
         {
-            var r = new Assembly.Node();
-            if (localScope.stackDepth - function.localScope.stackDepth > 0)
-                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(localScope.stackDepth - function.localScope.stackDepth)); 
-            r.AddInstruction(Assembly.Instructions.SET, "PC", footerLabel);
+            var r = new Assembly.ExpressionNode();
+            if (localScope.stackDepth > 0)//- function.localScope.stackDepth > 0)
+                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)localScope.stackDepth));// - function.localScope.stackDepth)); 
+            if (registersPreserved > 0) r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
+            else r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));
             return r;
         }
     }

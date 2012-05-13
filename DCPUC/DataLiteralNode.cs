@@ -19,7 +19,6 @@ namespace DCPUC
         public List<RawDataNode> dataNodes = new List<RawDataNode>();
         public List<ushort> data = new List<ushort>();
         public string dataLabel;
-        Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -88,7 +87,7 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.ExpressionNode();
-            r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), dataLabel);
+            r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(dataLabel));
             if (target == Register.STACK) scope.stackDepth += 1;
             return r;
         }

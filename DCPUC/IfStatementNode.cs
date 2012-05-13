@@ -65,21 +65,40 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = base.Emit(context, scope);
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
+            r.children.Insert(0, new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
             switch (clauseOrder)
             {
                 case ClauseOrder.FailFirst: //Only actual valid order.
                     {
-                        var thenLabel = context.GetLabel() + "THEN";
-                        var endLabel = context.GetLabel() + "END";
+                        var thenClauseAssembly = EmitBlock(context, scope, Child(1));
+                        Assembly.Node elseClauseAssembly = ChildNodes.Count == 3 ? EmitBlock(context, scope, Child(2)) : null;
 
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", thenLabel);
-                        if (ChildNodes.Count == 3) r.AddChild(EmitBlock(context, scope, Child(2)));
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", endLabel);
-                        r.AddLabel(thenLabel);
+                        thenClauseAssembly.CollapseTree();
+                        if (elseClauseAssembly != null) elseClauseAssembly.CollapseTree();
 
-                        r.AddChild(EmitBlock(context, scope, Child(1)));
-                        r.AddLabel(endLabel);
+                        if (thenClauseAssembly.InstructionCount() == 0 &&
+                            (elseClauseAssembly == null || elseClauseAssembly.InstructionCount() == 0))
+                        {
+                            r.children.RemoveRange(1, r.children.Count - 1);
+                        }
+                        else if (thenClauseAssembly.InstructionCount() == 1 && 
+                            (elseClauseAssembly == null || elseClauseAssembly.InstructionCount() == 0))
+                        {
+                            r.AddChild(thenClauseAssembly);
+                        }
+                        else
+                        {
+                            var thenLabel = context.GetLabel() + "THEN";
+                            var endLabel = context.GetLabel() + "END";
+
+                            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
+                            if (elseClauseAssembly != null) r.AddChild(elseClauseAssembly);
+                            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
+                            r.AddLabel(thenLabel);
+
+                            r.AddChild(thenClauseAssembly);
+                            r.AddLabel(endLabel);
+                        }
                     }
                     break;
                 default:

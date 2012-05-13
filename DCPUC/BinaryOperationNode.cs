@@ -117,65 +117,86 @@ namespace DCPUC
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-            if (!Child(1).IsIntegralConstant())
-            {
-                secondOperandResult = parentState.FindAndUseFreeRegister();
-                Child(1).AssignRegisters(context, parentState, secondOperandResult);
-            }
-
             firstOperandResult = target;
 
             if (!Child(0).IsIntegralConstant())
                 Child(0).AssignRegisters(context, parentState, firstOperandResult);
 
-            parentState.FreeRegisters(secondOperandResult);
+            if (!Child(1).IsIntegralConstant() && !(Child(1) is VariableNameNode))
+            {
+                secondOperandResult = parentState.FindAndUseFreeRegister();
+                Child(1).AssignRegisters(context, parentState, secondOperandResult);
+                parentState.FreeRegisters(secondOperandResult);
+            }
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             initOps();
 
+
             var r = new Assembly.ExpressionNode();
 
             if (Child(0).IsIntegralConstant())
             {
-                r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)firstOperandResult), Child(0).GetConstantToken());
-                if (firstOperandResult == Register.STACK) scope.stackDepth += 1;
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
+                    Label(Child(0).GetConstantToken()));
+                if (target == Register.STACK) scope.stackDepth += 1;
             }
             else
+            {
                 r.AddChild(Child(0).Emit(context, scope));
+                /*if (firstOperandResult != Child(0).actualTarget)
+                {
+                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)firstOperandResult),
+                        Scope.GetRegisterLabelSecond((int)Child(0).actualTarget));
+                    if (firstOperandResult == Register.STACK)
+                        scope.stackDepth += 1;
+                }*/
+            }
 
             var opcode = ResultType == "signed" && opcodes.ContainsKey(AsString+"signed") ? opcodes[AsString + "signed"] : opcodes[AsString];
 
-            if (!Child(1).IsIntegralConstant())
+            if (Child(1) is VariableNameNode)
+            {
+                if (firstOperandResult == Register.STACK)
+                    r.AddInstruction(opcode, Operand("PEEK"), (Child(1) as VariableNameNode).GetFetchToken(scope));
+                else
+                    r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)),
+                        (Child(1) as VariableNameNode).GetFetchToken(scope));
+            }
+            else if (Child(1).IsIntegralConstant())
+            {
+                if (firstOperandResult == Register.STACK)
+                    r.AddInstruction(opcode, Operand("PEEK"), Label(Child(1).GetConstantToken()));
+                else
+                    r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)), 
+                        Label(Child(1).GetConstantToken()));
+            }
+            else
             {
                 r.AddChild(Child(1).Emit(context, scope));
+                //secondOperandResult = Child(1).actualTarget;
 
                 if (firstOperandResult == Register.STACK)
                 {
                     if (secondOperandResult == Register.STACK)
                     {
-                        r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
-                        r.AddInstruction(opcode, "PEEK", Scope.TempRegister);
+                        r.AddInstruction(opcode, Operand("PEEK"), Operand("POP"));
+                        //r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
+                        //r.AddInstruction(opcode, "PEEK", Scope.TempRegister);
                         scope.stackDepth -= 1;
                     }
                     else
-                        r.AddInstruction(opcode, "PEEK", Scope.GetRegisterLabelSecond((int)secondOperandResult));
+                        r.AddInstruction(opcode, Operand("PEEK"), Operand(Scope.GetRegisterLabelSecond((int)secondOperandResult)));
                 }
                 else
                 {
                     r.AddInstruction(opcode, 
-                        Scope.GetRegisterLabelFirst((int)firstOperandResult),
-                        Scope.GetRegisterLabelSecond((int)secondOperandResult));
+                        Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)),
+                        Operand(Scope.GetRegisterLabelSecond((int)secondOperandResult)));
                     if (secondOperandResult == Register.STACK) scope.stackDepth -= 1;
                 }
-            }
-            else
-            {
-                if (firstOperandResult == Register.STACK)
-                    r.AddInstruction(opcode, "PEEK", Child(1).GetConstantToken());
-                else
-                    r.AddInstruction(opcode, Scope.GetRegisterLabelFirst((int)firstOperandResult), Child(1).GetConstantToken());
             }
 
             return r;

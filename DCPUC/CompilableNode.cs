@@ -10,13 +10,24 @@ namespace DCPUC
     {
         public bool WasFolded = false;
         public string ResultType = "void";
+        public Register target = Register.DISCARD;
+        //public Register actualTarget = Register.DISCARD;
 
         public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
-        public virtual void Compile(CompileContext context, Scope scope, Register target) { }
         public virtual int GetConstantValue() { return 0; }
         public virtual string GetConstantToken() { return "0x0000"; }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
+
+        public virtual Assembly.Operand GetFetchToken(Scope scope) { return null; }
+
+        public virtual int ReferencesVariable(Variable v)
+        {
+            var r = 0;
+            foreach (var child in ChildNodes)
+                r += (child as CompilableNode).ReferencesVariable(v);
+            return r;
+        }
 
         public virtual void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
@@ -55,6 +66,36 @@ namespace DCPUC
             return 0;
         }
 
+        public static Assembly.Operand Operand(String r, Assembly.OperandSemantics semantics = Assembly.OperandSemantics.None)
+        {
+            Assembly.OperandRegister opReg;
+            if (!Enum.TryParse(r, out opReg)) throw new CompileError("Unmappable operand register");
+            return new Assembly.Operand { register = opReg, semantics = semantics };
+        }
+
+        public static Assembly.Operand Dereference(String r) { return Operand(r, Assembly.OperandSemantics.Dereference); }
+        
+        public static Assembly.Operand DereferenceOffset(String s, ushort offset) 
+        {
+            var r = Operand(s, Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset);
+            r.constant = offset;
+            return r; 
+        }
+
+        public static Assembly.Operand Constant(ushort value)
+        {
+            return new Assembly.Operand { semantics = Assembly.OperandSemantics.Constant, constant = value };
+        }
+
+        public static Assembly.Operand Label(string value)
+        {
+            return new Assembly.Operand { semantics = Assembly.OperandSemantics.Label, label = value };
+        }
+
+        public static Assembly.Operand DereferenceLabel(string value)
+        {
+            return new Assembly.Operand { semantics = Assembly.OperandSemantics.Label | Assembly.OperandSemantics.Dereference, label = value };
+        }
 
 
         /*
