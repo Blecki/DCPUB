@@ -52,11 +52,11 @@ namespace DCPUC
                     {
                         var yesLabel = context.GetLabel() + "YES";
                         var endLabel = context.GetLabel() + "END_WHILE";
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", yesLabel);
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", endLabel);
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(yesLabel));
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
                         r.AddLabel(yesLabel);
                         r.AddChild(EmitBlock(context, scope, Child(1)));
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", topLabel);
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(topLabel));
                         r.AddLabel(endLabel);
                     }
                     break;

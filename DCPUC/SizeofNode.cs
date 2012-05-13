@@ -8,7 +8,6 @@ namespace DCPUC
 {
     public class SizeofNode : CompilableNode
     {
-        Register target;
         public String typeName;
         public Struct _struct = null;
         public bool IsAssignedTo { get; set; }
@@ -54,7 +53,8 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.ExpressionNode();
-            r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), Hex.hex(_struct.size));
+            r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                Constant((ushort)_struct.size));
             return r;
         }
 

@@ -8,8 +8,6 @@ namespace DCPUC
 {
     public class TernarySelectionNode : BranchStatementNode
     {
-        public Register target;
-
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -64,6 +62,7 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = base.Emit(context, scope);
+            r = new Assembly.ExpressionNode { children = r.children };
             switch (clauseOrder)
             {
                 case ClauseOrder.FailFirst: //Only actual valid order.
@@ -71,12 +70,13 @@ namespace DCPUC
                         var thenLabel = context.GetLabel() + "THEN";
                         var endLabel = context.GetLabel() + "END";
 
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", thenLabel);
-                        if (ChildNodes.Count == 3) r.AddChild(EmitBlock(context, scope, Child(2), false));
-                        r.AddInstruction(Assembly.Instructions.SET, "PC", endLabel);
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
+                        if (ChildNodes.Count == 3) 
+                            r.AddChild(new Assembly.ExpressionNode { children = EmitBlock(context, scope, Child(2), false).children });
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
                         r.AddLabel(thenLabel);
 
-                        r.AddChild(EmitBlock(context, scope, Child(1), false));
+                        r.AddChild(new Assembly.ExpressionNode { children = EmitBlock(context, scope, Child(1), false).children });
                         r.AddLabel(endLabel);
                     }
                     break;

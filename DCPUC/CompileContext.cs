@@ -78,6 +78,7 @@ namespace DCPUC
         public void Initialize(CompileOptions options)
         {
             this.options = options;
+            Assembly.Peephole.Peepholes.InitializePeepholes();
         }
 
         public bool Parse(String code, Action<string> onError)
@@ -113,7 +114,6 @@ namespace DCPUC
             end_of_program.type = VariableType.ConstantReference;
             end_of_program.name = "__endofprogram";
             end_of_program.staticLabel = "ENDOFPROGRAM";
-            end_of_program.emitBrackets = false;
             globalScope.variables.Add(end_of_program);
 
             try

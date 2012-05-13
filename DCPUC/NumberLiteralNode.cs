@@ -9,7 +9,6 @@ namespace DCPUC
     public class NumberLiteralNode : CompilableNode
     {
         public int Value = 0;
-        public Register target;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -69,7 +68,8 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.ExpressionNode();
-            r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)target), GetConstantToken());
+            r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                Label(GetConstantToken()));
             if (target == Register.STACK) scope.stackDepth += 1;
             return r;
         }

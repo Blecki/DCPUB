@@ -124,20 +124,31 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.StatementNode();
+            Assembly.Operand secondToken = null;
             if (!secondOperand.IsIntegralConstant())
-                r.AddChild(secondOperand.Emit(context, scope));
+            {
+                secondToken = secondOperand.GetFetchToken(scope);
+                if (secondToken == null)
+                {
+                    r.AddChild(secondOperand.Emit(context, scope));
+                    secondToken = Operand(Scope.GetRegisterLabelSecond((int)secondOperandTarget));
+                }
+            }
+            else
+                secondToken = Label(secondOperand.GetConstantToken());
+
             if (!firstOperand.IsIntegralConstant())
                 r.AddChild(firstOperand.Emit(context, scope));
 
             if (!firstOperand.IsIntegralConstant() && firstOperandTarget == Register.STACK)
             {
                 firstOperandTarget = Register.J;
-                r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("POP"));
             }
 
             r.AddInstruction(comparisonInstruction,
-                firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)firstOperandTarget),
-                secondOperand.IsIntegralConstant() ? secondOperand.GetConstantToken() : Scope.GetRegisterLabelSecond((int)secondOperandTarget));
+                firstOperand.IsIntegralConstant() ? Label(firstOperand.GetConstantToken()) : Operand(Scope.GetRegisterLabelSecond((int)firstOperandTarget)),
+                secondToken);
             if (firstOperandTarget == Register.STACK) scope.stackDepth -= 1;
             if (secondOperandTarget == Register.STACK) scope.stackDepth -= 1;
 
@@ -150,7 +161,7 @@ namespace DCPUC
             var blockScope = scope.Push();
             r.AddChild(block.Emit(context, blockScope));
             if (restoreStack && blockScope.stackDepth - scope.stackDepth > 0)
-                r.AddInstruction(Assembly.Instructions.ADD, "SP", Hex.hex(blockScope.stackDepth - scope.stackDepth));
+                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.stackDepth - scope.stackDepth)));
             return r;
         }
         
