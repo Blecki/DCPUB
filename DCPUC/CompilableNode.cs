@@ -69,11 +69,20 @@ namespace DCPUC
         public static Assembly.Operand Operand(String r, Assembly.OperandSemantics semantics = Assembly.OperandSemantics.None)
         {
             Assembly.OperandRegister opReg;
-            if (!Enum.TryParse(r, out opReg)) throw new CompileError("Unmappable operand register");
+            if (!Enum.TryParse(r, out opReg)) 
+                throw new CompileError("Unmappable operand register");
             return new Assembly.Operand { register = opReg, semantics = semantics };
         }
 
         public static Assembly.Operand Dereference(String r) { return Operand(r, Assembly.OperandSemantics.Dereference); }
+
+        public static Assembly.Operand DereferenceLabel(String r) 
+        { 
+            return new Assembly.Operand{
+                label = r,
+                semantics = Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Label
+            };
+        }
         
         public static Assembly.Operand DereferenceOffset(String s, ushort offset) 
         {
@@ -91,12 +100,6 @@ namespace DCPUC
         {
             return new Assembly.Operand { semantics = Assembly.OperandSemantics.Label, label = value };
         }
-
-        public static Assembly.Operand DereferenceLabel(string value)
-        {
-            return new Assembly.Operand { semantics = Assembly.OperandSemantics.Label | Assembly.OperandSemantics.Dereference, label = value };
-        }
-
 
         /*
         public void InsertLibrary(List<string> library)
