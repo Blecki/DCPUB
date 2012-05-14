@@ -155,7 +155,7 @@ namespace DCPUC
                     scope.stackDepth += 1;
                     pushTemp = true;
                 }
-                else
+                else if (target != Register.DISCARD)
                 {
                     r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("A"));
                 }

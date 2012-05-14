@@ -60,7 +60,7 @@ namespace DCPUC
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("POP"));
                 if (member.offset > 0)
                     r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"),
-                        Dereference(Scope.TempRegister + " + " + Hex.hex(member.offset)));
+                        DereferenceOffset(Scope.TempRegister, (ushort)member.offset));
                 else
                     r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Dereference(Scope.TempRegister));
             }
@@ -68,7 +68,7 @@ namespace DCPUC
             {
                 if (member.offset > 0)
                     r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                        Dereference(Scope.GetRegisterLabelFirst((int)target) + " + " + Hex.hex(member.offset)));
+                        DereferenceOffset(Scope.GetRegisterLabelFirst((int)target), (ushort)member.offset));
                 else
                     r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                         Dereference(Scope.GetRegisterLabelFirst((int)target)));
@@ -88,7 +88,7 @@ namespace DCPUC
                 scope.stackDepth -= 1;
             }
             if (member.offset > 0)
-                r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target) + "+" + Hex.hex(member.offset)),
+                r.AddInstruction(opcode, DereferenceOffset(Scope.GetRegisterLabelFirst((int)target), (ushort)member.offset),
                     Operand(Scope.GetRegisterLabelSecond((int)from)));
             else
                 r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),

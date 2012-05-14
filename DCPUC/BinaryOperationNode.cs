@@ -139,7 +139,7 @@ namespace DCPUC
 
             if (Child(0).IsIntegralConstant())
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)), 
                     Label(Child(0).GetConstantToken()));
                 if (target == Register.STACK) scope.stackDepth += 1;
             }
