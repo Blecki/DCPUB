@@ -93,7 +93,7 @@ namespace DCPUC
             else if (variable.type == VariableType.Static)
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
-                    Dereference(variable.staticLabel));
+                    DereferenceLabel(variable.staticLabel));
             }
             else if (variable.type == VariableType.Local)
             {
@@ -147,7 +147,7 @@ namespace DCPUC
                         Operand(Scope.GetRegisterLabelSecond((int)from)));
             }
             else if (variable.type == VariableType.Static)
-                r.AddInstruction(opcode, Dereference(variable.staticLabel), Operand(Scope.GetRegisterLabelSecond((int)from)));
+                r.AddInstruction(opcode, DereferenceLabel(variable.staticLabel), Operand(Scope.GetRegisterLabelSecond((int)from)));
             return r;
         }
 
