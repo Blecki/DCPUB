@@ -1,66 +1,53 @@
 DCPUC, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game 0x10c. 
 
-This compiler targets DCPU assembly. http://0x10c.com/doc/dcpu-16.txt
-Updated for the new spec at http://dcpu.com/highnerd/dcpu16.txt
-Updated for http://dcpu.com/highnerd/dcpu16_1_3.txt (And for something I overlooked in the previous one)
+This compiler targets DCPU assembly. http://pastebin.com/raw.php?i=Q4JvQvnM
 
 NOTE THAT THIS LANGUAGE MAKES NO ATTEMPT TO SUPPORT HARDWARE FEATURES LIKE INTERRUPTS OR HARDWARE DEVICES. But, it DOES provide inline assembly.
 Nor does it emit any instructions that use the EX register. A library implementing larger sized types wouldn't have any trouble using it, though.
 
 I know of no emulators that support the new spec. 
 
-//The output of this compiler has been tested with this emulator https://github.com/mappum/DCPU-16 and may output the 'BRK' instruction, which is a feature of that emulator and not of the official DCPU-16 spec.
-
 There is a simple GUI compiler included (DCPUCIDE). Try compiling this program:
 
-function fib(n:unsigned):unsigned
+function fib(n) 
 {
-   if (n < 2u) return n;
-   return fib(n-1u) + fib(n-2u);
+	if (2 > n) return n;
+	return fib(n-1) + fib(n-2);
 }
 
-var a:unsigned = fib(6u);
+var a = fib(6);
 
-For reference
-   SET A, 0x0006
-JSR L1fib
-   SET X, A
-:L0main_footer
-BRK
-:L1fib
-   SET PUSH, X
-   SET PUSH, Y
-   SET X, A
-   IFL X, 0x0002
-   SET PC, L3THEN
-   SET PC, L4END
-:L3THEN
-   SET X, A
-   SET A, X
-   SET PC, L2fib_footer
-:L4END
-   SET PUSH, A
-   SET A, PEEK
-   SUB A, 0x0001
-JSR L1fib
-   SET J, A
-   SET A, POP
-   SET X, J
-   SET PUSH, A
-   SET A, PEEK
-   SUB A, 0x0002
-JSR L1fib
-   SET J, A
-   SET A, POP
-   SET Y, J
-   ADD X, Y
-   SET A, X
-   SET PC, L2fib_footer
-:L2fib_footer
-   SET Y, POP
-   SET X, POP
-   SET PC, POP
-:ENDOFPROGRAM
+Compiles too...
+
+; var a = fib(6);
+      SET A, 0x0006
+      JSR L1fib
+      SET PUSH, A
+   :L0main_footer
+   SUB PC, 0x0001
+;DCPUC FUNCTION fib L1fib 1
+; function fib(n)
+      :L1fib
+; if (2 > n)
+            IFA 0x0002, A
+; return n;
+               SET PC, POP
+; return fib(n-1) + fib(n-2);
+            SET PUSH, A
+            SUB A, 0x0001
+            JSR L1fib
+            SET PUSH, A
+            SET A, [0x0001+SP]
+            SUB A, 0x0002
+            JSR L1fib
+            ADD A, POP
+            ADD SP, 0x0001
+            SET PC, POP
+      :L2fib_footer
+      SET PC, POP
+;END FUNCTION
+
+   :ENDOFPROGRAM
 
 
 Have fun, and read the language spec!

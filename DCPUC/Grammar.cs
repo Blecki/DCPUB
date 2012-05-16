@@ -40,6 +40,8 @@ namespace DCPUC
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
+            var unaryNot = new NonTerminal("Unary Not", typeof(NotOperatorNode));
+            var unaryNegate = new NonTerminal("Unary Negate", typeof(NegateOperatorNode));
             var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>";
             var comparisonOperator = ToTerm("==") | "!=" | ">" | "<";
@@ -76,10 +78,12 @@ namespace DCPUC
 
             expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
                 | dereference | functionCall | dataLiteralChain | addressOf | memberAccess | @sizeof | indexOperator
-                | ternaryOperator;
+                | ternaryOperator | unaryNot | unaryNegate;
 
             assignment.Rule = (identifier | dereference | memberAccess | indexOperator) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
             binaryOperation.Rule = expression + @operator + expression;
+            unaryNot.Rule = ToTerm("!") + expression;
+            unaryNegate.Rule = ToTerm("-") + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule =
@@ -105,7 +109,7 @@ namespace DCPUC
             ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;
             whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
-            functionCall.Rule = (identifier | memberAccess) + "(" + parameterList + ")";
+            functionCall.Rule = expression + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q();
             parameterListDeclaration.Rule = MakeStarRule(parameterListDeclaration, ToTerm(","), parameterDeclaration);
             functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" 
@@ -122,14 +126,14 @@ namespace DCPUC
             this.RegisterBracePair("[", "]");
             this.RegisterBracePair("{", "}");
             this.Delimiters = "{}[](),:;+-*/%&|^!~<>=.";
-            this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?");
+            this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?", "!");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
             this.RegisterOperators(1, Associativity.Right, "==", "!=", ">", "<");
             this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=");
             this.RegisterOperators(3, Associativity.Left, "+", "-");
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
-            this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^");
+            this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^", "!");
             
             this.RegisterOperators(6, Associativity.Left, "{", "}", "[", "]");
         }
