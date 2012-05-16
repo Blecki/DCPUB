@@ -16,3 +16,5 @@
 [ ] Freestore/heap implementation
 [ ] pre/post inc/dec operators
 [ ] improved error reporting
+[ ] Unary - 
+[ ] Unary !

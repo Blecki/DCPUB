@@ -82,6 +82,8 @@
     <Compile Include="CompileOptions.cs" />
     <Compile Include="AddressOfNode.cs" />
     <Compile Include="BlockLiteralNode.cs" />
+    <Compile Include="NegateOperatorNode.cs" />
+    <Compile Include="NotOperatorNode.cs" />
     <Compile Include="TernarySelectionNode.cs" />
     <Compile Include="IndexOperatorNode.cs" />
     <Compile Include="SizeofNode.cs" />
@@ -152,6 +154,9 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(TargetPath) $(ProjectDir)..\Binaries\$(TargetFileName)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

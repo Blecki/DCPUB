@@ -31,7 +31,7 @@ namespace DCPUC
 
             r.AddChild(Child(0).Emit(context, localScope));
             r.AddLabel(footerLabel);
-            r.AddInstruction(Assembly.Instructions.SUB, Operand("PC"), Constant(1));
+            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
 
             foreach (var nestedFunction in function.localScope.functions)
                 r.AddChild(nestedFunction.Node.CompileFunction(context));

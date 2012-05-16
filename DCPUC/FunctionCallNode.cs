@@ -17,7 +17,7 @@ namespace DCPUC
         {
             base.Init(context, treeNode);
             functionName = null;//treeNode.ChildNodes[0].FindTokenAndGetText();
-            AddChild("expression", treeNode.ChildNodes[0].FirstChild);
+            AddChild("expression", treeNode.ChildNodes[0]);//.FirstChild);
             foreach (var parameter in treeNode.ChildNodes[1].ChildNodes)
                 AddChild("parameter", parameter);
         }
@@ -131,8 +131,19 @@ namespace DCPUC
 
             if (function == null)
             {
-                r.AddChild(Child(0).Emit(context, scope));
-                r.AddInstruction(Assembly.Instructions.JSR, Operand("POP"));
+                if (Child(0).IsIntegralConstant())
+                    r.AddInstruction(Assembly.Instructions.JSR, Constant((ushort)Child(0).GetConstantValue()));
+                else
+                {
+                    var fetchToken = Child(0).GetFetchToken(scope);
+                    if (fetchToken != null)
+                        r.AddInstruction(Assembly.Instructions.JSR, fetchToken);
+                    else
+                    {
+                        r.AddChild(Child(0).Emit(context, scope));
+                        r.AddInstruction(Assembly.Instructions.JSR, Operand("POP"));
+                    }
+                }
             }
             else
             {
