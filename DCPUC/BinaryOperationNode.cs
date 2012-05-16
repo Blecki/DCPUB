@@ -42,9 +42,11 @@ namespace DCPUC
             }
         }
 
+        protected bool SkipInit = false;
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
+            if (SkipInit) return;
             AddChild("Parameter", treeNode.ChildNodes[0]);
             AddChild("Parameter", treeNode.ChildNodes[2]);
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
