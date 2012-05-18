@@ -15,7 +15,7 @@ namespace DCPUC
 
         public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
         public virtual int GetConstantValue() { return 0; }
-        public virtual string GetConstantToken() { return "0x0000"; }
+        public virtual Assembly.Operand GetConstantToken() { return Constant(0x0000); }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
 
@@ -76,10 +76,10 @@ namespace DCPUC
 
         public static Assembly.Operand Dereference(String r) { return Operand(r, Assembly.OperandSemantics.Dereference); }
 
-        public static Assembly.Operand DereferenceLabel(String r) 
+        public static Assembly.Operand DereferenceLabel(Assembly.Label l) 
         { 
             return new Assembly.Operand{
-                label = r,
+                label = l,
                 semantics = Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Label
             };
         }
@@ -96,7 +96,7 @@ namespace DCPUC
             return new Assembly.Operand { semantics = Assembly.OperandSemantics.Constant, constant = value };
         }
 
-        public static Assembly.Operand Label(string value)
+        public static Assembly.Operand Label(Assembly.Label value)
         {
             return new Assembly.Operand { semantics = Assembly.OperandSemantics.Label, label = value };
         }

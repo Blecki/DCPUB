@@ -47,17 +47,17 @@ namespace DCPUC
                 variable.location = Register.STATIC;
                 if (Child(0) is DataLiteralNode)
                 {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    variable.staticLabel = Assembly.Label.Make("_STATIC_" + variable.name);
                     context.AddData(variable.staticLabel, (Child(0) as DataLiteralNode).dataLabel);
                 }
                 else if (Child(0) is BlockLiteralNode)
                 {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    variable.staticLabel = Assembly.Label.Make("_STATIC_" + variable.name);
                     context.AddData(variable.staticLabel, (Child(0) as BlockLiteralNode).dataLabel);
                 }
                 else if (Child(0).IsIntegralConstant()) //Other expressions should fold if they are constant.
                 {
-                    variable.staticLabel = context.GetLabel() + "_STATIC_" + variable.name;
+                    variable.staticLabel = Assembly.Label.Make("_STATIC_" + variable.name);
                     context.AddData(variable.staticLabel, (ushort)Child(0).GetConstantValue());
                 }
                 else

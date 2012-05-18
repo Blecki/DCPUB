@@ -18,7 +18,7 @@ namespace DCPUC
     {
         public List<RawDataNode> dataNodes = new List<RawDataNode>();
         public List<ushort> data = new List<ushort>();
-        public string dataLabel;
+        public Assembly.Label dataLabel;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -63,7 +63,7 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            dataLabel = context.GetLabel() + "_DATA";
+            dataLabel = Assembly.Label.Make("_DATA");
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)

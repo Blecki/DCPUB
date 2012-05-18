@@ -13,11 +13,12 @@ namespace DCPUC
         public RootProgramNode rootNode = null;
         public Scope globalScope = new Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
-        private List<Tuple<string, List<string>>> dataElements = new List<Tuple<string, List<string>>>();
+        private List<Tuple<Assembly.Label, Object>> dataElements = new List<Tuple<Assembly.Label, Object>>();
         private int nextLabelID = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
         public Action<String> onWarning = null;
+        public Variable end_of_program = null;
         
         public String GetLabel()
         {
@@ -29,21 +30,21 @@ namespace DCPUC
             return source.Substring(span.Location.Position, span.Length + 1);
         }
 
-        public void AddData(string label, List<ushort> data)
+        public void AddData(Assembly.Label label, List<ushort> data)
         {
             var strings = new List<string>();
             foreach (var item in data) strings.Add(Hex.hex(item));
-            dataElements.Add(new Tuple<string, List<string>>(label, strings));
+            dataElements.Add(new Tuple<Assembly.Label, Object>(label, strings));
         }
 
-        public void AddData(string label, string data)
+        public void AddData(Assembly.Label label, Assembly.Label data)
         {
-            dataElements.Add(new Tuple<string, List<string>>(label, new List<String>(new string[] { data })));
+            dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
         }
 
-        public void AddData(string label, ushort word)
+        public void AddData(Assembly.Label label, ushort word)
         {
-            dataElements.Add(new Tuple<string, List<string>>(label, new List<string>(new string[] { Hex.hex(word) })));
+            dataElements.Add(new Tuple<Assembly.Label, Object>(label, new List<string>(new string[] { Hex.hex(word) })));
         }
 
         public static String TypeWarning(string A, string B)
@@ -109,11 +110,11 @@ namespace DCPUC
 
         public void Compile(Action<string> onError)
         {
-            var end_of_program = new Variable();
+            end_of_program = new Variable();
             end_of_program.location = Register.CONST;
             end_of_program.type = VariableType.ConstantReference;
             end_of_program.name = "__endofprogram";
-            end_of_program.staticLabel = "ENDOFPROGRAM";
+            end_of_program.staticLabel = new Assembly.Label("ENDOFPROGRAM");
             globalScope.variables.Add(end_of_program);
 
             try
@@ -135,8 +136,13 @@ namespace DCPUC
             {
                 var r = rootNode.CompileFunction(this);
                 foreach (var dataItem in dataElements)
-                    r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 });
-                r.AddLabel("ENDOFPROGRAM");
+                {
+                    if (dataItem.Item2 is Assembly.Label)
+                        r.AddChild(new Assembly.StaticLabelData { label = dataItem.Item1, data = dataItem.Item2 as Assembly.Label });
+                    else
+                        r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<String> });
+                }
+                r.AddLabel(end_of_program.staticLabel);
                 r.CollapseTree();
                 return r;
             }

@@ -11,7 +11,7 @@ namespace DCPUC
         public Function function = null;
         public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
         public RegisterBank usedRegisters = new RegisterBank();
-        protected String footerLabel = null;
+        protected Assembly.Label footerLabel = null;
         private Irony.Parsing.SourceSpan headerSpan;
         private int registersPreserved = 0;
 
@@ -48,8 +48,8 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            function.label = context.GetLabel() + function.name;
-            footerLabel = context.GetLabel() + function.name + "_footer";
+            function.label = Assembly.Label.Make(function.name);
+            footerLabel = Assembly.Label.Make(function.name + "_footer");
             enclosingScope.functions.Add(function);
             function.localScope.parent = enclosingScope;
 

@@ -8,7 +8,7 @@ namespace DCPUC
 {
     class BlockLiteralNode : RawDataNode
     {
-        public String dataLabel;
+        public Assembly.Label dataLabel;
         public int dataSize;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -19,7 +19,7 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            dataLabel = context.GetLabel() + "_DATA";
+            dataLabel = Assembly.Label.Make("_DATA");
             Child(0).GatherSymbols(context, enclosingScope);
         }
 

@@ -11,7 +11,7 @@ namespace DCPUC
         public String name;
         public FunctionDeclarationNode Node;
         public Scope localScope;
-        public String label;
+        public Assembly.Label label;
         public int parameterCount = 0;
         public String returnType = "void";
     }

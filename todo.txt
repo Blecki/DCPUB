@@ -6,7 +6,6 @@
 [ ] Support multiple calling conventions
 [ ] Don't transform strings to bytes
 [ ] 'length of' operator, applies to datalists and stack-allocated arrays (resolves at compile time)
-[ ] Don't halt on errors (May not be possible with parser errors)
 [ ] Move all DAT emission to top of program so locations can be predicted and folded
 [ ] Implement http://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm
 [ ] BUG: Variables leak out of IF/WHILE blocks when condition is constant UPDATE: Apparently I neglected to implement branch block scopes at all.
@@ -14,7 +13,4 @@
 [ ] Default type should (probably) be signed [Though many operations result in unsigned types.]
 [ ] Don't emit warnings for folded constant conversions that don't lose data.
 [ ] Freestore/heap implementation
-[ ] pre/post inc/dec operators
 [ ] improved error reporting
-[ ] Unary - 
-[ ] Unary !

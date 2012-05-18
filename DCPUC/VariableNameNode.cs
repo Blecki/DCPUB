@@ -46,9 +46,9 @@ namespace DCPUC
             return variable.constantValue;
         }
 
-        public override string GetConstantToken()
+        public override Assembly.Operand GetConstantToken()
         {
-            return Hex.hex(GetConstantValue());
+            return Constant((ushort)GetConstantValue());
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -127,7 +127,7 @@ namespace DCPUC
 
         public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.ExpressionNode();
             if (variable.type == VariableType.Constant || variable.type == VariableType.ConstantReference)
                 throw new CompileError(this, "Can't assign to constant values");
 

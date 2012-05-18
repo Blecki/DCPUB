@@ -38,7 +38,7 @@ namespace DCPUC.Assembly
         public OperandRegister register = OperandRegister.A;
         public OperandSemantics semantics = OperandSemantics.None;
         public ushort constant;
-        public string label;
+        public Label label;
 
         public override string ToString()
         {
@@ -54,7 +54,7 @@ namespace DCPUC.Assembly
 
         public static Operand fromString(String s)
         {
-            return new Operand { semantics = OperandSemantics.Label, label = s };
+            return new Operand { semantics = OperandSemantics.Label, label = new Label(s) };
         }
 
         public Operand Clone()

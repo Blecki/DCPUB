@@ -55,9 +55,9 @@ namespace DCPUC
             return Value;
         }
 
-        public override string GetConstantToken()
+        public override Assembly.Operand GetConstantToken()
         {
-            return Hex.hex((ushort)GetConstantValue());
+            return Constant((ushort)GetConstantValue());
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -69,7 +69,7 @@ namespace DCPUC
         {
             var r = new Assembly.ExpressionNode();
             r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                Label(GetConstantToken()));
+                GetConstantToken());
             if (target == Register.STACK) scope.stackDepth += 1;
             return r;
         }

@@ -15,7 +15,7 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            footerLabel = context.GetLabel() + "main_footer";
+            footerLabel = Assembly.Label.Make("main_footer");
             function = new Function();
             function.localScope = enclosingScope;
             function.Node = this;

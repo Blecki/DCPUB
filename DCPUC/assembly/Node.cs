@@ -25,9 +25,9 @@ namespace DCPUC.Assembly
             AddChild(Instruction.Make(instruction, firstOperand, secondOperand));
         }
 
-        public void AddLabel(String label)
+        public void AddLabel(Assembly.Label label)
         {
-            AddChild(new Label { label = label });
+            AddChild(new LabelNode { label = label });
         }
 
         public virtual void Emit(EmissionStream stream) 
@@ -48,6 +48,11 @@ namespace DCPUC.Assembly
         public virtual int InstructionCount()
         {
             return children.Sum((node) => { return node.InstructionCount(); });
+        }
+
+        public virtual void EmitBinary(List<Box<ushort>> binary)
+        {
+            foreach (var child in children) child.EmitBinary(binary);
         }
     }
 

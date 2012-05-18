@@ -142,7 +142,7 @@ namespace DCPUC
             if (Child(0).IsIntegralConstant())
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)), 
-                    Label(Child(0).GetConstantToken()));
+                    Child(0).GetConstantToken());
                 if (target == Register.STACK) scope.stackDepth += 1;
             }
             else
@@ -170,10 +170,10 @@ namespace DCPUC
             else if (Child(1).IsIntegralConstant())
             {
                 if (firstOperandResult == Register.STACK)
-                    r.AddInstruction(opcode, Operand("PEEK"), Label(Child(1).GetConstantToken()));
+                    r.AddInstruction(opcode, Operand("PEEK"), Child(1).GetConstantToken());
                 else
                     r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)), 
-                        Label(Child(1).GetConstantToken()));
+                        Child(1).GetConstantToken());
             }
             else
             {

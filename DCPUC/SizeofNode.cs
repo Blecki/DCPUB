@@ -28,9 +28,9 @@ namespace DCPUC
             return true;
         }
 
-        public override string GetConstantToken()
+        public override Assembly.Operand GetConstantToken()
         {
-            return Hex.hex(_struct.size);
+            return Constant((ushort)_struct.size);
         }
 
         public override int GetConstantValue()

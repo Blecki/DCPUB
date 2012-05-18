@@ -135,7 +135,7 @@ namespace DCPUC
                 }
             }
             else
-                secondToken = Label(secondOperand.GetConstantToken());
+                secondToken = secondOperand.GetConstantToken();
 
             if (!firstOperand.IsIntegralConstant())
                 r.AddChild(firstOperand.Emit(context, scope));
@@ -147,7 +147,7 @@ namespace DCPUC
             }
 
             r.AddInstruction(comparisonInstruction,
-                firstOperand.IsIntegralConstant() ? Label(firstOperand.GetConstantToken()) : Operand(Scope.GetRegisterLabelSecond((int)firstOperandTarget)),
+                firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Operand(Scope.GetRegisterLabelSecond((int)firstOperandTarget)),
                 secondToken);
             if (firstOperandTarget == Register.STACK) scope.stackDepth -= 1;
             if (secondOperandTarget == Register.STACK) scope.stackDepth -= 1;

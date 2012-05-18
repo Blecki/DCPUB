@@ -49,7 +49,9 @@
     <Compile Include="Assembly\Function.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Assembly\Label.cs" />
     <Compile Include="Assembly\Operand.cs" />
+    <Compile Include="Assembly\Peephole\OperandGrammar.cs" />
     <Compile Include="Assembly\Peephole\InstructionMatcher.cs" />
     <Compile Include="Assembly\Peephole\Grammar.cs" />
     <Compile Include="Assembly\Inline.cs">
@@ -61,7 +63,7 @@
     <Compile Include="Assembly\Instructions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Label.cs">
+    <Compile Include="Assembly\LabelNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Assembly\Node.cs">

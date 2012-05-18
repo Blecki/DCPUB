@@ -67,8 +67,8 @@ namespace DCPUC
             {
                 case ClauseOrder.FailFirst: //Only actual valid order.
                     {
-                        var thenLabel = context.GetLabel() + "THEN";
-                        var endLabel = context.GetLabel() + "END";
+                        var thenLabel = Assembly.Label.Make("THEN");
+                        var endLabel = Assembly.Label.Make("END");
 
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
                         if (ChildNodes.Count == 3) 
