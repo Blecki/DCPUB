@@ -14,3 +14,5 @@
 [ ] Don't emit warnings for folded constant conversions that don't lose data.
 [ ] Freestore/heap implementation
 [ ] improved error reporting
+[ ] Report errors in Peepholedef
+[ ] Parse internals of ASM statements (So they can be properly assembled)

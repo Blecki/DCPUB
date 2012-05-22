@@ -41,6 +41,7 @@ namespace DCPUC.Assembly
         SINGLE_OPERAND_INSTRUCTIONS = 0x100,
 
         JSR = 0x101,
+        HLT = 0x102, //Non spec
 
         INT = 0x108,
         IAG = 0x109,
@@ -50,7 +51,9 @@ namespace DCPUC.Assembly
 
         HWN = 0x110,
         HWQ = 0x111,
-        HWI = 0x112
+        HWI = 0x112,
+
+
     }
 
     /*

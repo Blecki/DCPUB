@@ -32,9 +32,9 @@ namespace DCPUC
 
         public void AddData(Assembly.Label label, List<ushort> data)
         {
-            var strings = new List<string>();
-            foreach (var item in data) strings.Add(Hex.hex(item));
-            dataElements.Add(new Tuple<Assembly.Label, Object>(label, strings));
+            //var strings = new List<string>();
+            //foreach (var item in data) strings.Add(Hex.hex(item));
+            dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
         }
 
         public void AddData(Assembly.Label label, Assembly.Label data)
@@ -44,7 +44,7 @@ namespace DCPUC
 
         public void AddData(Assembly.Label label, ushort word)
         {
-            dataElements.Add(new Tuple<Assembly.Label, Object>(label, new List<string>(new string[] { Hex.hex(word) })));
+            dataElements.Add(new Tuple<Assembly.Label, Object>(label, new List<ushort>( word )));
         }
 
         public static String TypeWarning(string A, string B)
@@ -140,7 +140,7 @@ namespace DCPUC
                     if (dataItem.Item2 is Assembly.Label)
                         r.AddChild(new Assembly.StaticLabelData { label = dataItem.Item1, data = dataItem.Item2 as Assembly.Label });
                     else
-                        r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<String> });
+                        r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<ushort> });
                 }
                 r.AddLabel(end_of_program.staticLabel);
                 r.CollapseTree();

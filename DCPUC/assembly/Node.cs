@@ -54,6 +54,9 @@ namespace DCPUC.Assembly
         {
             foreach (var child in children) child.EmitBinary(binary);
         }
+
+        public virtual void SetupLabels(Dictionary<string, Label> labelTable)
+        { }
     }
 
     public class StatementNode : Node 

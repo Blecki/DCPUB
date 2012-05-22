@@ -5,7 +5,7 @@ using System.Text;
 using Irony.Parsing;
 using Irony.Interpreter.Ast;
 
-namespace DCPUC.Assembly.Peephole
+namespace DCPUC.Assembly
 {
     [Language("DCPUC OPERAND PEEPHOLE", "0.1", "Peephole optimization instruction replacement definition")]
     public class OperandGrammar : Irony.Parsing.Grammar
@@ -15,15 +15,17 @@ namespace DCPUC.Assembly.Peephole
             var integerLiteral = new NumberLiteral("integer", NumberOptions.IntOnly);
             integerLiteral.AddPrefix("0x", NumberOptions.Hex);
 
-            var Register = ToTerm("A") | "B" | "C" | "X" | "Y" | "Z" | "I" | "J" | "PC" | "EX" | "SP" | "PUSH" | "POP" | "PEEK";
-            Register.Name = "register";
+            //var Register = ToTerm("A") | "B" | "C" | "X" | "Y" | "Z" | "I" | "J" | "PC" | "EX" | "SP" | "PUSH" | "POP" | "PEEK";
+            //Register.Name = "register";
             var Offset = new NonTerminal("offset");
             var Dereference = new NonTerminal("deref");
-            var Operand = new NonTerminal("operand");
+            var Operand = new NonTerminal("operand");//, typeof(OperandAstNode));
+            var Label = new NonTerminal("label");
 
-            Offset.Rule = (integerLiteral + "+" + Register) | (Register + "+" + integerLiteral);
-            Dereference.Rule = ToTerm("[") + (Offset | integerLiteral | Register) + "]";
-            Operand.Rule = Dereference | Register | integerLiteral;
+            Offset.Rule = (integerLiteral + "+" + Label) | (Label + "+" + integerLiteral);
+            Dereference.Rule = ToTerm("[") + (Offset | integerLiteral | Label) + "]";
+            Label.Rule = TerminalFactory.CreateCSharpIdentifier("identifier");
+            Operand.Rule = Dereference | integerLiteral | Label;
 
             this.Root = Operand;
 

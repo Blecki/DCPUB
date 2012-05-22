@@ -61,5 +61,13 @@ namespace DCPUC.Assembly
                 ins.data += (ushort)(((ushort)instruction - (ushort)Instructions.SINGLE_OPERAND_INSTRUCTIONS) << 5);
             }
         }
+
+        public override void SetupLabels(Dictionary<string, Label> labelTable)
+        {
+            if ((firstOperand.semantics & OperandSemantics.Label) == OperandSemantics.Label)
+                firstOperand.label = labelTable[firstOperand.label.rawLabel];
+            if (secondOperand != null && (secondOperand.semantics & OperandSemantics.Label) == OperandSemantics.Label)
+                secondOperand.label = labelTable[secondOperand.label.rawLabel];
+        }
     }
 }

@@ -88,6 +88,8 @@ namespace DCPUC
     public class InlineASMNode : CompilableNode
     {
         public string rawAssembly = "";
+        public Assembly.Node parsedNode;
+        public static Irony.Parsing.Parser asmParser = new Irony.Parsing.Parser(new Assembly.AssemblyGrammar());
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -96,6 +98,10 @@ namespace DCPUC
                 foreach (var child in treeNode.ChildNodes[1].FirstChild.FirstChild.ChildNodes)
                     AddChild("bound register", child);
             rawAssembly = treeNode.ChildNodes[2].FindTokenAndGetText();
+
+            var parsed = asmParser.Parse(rawAssembly);
+            if (parsed.HasErrors()) throw new CompileError("Error parsing inline ASM: " + parsed.ParserMessages[0].Message);
+            parsedNode = (parsed.Root.AstNode as Assembly.InstructionListAstNode).resultNode;
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -114,7 +120,8 @@ namespace DCPUC
             for (var i = 0; i < ChildNodes.Count; ++i)
                 r.AddChild(Child(i).Emit(context, scope));
 
-            r.AddChild(new Assembly.Inline { code = rawAssembly });
+            r.AddChild(parsedNode);
+            //r.AddChild(new Assembly.Inline { code = rawAssembly });
 
             for (var i = ChildNodes.Count - 1; i >= 0; --i)
                 r.AddChild((Child(i) as RegisterBindingNode).Restore(context, scope));

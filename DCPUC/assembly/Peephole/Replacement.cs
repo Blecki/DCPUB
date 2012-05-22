@@ -26,47 +26,7 @@ namespace DCPUC.Assembly.Peephole
             if (opParse.HasErrors()) parsedOperand = Operand.fromString(rawValue);
             else
             {
-                var r = new Operand();
-                var root = opParse.Root.FirstChild;
-                if (root.Term.Name == "deref")
-                {
-                    r.semantics |= OperandSemantics.Dereference;
-                    root = root.ChildNodes[1];
-                }
-
-                if (root.Term.Name == "offset")
-                {
-                    r.semantics |= OperandSemantics.Constant;
-                    string constant = "";
-                    string reg = "";
-                    if (root.FirstChild.Term.Name == "integer")
-                    {
-                        constant = root.FirstChild.FindTokenAndGetText();
-                        reg = root.LastChild.FindTokenAndGetText();
-                    }
-                    else
-                    {
-                        constant = root.LastChild.FindTokenAndGetText();
-                        reg = root.FirstChild.FindTokenAndGetText();
-                    }
-                    r.register = (OperandRegister)Enum.Parse(typeof(OperandRegister), reg);
-                    if (constant.StartsWith("0x")) r.constant = Hex.atoh(constant.Substring(2));
-                    else r.constant = Convert.ToUInt16(constant);
-                }
-                else if (root.Term.Name == "integer")
-                {
-                    r.semantics |= OperandSemantics.Constant;
-                    var constant = root.FindTokenAndGetText();
-                    if (constant.StartsWith("0x")) r.constant = Hex.atoh(constant.Substring(2));
-                    else r.constant = Convert.ToUInt16(constant);
-                }
-                else
-                {
-                    var reg = root.FindTokenAndGetText();
-                    r.register = (OperandRegister)Enum.Parse(typeof(OperandRegister), reg);
-                }
-
-                parsedOperand = r;
+                parsedOperand = OperandAstNode.ParseOperand(opParse.Root.FirstChild);
             }
         }
 

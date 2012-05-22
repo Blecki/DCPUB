@@ -30,7 +30,7 @@ namespace DCPUC.Assembly
         Dereference = 1,
         Offset = 2,
         Constant = 4,
-        Label = 8
+        Label = 8,
     }
 
     public class Operand

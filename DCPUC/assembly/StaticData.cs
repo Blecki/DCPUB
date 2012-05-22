@@ -8,12 +8,19 @@ namespace DCPUC.Assembly
     public class StaticData : Node
     {
         public Assembly.Label label;
-        public List<string> data;
+        public List<ushort> data;
 
         public override void Emit(EmissionStream stream)
         {
-            var str = ":" + label + " DAT " + String.Join(" ", data);
+            var str = ":" + label + " DAT " + String.Join(" ", data.Select((u)=>{return Hex.hex(u); }));
             stream.WriteLine(str);
+        }
+
+        public override void EmitBinary(List<Box<ushort>> binary)
+        {
+            label.position.data = (ushort)binary.Count;
+            foreach (var u in data)
+                binary.Add(new Box<ushort> { data = u });
         }
     }
 
@@ -26,6 +33,12 @@ namespace DCPUC.Assembly
         {
             var str = ":" + label + " DAT " + data;
             stream.WriteLine(str);
+        }
+
+        public override void EmitBinary(List<Box<ushort>> binary)
+        {
+            label.position.data = (ushort)binary.Count;
+            binary.Add(data.position);
         }
     }
 }
