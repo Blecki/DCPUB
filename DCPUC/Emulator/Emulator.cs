@@ -35,10 +35,16 @@ namespace DCPUC.Emulator
         public bool PushAfter = false;
         public bool SkipIf = true;
         public int cycles = 0;
-        public List<HardwareDevice> devices = new List<HardwareDevice>();
-        public List<ushort> queuedInterrupts = new List<ushort>();
+        private List<HardwareDevice> devices = new List<HardwareDevice>();
+        private List<ushort> queuedInterrupts = new List<ushort>();
         private System.Threading.Mutex protectInterruptQueue = new System.Threading.Mutex();
         public bool interruptQueueEnabled = false;
+
+        public void AttachDevice(HardwareDevice device)
+        {
+            devices.Add(device);
+            device.OnAttached(this);
+        }
 
         public void Load(ushort[] program)
         {
@@ -114,7 +120,7 @@ namespace DCPUC.Emulator
                 else if (place == OperandPlace.B)
                 {
                     PushAfter = true;
-                    return ram[registers[(int)Registers.SP] - 1];
+                    return ram[(ushort)(registers[(int)Registers.SP] - 1)];
                 }
                 return 0;
             }
@@ -251,6 +257,7 @@ namespace DCPUC.Emulator
             PushAfter = false;
 
             UInt32 intermediate = 0;
+            ushort bValue = 0;
 
             ushort value = GetOperandValue(operandA, OperandPlace.A, !SkipIf);
 
@@ -289,20 +296,24 @@ namespace DCPUC.Emulator
                     AssignToEx(intermediate >> 16);
                     break;
                 case Assembly.Instructions.DIV: //DIV b, a | sets b to b/a, sets EX to ((b<<16)/a)&0xffff. if a==0, sets b and EX to 0 instead. (treats b, a as unsigned)
-                    intermediate = value == 0 ? 0 : (UInt32)GetOperandValue(operandB, OperandPlace.B) / value;
+                    bValue = GetOperandValue(operandB, OperandPlace.B, false);
+                    intermediate = value == 0 ? 0 : (UInt32)bValue / value;
                     AssignToOperand(operandB, (ushort)intermediate, true);
                     AssignToEx(intermediate >> 16);
                     break;
                 case Assembly.Instructions.DVI: //DVI b, a | like DIV, but treat b, a as signed. Rounds towards 0
-                    intermediate = value == 0 ? 0 : (UInt32)((short)GetOperandValue(operandB, OperandPlace.B) / (short)value);
+                    bValue = GetOperandValue(operandB, OperandPlace.B, false);
+                    intermediate = value == 0 ? 0 : (UInt32)((short)bValue / (short)value);
                     AssignToOperand(operandB, (ushort)intermediate, true);
                     AssignToEx(intermediate >> 16);
                     break;
                 case Assembly.Instructions.MOD: //MOD b, a | sets b to b%a. if a==0, sets b to 0 instead.
-                    AssignToOperand(operandB, (ushort)(GetOperandValue(operandB, OperandPlace.B) % value), true);
+                    bValue = GetOperandValue(operandB, OperandPlace.B, false);
+                    AssignToOperand(operandB, value == 0 ? (ushort)0 : (ushort)(bValue % value), true);
                     break;
                 case Assembly.Instructions.MDI: //MDI b, a | like MOD, but treat b, a as signed. (MDI -7, 16 == -7)
-                    AssignToOperand(operandB, (ushort)((short)GetOperandValue(operandB, OperandPlace.B) % (short)value), true);
+                    bValue = GetOperandValue(operandB, OperandPlace.B, false);
+                    AssignToOperand(operandB, value == 0 ? (ushort)0 : (ushort)((short)bValue % (short)value), true);
                     break;
                 case Assembly.Instructions.AND: //AND b, a | sets b to b&a
                     AssignToOperand(operandB, (ushort)(GetOperandValue(operandB, OperandPlace.B) & value), true);

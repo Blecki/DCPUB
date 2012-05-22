@@ -10,7 +10,14 @@ namespace Emulator
     class Options
     {
         public string @in;
+        public String dis = null;
     }
+
+     class DisEntry
+     {
+                    public String str;
+                    public int size;
+     }
 
     class Program
     {
@@ -90,7 +97,16 @@ namespace Emulator
                 var emu = new DCPUC.Emulator.Emulator();
                 emu.Load(shorts);
                 var lem = new DCPUC.Emulator.LEM1802(emu);
-                emu.devices.Add(lem);
+                emu.AttachDevice(lem);
+
+               
+                String[] disassembly = null;
+                if (!String.IsNullOrEmpty(options.dis)) 
+                {
+                    disassembly = new String[shorts.Length];
+                    for (int i = 0; i < shorts.Length; ++i)
+                        disassembly[i] = "DAT " + Hex.hex(shorts[i]);
+                }
 
                 bool running = true;
                 var emulationThread = new System.Threading.Thread(
@@ -98,18 +114,31 @@ namespace Emulator
                     {
                         try
                         {
-                            while (true)
+                            bool paused = false;
+                            while (!paused)
                             {
-                                //Console.ReadKey(true);
-                                //var _pc = emu.registers[(int)DCPUC.Emulator.Registers.PC];
-                                //Console.WriteLine(emu.Disassemble(ref _pc));
+                                if (Console.KeyAvailable)
+                                {
+                                    var key = Console.ReadKey(true);
+                                    paused = true;
+                                }
+
+                                if (!String.IsNullOrEmpty(options.dis))
+                                {
+                                    var _pc = emu.registers[(int)DCPUC.Emulator.Registers.PC];
+                                    var start = _pc;
+                                    var str = emu.Disassemble(ref _pc);
+
+                                    for (int i = start; i < _pc; ++i)
+                                        disassembly[i] = null;
+
+                                    disassembly[start] = str.Substring(7);
+                                }
                                 emu.Step();
-                                //Console.WriteLine(emu.debug);
                             }
                         }
                         catch (Exception e)
                         {
-                            //Console.Write(emu.debug);
                             Console.WriteLine(e.Message);
                         }
 
@@ -121,6 +150,15 @@ namespace Emulator
                 emulationThread.Start();
 
                 while (running) Application.DoEvents();
+
+                if (!String.IsNullOrEmpty(options.dis))
+                {
+                    var writer = System.IO.File.OpenWrite(options.dis);
+                    var stream = new System.IO.StreamWriter(writer);
+                    foreach (var str in disassembly)
+                        if (str != null) stream.WriteLine(str);
+                    stream.Close();
+                }
             }
             catch (Exception e)
             {

@@ -46,6 +46,16 @@ Key numbers are:
         public uint HardwareID { get { return 0x30cf7406; } }
         public ushort Version { get { return 1; } }
 
+        public KeyboardWindow window = null;
+
+        public bool[] keyState = new bool[0x92];
+
+        public Keyboard()
+        {
+            window = new KeyboardWindow();
+            window.Show();
+        }
+
         public void OnAttached(Emulator emu)
         {
 
