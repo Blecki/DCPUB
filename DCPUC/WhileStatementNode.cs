@@ -43,15 +43,15 @@ namespace DCPUC
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
-            var topLabel = context.GetLabel() + "BEGIN_WHILE";
+            var topLabel = Assembly.Label.Make("BEGIN_WHILE");
             r.AddLabel(topLabel);
             r.AddChild(base.Emit(context, scope));
             switch (clauseOrder)
             {
                 case ClauseOrder.FailFirst:
                     {
-                        var yesLabel = context.GetLabel() + "YES";
-                        var endLabel = context.GetLabel() + "END_WHILE";
+                        var yesLabel = Assembly.Label.Make("YES");
+                        var endLabel = Assembly.Label.Make("END_WHILE");
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(yesLabel));
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
                         r.AddLabel(yesLabel);

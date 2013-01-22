@@ -9,16 +9,22 @@ namespace DCPUC
     public class CompilableNode : AstNode
     {
         public bool WasFolded = false;
-        public string ResultType = "void";
+        public string ResultType = "word";
         public Register target = Register.DISCARD;
-        //public Register actualTarget = Register.DISCARD;
 
         public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
         public virtual int GetConstantValue() { return 0; }
-        public virtual string GetConstantToken() { return "0x0000"; }
+        public virtual Assembly.Operand GetConstantToken() { return Constant(0x0000); }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
 
+        /// <summary>
+        /// Returns an operand to fetch the value of a node. Returns null if the value cannot
+        /// be fetched by a single operand. If this does not return null, the emission of 
+        /// this nodes op-codes can be skipped.
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <returns>An operand to fetch the value of the node</returns>
         public virtual Assembly.Operand GetFetchToken(Scope scope) { return null; }
 
         public virtual int ReferencesVariable(Variable v)
@@ -76,10 +82,10 @@ namespace DCPUC
 
         public static Assembly.Operand Dereference(String r) { return Operand(r, Assembly.OperandSemantics.Dereference); }
 
-        public static Assembly.Operand DereferenceLabel(String r) 
+        public static Assembly.Operand DereferenceLabel(Assembly.Label l) 
         { 
             return new Assembly.Operand{
-                label = r,
+                label = l,
                 semantics = Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Label
             };
         }
@@ -96,58 +102,10 @@ namespace DCPUC
             return new Assembly.Operand { semantics = Assembly.OperandSemantics.Constant, constant = value };
         }
 
-        public static Assembly.Operand Label(string value)
+        public static Assembly.Operand Label(Assembly.Label value)
         {
             return new Assembly.Operand { semantics = Assembly.OperandSemantics.Label, label = value };
         }
 
-        /*
-        public void InsertLibrary(List<string> library)
-        {
-            for (int i = 0; i < library.Count; ++i)
-            {
-                if (library[i].StartsWith(";DCPUC FUNCTION"))
-                {
-                    //Parse function..
-                    var funcHeader = library[i].Split(' ');
-                    List<String> funcCode = new List<string>();
-                    while (i < library.Count && !library[i].StartsWith(";DCPUC END"))
-                    {
-                        funcCode.Add(library[i]);
-                        ++i;
-                    }
-                    if (i < library.Count)
-                    {
-                        funcCode.Add(library[i]);
-                        ++i;
-                    }
-                    var funcNode = new LibraryFunctionNode();
-                    funcNode.AsString = funcHeader[2];
-                    funcNode.label = funcHeader[3];
-                    funcNode.parameterCount = Convert.ToInt32(funcHeader[4]);
-                    funcNode.code = funcCode;
-                    ChildNodes.Add(funcNode);
-                }
-                else if (library[i].StartsWith(";DCPUC STATIC"))
-                {
-                    List<String> funcCode = new List<string>();
-                    while (i < library.Count && !library[i].StartsWith(";DCPUC END"))
-                    {
-                        funcCode.Add(library[i]);
-                        ++i;
-                    }
-                    if (i < library.Count)
-                    {
-                        funcCode.Add(library[i]);
-                        ++i;
-                    }
-                    var funcNode = new LibraryFunctionNode();
-                    funcNode.AsString = "%STATICDATA%";
-                    funcNode.code = funcCode;
-                    ChildNodes.Add(funcNode);
-                }
-            }
-        
-        }*/
     }
 }

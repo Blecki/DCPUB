@@ -65,12 +65,6 @@ namespace DCPUC
                 if (function == null) throw new CompileError("Could not find function " + functionName);
                 if (function.parameterCount != ChildNodes.Count - 1) throw new CompileError("Incorrect number of arguments to function");
 
-                for (int i = 0; i < function.parameterCount; ++i)
-                {
-                    if (function.localScope.variables[i].typeSpecifier != Child(i + 1).ResultType)
-                        context.AddWarning(Span, CompileContext.TypeWarning(Child(i + 1).ResultType, function.localScope.variables[i].typeSpecifier));
-                }
-
                 ResultType = function.returnType;
             }
         }
@@ -83,9 +77,7 @@ namespace DCPUC
 
             if (function == null) Child(0).AssignRegisters(context, parentState, Register.STACK);
 
-            for (int i = 1; i < 4 && i < ChildNodes.Count; ++i)
-                Child(i).AssignRegisters(context, parentState, (Register)(i - 1));
-            for (int i = 4; i < ChildNodes.Count; ++i)
+            for (int i = 1; i < ChildNodes.Count; ++i)
                 Child(i).AssignRegisters(context, parentState, Register.STACK);
         }
 
@@ -100,35 +92,9 @@ namespace DCPUC
             else
                 r = new Assembly.ExpressionNode();
 
-            int[] needsRestored = {0, 0, 0};
-
-            for (int i = 0; i < 3; ++i)
-            {
-                if (i != (int)target && activeRegisters[i] == RegisterState.Used)//scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond((int)i)));
-                    scope.stackDepth += 1;
-                    needsRestored[i] = 1;
-
-                    if (scope.activeFunction.function.parameterCount > i 
-                        && scope.activeFunction.function.localScope.variables[i].location != Register.STACK)
-                    {
-                        scope.activeFunction.function.localScope.variables[i].location = Register.STACK;
-                        scope.activeFunction.function.localScope.variables[i].stackOffset = scope.stackDepth - 1;
-                        needsRestored[i] = 2;
-
-                    }
-                }
-                if (ChildNodes.Count > i + 1)
-                    r.AddChild(Child(i + 1).Emit(context, scope));
-            }
-
-            for (int i = ChildNodes.Count - 1; i >= 4; --i)
-            {
+            for (int i = ChildNodes.Count - 1; i >= 1; --i)
                 r.AddChild(Child(i).Emit(context, scope));
-                scope.stackDepth += 1;
-            }
-
+            
             if (function == null)
             {
                 if (Child(0).IsIntegralConstant())
@@ -150,44 +116,12 @@ namespace DCPUC
                 r.AddInstruction(Assembly.Instructions.JSR, Label(function.label));
             }
 
-            if (ChildNodes.Count > 4) //Need to remove parameters from stack
-            {
-                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 4)));
-                scope.stackDepth -= (ChildNodes.Count - 4);
-            }
+             r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
 
-            var pushTemp = false;
-            //if (saveA && target != Register.DISCARD) r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "A");
-            if (target != Register.A)
-            {
-                if (target == Register.STACK)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("A"));
-                    scope.stackDepth += 1;
-                    pushTemp = true;
-                }
-                else if (target != Register.DISCARD)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("A"));
-                }
-            }
+             if (target != Register.A && target != Register.DISCARD)
+                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("A"));
 
-            for (int i = 2; i >= 0; --i)
-                if (needsRestored[i] > 0)//i != (int)target && activeRegisters[i] == RegisterState.Used)//scope.activeFunction.usedRegisters.registers[i] == RegisterState.Used)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst(i)), Operand("POP"));
-                    scope.stackDepth -= 1;
-                    if (needsRestored[i] == 2 && scope.activeFunction.function.parameterCount > i)
-                        scope.activeFunction.function.localScope.variables[i].location = (Register)i;
-                }
-
-            if (pushTemp) r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.TempRegister));
-           
             return r;
         }
-
-        
-
-        
     }
 }

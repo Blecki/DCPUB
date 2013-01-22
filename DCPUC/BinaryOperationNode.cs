@@ -29,11 +29,11 @@ namespace DCPUC
                 opcodes.Add("*", Assembly.Instructions.MUL);
                 opcodes.Add("/", Assembly.Instructions.DIV);
 
-                opcodes.Add("*signed", Assembly.Instructions.MLI);
-                opcodes.Add("/signed", Assembly.Instructions.DVI);
+                opcodes.Add("-*", Assembly.Instructions.MLI);
+                opcodes.Add("-/", Assembly.Instructions.DVI);
 
                 opcodes.Add("%", Assembly.Instructions.MOD);
-                opcodes.Add("%signed", Assembly.Instructions.MDI);
+                opcodes.Add("-%", Assembly.Instructions.MDI);
                 opcodes.Add("<<", Assembly.Instructions.SHL);
                 opcodes.Add(">>", Assembly.Instructions.SHR);
                 opcodes.Add("&", Assembly.Instructions.AND);
@@ -50,9 +50,6 @@ namespace DCPUC
             AddChild("Parameter", treeNode.ChildNodes[0]);
             AddChild("Parameter", treeNode.ChildNodes[2]);
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
-
-            
-
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -63,17 +60,7 @@ namespace DCPUC
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
-            if (Child(0).ResultType != Child(1).ResultType)
-            {
-                context.AddWarning(this.Span, "Conversion between types. Possible loss of data.");
-                //Promote to signed?
-
-                if (AsString == "+" || AsString == "-" || AsString == "*" || AsString == "/" || AsString == "%") 
-                    ResultType = "signed";
-                else ResultType = "unsigned";
-            }
-            else
-                ResultType = Child(0).ResultType;
+            ResultType = "word";
         }
 
         public override CompilableNode FoldConstants(CompileContext context)
@@ -81,28 +68,39 @@ namespace DCPUC
             var first = Child(0).FoldConstants(context);
             var second = Child(1).FoldConstants(context);
 
-            
-
             if (first.IsIntegralConstant() && second.IsIntegralConstant())
             {
                 var a = first.GetConstantValue();
                 var b = second.GetConstantValue();
-                var promote = first.ResultType == "signed" || second.ResultType == "signed";
 
-                if (AsString == "+") if (promote) a = (int)((short)a + (short)b); else a = (int)((ushort)a + (ushort)b);
-                if (AsString == "-") if (promote) a = (int)((short)a - (short)b); else a = (int)((ushort)a - (ushort)b);
-                if (AsString == "*") if (promote) a = (int)((short)a * (short)b); else a = (int)((ushort)a * (ushort)b);
+                if (AsString == "+") a = (int)((ushort)a + (ushort)b);
+                if (AsString == "-") a = (int)((ushort)a - (ushort)b);
+                if (AsString == "*") a = (int)((ushort)a * (ushort)b);
 
                 if (AsString == "/")
                 {
                     if (b == 0) throw new CompileError(second, "Division by zero in constant expression");
-                    if (promote) a = (int)((short)a / (short)b); else a = (int)((ushort)a / (ushort)b);
+                     a = (int)((ushort)a / (ushort)b);
                 }
 
                 if (AsString == "%")
                 {
                     if (b == 0) throw new CompileError(second, "Division by zero in constant expression");
-                    if (promote) a = (int)((short)a % (short)b); else a = (int)((ushort)a % (ushort)b);
+                    a = (int)((ushort)a % (ushort)b);
+                }
+
+                if (AsString == "-*") a = (int)((short)a * (short)b);
+
+                if (AsString == "-/")
+                {
+                    if (b == 0) throw new CompileError(second, "Division by zero in constant expression");
+                    a = (int)((short)a / (short)b);
+                }
+
+                if (AsString == "-%")
+                {
+                    if (b == 0) throw new CompileError(second, "Division by zero in constant expression");
+                    a = (int)((short)a % (short)b);
                 }
 
                 if (AsString == "<<") a = (int)((ushort)a << (ushort)b);
@@ -136,30 +134,21 @@ namespace DCPUC
         {
             initOps();
 
-
             var r = new Assembly.ExpressionNode();
 
             if (Child(0).IsIntegralConstant())
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)), 
-                    Label(Child(0).GetConstantToken()));
-                if (target == Register.STACK) scope.stackDepth += 1;
+                    Child(0).GetConstantToken());
             }
             else
             {
                 r.AddChild(Child(0).Emit(context, scope));
-                /*if (firstOperandResult != Child(0).actualTarget)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Scope.GetRegisterLabelFirst((int)firstOperandResult),
-                        Scope.GetRegisterLabelSecond((int)Child(0).actualTarget));
-                    if (firstOperandResult == Register.STACK)
-                        scope.stackDepth += 1;
-                }*/
             }
 
-            var opcode = ResultType == "signed" && opcodes.ContainsKey(AsString+"signed") ? opcodes[AsString + "signed"] : opcodes[AsString];
+            var opcode = opcodes[AsString];
 
-            if (Child(1) is VariableNameNode)
+            if (Child(1) is VariableNameNode && (Child(1) as VariableNameNode).variable.type != VariableType.External)
             {
                 if (firstOperandResult == Register.STACK)
                     r.AddInstruction(opcode, Operand("PEEK"), (Child(1) as VariableNameNode).GetFetchToken(scope));
@@ -170,10 +159,10 @@ namespace DCPUC
             else if (Child(1).IsIntegralConstant())
             {
                 if (firstOperandResult == Register.STACK)
-                    r.AddInstruction(opcode, Operand("PEEK"), Label(Child(1).GetConstantToken()));
+                    r.AddInstruction(opcode, Operand("PEEK"), Child(1).GetConstantToken());
                 else
                     r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)), 
-                        Label(Child(1).GetConstantToken()));
+                        Child(1).GetConstantToken());
             }
             else
             {
@@ -187,7 +176,6 @@ namespace DCPUC
                         r.AddInstruction(opcode, Operand("PEEK"), Operand("POP"));
                         //r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
                         //r.AddInstruction(opcode, "PEEK", Scope.TempRegister);
-                        scope.stackDepth -= 1;
                     }
                     else
                         r.AddInstruction(opcode, Operand("PEEK"), Operand(Scope.GetRegisterLabelSecond((int)secondOperandResult)));
@@ -197,7 +185,6 @@ namespace DCPUC
                     r.AddInstruction(opcode, 
                         Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)),
                         Operand(Scope.GetRegisterLabelSecond((int)secondOperandResult)));
-                    if (secondOperandResult == Register.STACK) scope.stackDepth -= 1;
                 }
             }
 

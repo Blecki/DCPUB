@@ -17,7 +17,7 @@ namespace DCPUC
             {
                 AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1].FirstChild);
                 AddChild("then", treeNode.ChildNodes[0].ChildNodes[2]);
-                AddChild("ELSE", treeNode.ChildNodes[2]);
+                AddChild("else", treeNode.ChildNodes[2]);
                 headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
                     treeNode.ChildNodes[0].ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
             }
@@ -88,8 +88,8 @@ namespace DCPUC
                         }
                         else
                         {
-                            var thenLabel = context.GetLabel() + "THEN";
-                            var endLabel = context.GetLabel() + "END";
+                            var thenLabel = Assembly.Label.Make("THEN");
+                            var endLabel = Assembly.Label.Make("END");
 
                             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
                             if (elseClauseAssembly != null) r.AddChild(elseClauseAssembly);

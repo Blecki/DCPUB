@@ -8,7 +8,7 @@ namespace DCPUC.Assembly
     public class Function : Node
     {
         public String functionName;
-        public String entranceLabel;
+        public Assembly.Label entranceLabel;
         public int parameterCount;
 
         public override void Emit(EmissionStream stream)

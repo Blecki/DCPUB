@@ -34,5 +34,40 @@ namespace DCPUC.Assembly
         {
             return 1;
         }
+
+        public override void EmitBinary(List<Box<ushort>> binary)
+        {
+            var ins = new Box<ushort>{ data = 0 };
+            binary.Add(ins);
+            
+            if (instruction < Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+            {
+                var A = DCPU.EncodeOperand(secondOperand, OperandUsage.A);
+                if (A.Item2 != null) binary.Add(A.Item2);
+                ins.data += (ushort)(A.Item1 << 10);
+
+                var B = DCPU.EncodeOperand(firstOperand, OperandUsage.B);
+                if (B.Item2 != null) binary.Add(B.Item2);
+                ins.data += (ushort)(B.Item1 << 5);
+
+                ins.data += (ushort)instruction;
+            }
+            else
+            {
+                var A = DCPU.EncodeOperand(firstOperand, OperandUsage.A);
+                if (A.Item2 != null) binary.Add(A.Item2);
+                ins.data += (ushort)(A.Item1 << 10);
+
+                ins.data += (ushort)(((ushort)instruction - (ushort)Instructions.SINGLE_OPERAND_INSTRUCTIONS) << 5);
+            }
+        }
+
+        public override void SetupLabels(Dictionary<string, Label> labelTable)
+        {
+            if ((firstOperand.semantics & OperandSemantics.Label) == OperandSemantics.Label)
+                firstOperand.label = labelTable[firstOperand.label.rawLabel];
+            if (secondOperand != null && (secondOperand.semantics & OperandSemantics.Label) == OperandSemantics.Label)
+                secondOperand.label = labelTable[secondOperand.label.rawLabel];
+        }
     }
 }

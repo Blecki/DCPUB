@@ -11,7 +11,7 @@ namespace DCPUC
         public Function function = null;
         public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
         public RegisterBank usedRegisters = new RegisterBank();
-        protected String footerLabel = null;
+        protected Assembly.Label footerLabel = null;
         private Irony.Parsing.SourceSpan headerSpan;
         private int registersPreserved = 0;
 
@@ -37,7 +37,7 @@ namespace DCPUC
             function.localScope.type = ScopeType.Function;
             function.localScope.activeFunction = this;
             function.returnType = treeNode.ChildNodes[3].FindTokenAndGetText();
-            if (function.returnType == null) function.returnType = "unsigned";
+            if (function.returnType == null) function.returnType = "word";
             ResultType = function.returnType;
         }
 
@@ -48,8 +48,8 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            function.label = context.GetLabel() + function.name;
-            footerLabel = context.GetLabel() + function.name + "_footer";
+            function.label = Assembly.Label.Make(function.name);
+            footerLabel = Assembly.Label.Make(function.name + "_footer");
             enclosingScope.functions.Add(function);
             function.localScope.parent = enclosingScope;
 
@@ -59,20 +59,14 @@ namespace DCPUC
                 variable.scope = function.localScope;
                 variable.name = parameters[i].Item1;
                 variable.typeSpecifier = parameters[i].Item2;
-                if (variable.typeSpecifier == null) variable.typeSpecifier = "unsigned";
+                if (variable.typeSpecifier == null) variable.typeSpecifier = "word";
                 function.localScope.variables.Add(variable);
 
-                if (i < 3)
-                {
-                    variable.location = (Register)i;
-                    function.localScope.UseRegister(i);
-                }
-                else
-                {
+                
                     variable.location = Register.STACK;
-                    variable.stackOffset = function.localScope.stackDepth;
-                    function.localScope.stackDepth += 1;
-                }
+                    variable.stackOffset = i + 2; //Need an extra space for the return pointer and stored frame pointer
+                    //function.localScope.variablesOnStack += 1;
+                
             }
 
             Child(0).GatherSymbols(context, function.localScope);
@@ -94,9 +88,7 @@ namespace DCPUC
         {
             var localBank = new RegisterBank();
             localBank.functionBank = usedRegisters;
-            for (int i = 0; i < 3 && i < function.parameterCount; ++i)
-                localBank.UseRegister((Register)i);
-
+            
             Child(0).AssignRegisters(context, localBank, Register.DISCARD);
 
             foreach (var nestedFunction in function.localScope.functions)
@@ -117,49 +109,40 @@ namespace DCPUC
                 parameterCount = function.parameterCount
             };
 
-            function.localScope.stackDepth += 1;
-
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.headerSpan)));
 
             r.AddLabel(function.label);
 
+            r.AddChild(new Assembly.Annotation("Save frame pointer in J"));
+            r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand("J"));
+            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
+            
             //Save registers
             //ABC saved by caller
-            for (int i = 3/*Math.Min(3, function.parameterCount)*/; i < 7; ++i)
+            for (int i = 1; i < 7; ++i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
                 {
                     r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond(i)));
-                    function.localScope.stackDepth += 1;
                     registersPreserved += 1;
+                    function.localScope.variablesOnStack += 1;
                 }
 
-            var localScope = function.localScope.Push();
-
-            for (int i = 0; i < Math.Min(3, function.parameterCount); ++i)
-            {
-                if (function.localScope.variables[i].addressTaken)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), 
-                        Operand(Scope.GetRegisterLabelSecond((int)function.localScope.variables[i].location)));
-                    function.localScope.variables[i].location = Register.STACK;
-                    function.localScope.variables[i].stackOffset = localScope.stackDepth;
-                    localScope.stackDepth += 1;
-                }
-            }
+            var localScope = function.localScope;
 
             r.AddChild(Child(0).Emit(context, localScope));
 
-            if (localScope.stackDepth - function.localScope.stackDepth > 0)
-                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), 
-                    Constant((ushort)(localScope.stackDepth - function.localScope.stackDepth)));
+            
+            r.AddLabel(footerLabel);            
 
-            r.AddLabel(footerLabel);
+            r.AddInstruction(Assembly.Instructions.SET, Operand("SP"), Operand("J"));
+            r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)registersPreserved));
 
             //Restore registers
-            for (int i = 6; i >= 3/*Math.Min(3, function.parameterCount)*/; --i)
+            for (int i = 6; i >= 1; --i)
                 if (usedRegisters.registers[i] == RegisterState.Used)
                     r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond(i)), Operand("POP"));
 
+            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));
 
             foreach (var nestedFunction in function.localScope.functions)
@@ -171,10 +154,7 @@ namespace DCPUC
         internal virtual Assembly.Node CompileReturn(CompileContext context, Scope localScope)
         {
             var r = new Assembly.ExpressionNode();
-            if (localScope.stackDepth > 0)//- function.localScope.stackDepth > 0)
-                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)localScope.stackDepth));// - function.localScope.stackDepth)); 
-            if (registersPreserved > 0) r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
-            else r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));
+            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
             return r;
         }
     }

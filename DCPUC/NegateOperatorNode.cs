@@ -20,7 +20,7 @@ namespace DCPUC
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
-            ResultType = "signed";
+            ResultType = "word";
         }
     }
 }

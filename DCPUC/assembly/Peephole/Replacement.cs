@@ -14,17 +14,26 @@ namespace DCPUC.Assembly.Peephole
     public class ReplacementRaw : ReplacementOperand
     {
         public String rawValue;
+        public Operand parsedOperand;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             rawValue = treeNode.FindTokenAndGetText();
             rawValue = rawValue.Substring(1, rawValue.Length - 2);
+
+            var opParse = Peepholes.operandParser.Parse(rawValue);
+            if (opParse.HasErrors()) parsedOperand = Operand.fromString(rawValue);
+            else
+            {
+                parsedOperand = OperandAstNode.ParseOperand(opParse.Root.FirstChild);
+            }
         }
 
         public override Operand Generate(Dictionary<string, Operand> values)
         {
-            return Operand.fromString(rawValue);
+            return parsedOperand.Clone();
+            //return Operand.fromString(rawValue);
         }
     }
 

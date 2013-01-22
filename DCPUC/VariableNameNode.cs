@@ -46,9 +46,9 @@ namespace DCPUC
             return variable.constantValue;
         }
 
-        public override string GetConstantToken()
+        public override Assembly.Operand GetConstantToken()
         {
-            return Hex.hex(GetConstantValue());
+            return Constant((ushort)GetConstantValue());
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -82,32 +82,36 @@ namespace DCPUC
             var r = new Assembly.ExpressionNode();
             if (variable.type == VariableType.Constant)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
-                    Constant((ushort)variable.constantValue));
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                    GetConstantToken());
             }
-            else if (variable.type == VariableType.ConstantReference)
+            else if (variable.type == VariableType.ConstantLabel)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                     Label(variable.staticLabel));
+            }
+            else if (variable.type == VariableType.External)
+            {
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                    Label(new Assembly.Label("EXTERNALS")));
+                r.AddInstruction(Assembly.Instructions.ADD,
+                    (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
+                    Constant((ushort)variable.constantValue));
+                r.AddInstruction(Assembly.Instructions.SET,
+                    (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
+                    (target == Register.STACK ? Dereference("PEEK") : Dereference(Scope.GetRegisterLabelSecond((int)target))));
             }
             else if (variable.type == VariableType.Static)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
+                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                     DereferenceLabel(variable.staticLabel));
             }
             else if (variable.type == VariableType.Local)
             {
                 if (variable.location == Register.STACK)
                 {
-                    var stackOffset = scope.StackOffset(variable.stackOffset);
-                    if (stackOffset > 0)
-                    {
-                        r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                            DereferenceOffset("SP", (ushort)stackOffset));
-                    }
-                    else
-                        r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), 
-                            Operand("PEEK"));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                        DereferenceOffset("J", (ushort)(variable.stackOffset)));
                 }
                 else if (variable.location == target)
                 {
@@ -115,32 +119,27 @@ namespace DCPUC
                 }
                 else
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, 
-                        Operand(Scope.GetRegisterLabelFirst((int)target)), 
+                    r.AddInstruction(Assembly.Instructions.SET,
+                        Operand(Scope.GetRegisterLabelFirst((int)target)),
                         Operand(Scope.GetRegisterLabelSecond((int)variable.location)));
                 }
             }
 
-            if (target == Register.STACK) scope.stackDepth += 1;
             return r;
         }
 
         public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
-            var r = new Assembly.Node();
-            if (variable.type == VariableType.Constant || variable.type == VariableType.ConstantReference)
+            var r = new Assembly.ExpressionNode();
+            if (variable.type == VariableType.Constant || variable.type == VariableType.External)
                 throw new CompileError(this, "Can't assign to constant values");
 
             if (variable.type == VariableType.Local)
             {
                 if (variable.location == Register.STACK)
                 {
-                    var stackOffset = scope.StackOffset(variable.stackOffset);
-                    if (stackOffset > 0)
-                        r.AddInstruction(opcode, DereferenceOffset("SP", (ushort)stackOffset), 
-                            Operand(Scope.GetRegisterLabelSecond((int)from)));
-                    else
-                        r.AddInstruction(opcode, Operand("PEEK"), Operand(Scope.GetRegisterLabelSecond((int)from)));
+                    r.AddInstruction(opcode, DereferenceOffset("J", (ushort)(variable.stackOffset)),
+                        Operand(Scope.GetRegisterLabelSecond((int)from)));
                 }
                 else
                     r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)variable.location)), 
@@ -153,24 +152,23 @@ namespace DCPUC
 
         public override Assembly.Operand GetFetchToken(Scope scope)
         {
-            if (variable.type == VariableType.Constant)
-                return Constant((ushort)variable.constantValue);
-            else if (variable.type == VariableType.ConstantReference)
-                return Label(variable.staticLabel);
-            else if (variable.type == VariableType.Static)
+            if (variable.type == VariableType.Static)
                 return DereferenceLabel(variable.staticLabel);
             else if (variable.type == VariableType.Local)
             {
                 if (variable.location == Register.STACK)
                 {
-                    var stackOffset = scope.StackOffset(variable.stackOffset);
-                    if (stackOffset > 0)
-                        return DereferenceOffset("SP", (ushort)stackOffset);
-                    else
-                        return Operand("PEEK");
+                    return DereferenceOffset("J", (ushort)(variable.stackOffset));
                 }
                 else
                     return Operand(Scope.GetRegisterLabelSecond((int)variable.location));
+            }
+            else if (variable.type == VariableType.Constant)
+                return Constant((ushort)variable.constantValue);
+            else if (variable.type == VariableType.External)
+            {
+                return null;
+                //throw new CompileError(this, "Attempt to get fetch token from external variable.");
             }
             else
                 throw new CompileError(this, "Unreachable code reached.");
