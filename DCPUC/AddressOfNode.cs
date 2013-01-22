@@ -59,13 +59,11 @@ namespace DCPUC
                 if (function == null) throw new CompileError(this, "Could not find symbol " + variableName);
             } 
 
-            ResultType = "unsigned";
+            ResultType = "word";
 
             if (variable != null)
             {
                 variable.addressTaken = true;
-                if (variable.type == VariableType.Constant) throw new CompileError("Integral constants have no address.");
-                if (variable.type == VariableType.ConstantReference) throw new CompileError("Can't take address of constant reference.");
             }
         }
 
@@ -80,15 +78,7 @@ namespace DCPUC
 
             if (variable != null)
             {
-                if (variable.type == VariableType.Constant)
-                {
-                    //context.Add("SET", Scope.GetRegisterLabelFirst((int)target), Hex.hex(variable.constantValue));
-                }
-                else if (variable.type == VariableType.ConstantReference)
-                {
-                    //context.Add("SET", Scope.GetRegisterLabelFirst((int)target), variable.staticLabel);
-                }
-                else if (variable.type == VariableType.Static)
+                if (variable.type == VariableType.Static)
                 {
                     r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(variable.staticLabel));
                 }
@@ -96,15 +86,9 @@ namespace DCPUC
                 {
                     if (variable.location == Register.STACK)
                     {
-                        var stackOffset = scope.StackOffset(variable.stackOffset);
-                        r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("SP"));
-                        if (stackOffset != 0)
-                        {
-                            if (target == Register.STACK)
-                                r.AddInstruction(Instructions.ADD, Operand("PEEK"), Constant((ushort)stackOffset));
-                            else
-                                r.AddInstruction(Instructions.ADD, Operand(Scope.GetRegisterLabelFirst((int)target)), Constant((ushort)stackOffset));
-                        }
+                        r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            Operand("J"));
+                        r.AddInstruction(Instructions.ADD, Operand("J"), Constant((ushort)variable.stackOffset));
                     }
                     else
                         throw new CompileError("Variable should be on stack");
@@ -115,7 +99,6 @@ namespace DCPUC
                 r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(function.label));
             }
 
-            if (target == Register.STACK) scope.stackDepth += 1;
             return r;
         }
     }

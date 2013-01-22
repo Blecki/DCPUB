@@ -8,22 +8,21 @@ namespace DCPUC
 {
     public class RegisterBindingNode : CompilableNode
     {
-        public string target = "";
+        public string targetRegisterName = "";
         public bool preserveTarget = false;
         public Register targetRegister;
-        public Variable variableSharingRegister = null;
         public Scope rememberScope = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            target = treeNode.ChildNodes[0].FindTokenAndGetText();
+            targetRegisterName = treeNode.ChildNodes[0].FindTokenAndGetText();
             AddChild("expression", treeNode.ChildNodes[2]);
         }
 
         public override string TreeLabel()
         {
-            return "Bind to register " + target + (preserveTarget ? " PRESERVE" : "");
+            return "Bind to register " + targetRegisterName + (preserveTarget ? " PRESERVE" : "");
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -31,21 +30,12 @@ namespace DCPUC
             if (parentState.registers[(int)targetRegister] == RegisterState.Used) preserveTarget = true;
             parentState.UseRegister(targetRegister);
 
-            var scope = rememberScope;
-            while (variableSharingRegister == null && scope != null)
-            {
-                foreach (var v in scope.variables)
-                    if (v.location == targetRegister)
-                        variableSharingRegister = v;
-                if (variableSharingRegister == null) scope = scope.parent;
-            }
-
             Child(0).AssignRegisters(context, parentState, targetRegister);
         }
 
         public override void  ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            targetRegister = (Register)Enum.Parse(typeof(Register), this.target);
+            targetRegister = (Register)Enum.Parse(typeof(Register), this.targetRegisterName);
             rememberScope = enclosingScope;
             Child(0).ResolveTypes(context, enclosingScope);
         }
@@ -58,13 +48,6 @@ namespace DCPUC
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), 
                     Operand(Scope.GetRegisterLabelSecond((int)targetRegister)));
-                scope.stackDepth += 1;
-                //If that register was used by a variable, we might have to move the variable.
-                if (variableSharingRegister != null && Scope.IsRegister(variableSharingRegister.location))
-                {
-                    variableSharingRegister.location = Register.STACK;
-                    variableSharingRegister.stackOffset = scope.stackDepth;
-                }
             }
             r.AddChild(Child(0).Emit(context, scope));
             return r;
@@ -77,9 +60,6 @@ namespace DCPUC
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond((int)targetRegister)), 
                     Operand("POP"));
-                scope.stackDepth -= 1;
-                if (variableSharingRegister != null && Scope.IsRegister(variableSharingRegister.location))
-                    variableSharingRegister.location = targetRegister;
             }
             return r;
         }
@@ -121,7 +101,6 @@ namespace DCPUC
                 r.AddChild(Child(i).Emit(context, scope));
 
             r.AddChild(parsedNode);
-            //r.AddChild(new Assembly.Inline { code = rawAssembly });
 
             for (var i = ChildNodes.Count - 1; i >= 0; --i)
                 r.AddChild((Child(i) as RegisterBindingNode).Restore(context, scope));

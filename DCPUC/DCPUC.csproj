@@ -90,7 +90,10 @@
     <Compile Include="AssignableNode.cs" />
     <Compile Include="CompileOptions.cs" />
     <Compile Include="AddressOfNode.cs" />
-    <Compile Include="BlockLiteralNode.cs" />
+    <Compile Include="ArrayInitializationNode.cs" />
+    <Compile Include="StringLiteralNode.cs" />
+    <Compile Include="GotoNode.cs" />
+    <Compile Include="LabelNode.cs" />
     <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\HardwareDevice.cs" />
     <Compile Include="Emulator\Keyboard.cs" />
@@ -109,7 +112,6 @@
     </Compile>
     <Compile Include="NegateOperatorNode.cs" />
     <Compile Include="NotOperatorNode.cs" />
-    <Compile Include="TernarySelectionNode.cs" />
     <Compile Include="IndexOperatorNode.cs" />
     <Compile Include="SizeofNode.cs" />
     <Compile Include="MemberAccessNode.cs" />
@@ -137,8 +139,6 @@
     <Compile Include="CompileContext.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="WhileStatementNode.cs" />
-    <Compile Include="DataLiteralNode.cs" />
-    <Compile Include="LibraryFunctionNode.cs" />
     <Compile Include="FunctionCallNode.cs" />
     <Compile Include="FunctionDeclarationNode.cs" />
     <Compile Include="DereferenceNode.cs" />

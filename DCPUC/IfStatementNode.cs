@@ -17,7 +17,7 @@ namespace DCPUC
             {
                 AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1].FirstChild);
                 AddChild("then", treeNode.ChildNodes[0].ChildNodes[2]);
-                AddChild("ELSE", treeNode.ChildNodes[2]);
+                AddChild("else", treeNode.ChildNodes[2]);
                 headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
                     treeNode.ChildNodes[0].ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
             }

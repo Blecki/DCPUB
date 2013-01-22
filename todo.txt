@@ -15,4 +15,4 @@
 [ ] Freestore/heap implementation
 [ ] improved error reporting
 [ ] Report errors in Peepholedef
-[ ] Parse internals of ASM statements (So they can be properly assembled)
+[ ] Casting would help with use of structs

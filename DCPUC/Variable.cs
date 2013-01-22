@@ -10,7 +10,8 @@ namespace DCPUC
         Local,
         Static,
         Constant,
-        ConstantReference
+        ConstantLabel,
+        External
     }
 
     public class Variable

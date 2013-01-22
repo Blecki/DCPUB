@@ -14,6 +14,7 @@ namespace DCPUC
         public Scope globalScope = new Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUC.Grammar());
         private List<Tuple<Assembly.Label, Object>> dataElements = new List<Tuple<Assembly.Label, Object>>();
+        public int externalCount = 0;
         private int nextLabelID = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
@@ -44,7 +45,9 @@ namespace DCPUC
 
         public void AddData(Assembly.Label label, ushort word)
         {
-            dataElements.Add(new Tuple<Assembly.Label, Object>(label, new List<ushort>( word )));
+            var data = new List<ushort>();
+            data.Add(word);
+            dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
         }
 
         public static String TypeWarning(string A, string B)
@@ -88,6 +91,7 @@ namespace DCPUC
             globalScope = new Scope();
             dataElements.Clear();
             nextLabelID = 0;
+            externalCount = 0;
 
             var program = Parser.Parse(code);
             if (onError == null) onError = (a) => { };
@@ -112,7 +116,7 @@ namespace DCPUC
         {
             end_of_program = new Variable();
             end_of_program.location = Register.CONST;
-            end_of_program.type = VariableType.ConstantReference;
+            end_of_program.type = VariableType.ConstantLabel;
             end_of_program.name = "__endofprogram";
             end_of_program.staticLabel = new Assembly.Label("ENDOFPROGRAM");
             globalScope.variables.Add(end_of_program);

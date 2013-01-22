@@ -12,7 +12,7 @@ namespace DCPUC
         {
             base.Init(context, treeNode);
             AddChild("Expression", treeNode.ChildNodes[1]);
-            ResultType = "unsigned";
+            ResultType = "word";
         }
 
         public override string TreeLabel()
@@ -42,7 +42,6 @@ namespace DCPUC
             return r;
         }
 
-
         public bool IsAssignedTo { get; set; }
 
         public DereferenceNode()
@@ -56,9 +55,9 @@ namespace DCPUC
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
+                throw new CompileError("Shouldn't happen");
                 r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
                 target = Register.J;
-                scope.stackDepth -= 1;
             }
             r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),
                 Operand(Scope.GetRegisterLabelSecond((int)from)));

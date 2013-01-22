@@ -29,6 +29,7 @@ namespace DCPUC
             var r = new Assembly.Node();
             var localScope = function.localScope.Push();
 
+            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
             r.AddChild(Child(0).Emit(context, localScope));
             r.AddLabel(footerLabel);
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
