@@ -8,6 +8,7 @@ namespace DCPUC.Assembly.Peephole
     public class Peepholes
     {
         public static RuleSet root = null;
+        public static Irony.Parsing.Parser operandParser = new Irony.Parsing.Parser(new OperandGrammar());
 
         public static void InitializePeepholes()
         {

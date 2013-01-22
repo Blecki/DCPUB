@@ -88,10 +88,22 @@ namespace DCPUCCL
                     context.Compile(Console.WriteLine);
                     var assembly = context.Emit(Console.WriteLine);
 
-                    var writer = new System.IO.StreamWriter(options.@out, false);
-                    var stream = new FileEmissionStream(writer);
-                    assembly.Emit(stream);
-                    writer.Close();
+                    if (options.b)
+                    {
+                        var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
+                        var bin = new List<DCPUC.Assembly.Box<ushort>>();
+                        assembly.EmitBinary(bin);
+                        foreach (var word in bin)
+                            writer.Write(word.data);
+                        writer.Close();
+                    }
+                    else
+                    {
+                        var writer = new System.IO.StreamWriter(options.@out, false);
+                        var stream = new FileEmissionStream(writer);
+                        assembly.Emit(stream);
+                        writer.Close();
+                    }
 
                     Console.WriteLine("Done.");
                 }

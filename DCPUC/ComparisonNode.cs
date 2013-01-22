@@ -45,6 +45,11 @@ namespace DCPUC
                     Value = (firstValue > secondValue ? (ushort)1 : (ushort)0),
                     WasFolded = true
                 };
+                if (AsString == "<") return new NumberLiteralNode
+                {
+                    Value = (firstValue < secondValue ? (ushort)1 : (ushort)0),
+                    WasFolded = true
+                };
             }
             return this;
         }

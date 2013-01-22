@@ -14,3 +14,5 @@ SET B, A / SET A, "POP" / ADD A, B => ADD A, "POP";
 
 // Push temp
 SET "J", A / SET "PUSH", "J" => SET "PUSH", A;
+
+SET A, B / ADD A, "0x0001" / SET B, A => ADD B, "0x0001";

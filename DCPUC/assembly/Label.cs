@@ -5,13 +5,33 @@ using System.Text;
 
 namespace DCPUC.Assembly
 {
-    public class Label : Node
-    {
-        public String label;
 
-        public override void Emit(EmissionStream stream)
+    public class Label
+    {
+        private static int labelCount = 0;
+
+        public Box<ushort> position = new Box<ushort> { data = 0 };
+        public string rawLabel;
+
+        public Label()
         {
-            stream.WriteLine(new String(' ', stream.indentDepth * 3) + ":" + label);
+            rawLabel = "L" + labelCount;
+            ++labelCount;
         }
+
+        public static Label Make(String suffix)
+        {
+            var l = new Label();
+            l.rawLabel += suffix;
+            return l;
+        }
+
+        public Label(String rl) { rawLabel = rl; }
+
+        public override string ToString()
+        {
+            return rawLabel;
+        }
+
     }
 }

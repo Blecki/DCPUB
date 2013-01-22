@@ -45,10 +45,8 @@ namespace DCPUC
                 if (@operator == "!=") comparisonInstruction = Assembly.Instructions.IFN;
                 if (@operator == ">") comparisonInstruction = Assembly.Instructions.IFG;
                 if (@operator == "<") comparisonInstruction = Assembly.Instructions.IFL;
-                if (@operator == ">" && (firstOperand.ResultType == "signed" || secondOperand.ResultType == "signed"))
-                    comparisonInstruction = Assembly.Instructions.IFA;
-                if (@operator == "<" && (firstOperand.ResultType == "signed" || secondOperand.ResultType == "signed"))
-                    comparisonInstruction = Assembly.Instructions.IFU;
+                if (@operator == "->") comparisonInstruction = Assembly.Instructions.IFA;
+                if (@operator == "-<") comparisonInstruction = Assembly.Instructions.IFU;
 
                 clauseOrder = ClauseOrder.FailFirst;
             }
@@ -82,16 +80,11 @@ namespace DCPUC
             {
                 firstOperand = Child(0).Child(0);
                 secondOperand = Child(0).Child(1);
-                if (firstOperand.ResultType != secondOperand.ResultType)
-                    context.AddWarning(Span, "Comparison between " + firstOperand.ResultType + " and " +
-                        secondOperand.ResultType + ". Comparison might be invalid.");
             }
-
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-            //if (target != Register.DISCARD) throw new CompileError("Branch not at top level");
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantFail:
@@ -135,23 +128,21 @@ namespace DCPUC
                 }
             }
             else
-                secondToken = Label(secondOperand.GetConstantToken());
+                secondToken = secondOperand.GetConstantToken();
 
             if (!firstOperand.IsIntegralConstant())
                 r.AddChild(firstOperand.Emit(context, scope));
 
             if (!firstOperand.IsIntegralConstant() && firstOperandTarget == Register.STACK)
             {
-                firstOperandTarget = Register.J;
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("POP"));
+                //throw new CompileError("No free registers to implement the conditional with.");
+                firstOperandTarget = Register.A;
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
             }
 
             r.AddInstruction(comparisonInstruction,
-                firstOperand.IsIntegralConstant() ? Label(firstOperand.GetConstantToken()) : Operand(Scope.GetRegisterLabelSecond((int)firstOperandTarget)),
+                firstOperand.IsIntegralConstant() ? firstOperand.GetConstantToken() : Operand(Scope.GetRegisterLabelSecond((int)firstOperandTarget)),
                 secondToken);
-            if (firstOperandTarget == Register.STACK) scope.stackDepth -= 1;
-            if (secondOperandTarget == Register.STACK) scope.stackDepth -= 1;
-
             return r;
         }
 
@@ -160,8 +151,9 @@ namespace DCPUC
             var r = new Assembly.StatementNode();
             var blockScope = scope.Push();
             r.AddChild(block.Emit(context, blockScope));
-            if (restoreStack && blockScope.stackDepth - scope.stackDepth > 0)
-                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.stackDepth - scope.stackDepth)));
+            if (restoreStack && blockScope.variablesOnStack - scope.variablesOnStack > 0)
+                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), 
+                    Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
             return r;
         }
         

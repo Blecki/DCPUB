@@ -28,13 +28,14 @@ namespace DCPUC
             return true;
         }
 
-        public override string GetConstantToken()
+        public override Assembly.Operand GetConstantToken()
         {
-            return Hex.hex(_struct.size);
+            return Constant((ushort)_struct.size);
         }
 
         public override int GetConstantValue()
         {
+            if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
             return _struct.size;
         }
 
@@ -42,7 +43,7 @@ namespace DCPUC
         {
             _struct = enclosingScope.FindType(typeName);
             if (_struct == null) throw new CompileError("Could not find type " + typeName);
-            ResultType = "unsigned";
+            ResultType = "word";
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -53,6 +54,7 @@ namespace DCPUC
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.ExpressionNode();
+            if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
             r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                 Constant((ushort)_struct.size));
             return r;

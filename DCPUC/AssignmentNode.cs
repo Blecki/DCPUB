@@ -33,10 +33,11 @@ namespace DCPUC
                 opcodes.Add("*=", Assembly.Instructions.MUL);
                 opcodes.Add("/=", Assembly.Instructions.DIV);
 
-                opcodes.Add("*=signed", Assembly.Instructions.MLI);
-                opcodes.Add("/=signed", Assembly.Instructions.DVI);
+                opcodes.Add("-*=", Assembly.Instructions.MLI);
+                opcodes.Add("-/=", Assembly.Instructions.DVI);
 
                 opcodes.Add("%=", Assembly.Instructions.MOD);
+                opcodes.Add("-%=", Assembly.Instructions.MDI);
                 opcodes.Add("<<=", Assembly.Instructions.SHL);
                 opcodes.Add(">>=", Assembly.Instructions.SHR);
                 opcodes.Add("&=", Assembly.Instructions.AND);
@@ -53,13 +54,6 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             Child(0).GatherSymbols(context, enclosingScope);
-            if (Child(0) is VariableNameNode)
-            {
-                var assignTo = (Child(0) as VariableNameNode).variable;
-                if (assignTo.type == VariableType.Constant || assignTo.type == VariableType.ConstantReference)
-                    throw new CompileError("Can't assign to constants");
-            }
-            
             Child(1).GatherSymbols(context, enclosingScope);
         }
 
@@ -67,8 +61,6 @@ namespace DCPUC
         {
             Child(0).ResolveTypes(context, enclosingScope);
             Child(1).ResolveTypes(context, enclosingScope);
-            if (Child(0).ResultType != Child(1).ResultType)
-                context.AddWarning(Span, CompileContext.TypeWarning(Child(1).ResultType, Child(0).ResultType));
             ResultType = Child(0).ResultType;
         }
 
@@ -82,12 +74,10 @@ namespace DCPUC
             Child(0).AssignRegisters(context, parentState, Register.DISCARD);
             Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
             parentState.FreeMaybeRegister(rvalueTargetRegister);
-
         }
         
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             r.AddChild(Child(1).Emit(context, scope));
@@ -97,8 +87,6 @@ namespace DCPUC
             else opcode = opcodes[@operator];
 
             r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, rvalueTargetRegister, opcode));
-            if (rvalueTargetRegister == Register.STACK)
-                scope.stackDepth -= 1;
             return r;
         }
     }

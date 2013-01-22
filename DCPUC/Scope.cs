@@ -6,14 +6,21 @@ using Irony.Interpreter.Ast;
 
 namespace DCPUC
 {
+    public class Label
+    {
+        public String declaredName;
+        public Assembly.Label realName;
+    }
+
     public class Function
     {
         public String name;
         public FunctionDeclarationNode Node;
         public Scope localScope;
-        public String label;
+        public Assembly.Label label;
         public int parameterCount = 0;
         public String returnType = "void";
+        public List<Label> labels = new List<Label>();
     }
 
     public class Member
@@ -22,6 +29,7 @@ namespace DCPUC
         public String typeSpecifier;
         public Struct referencedStruct;
         public int offset;
+        public int size;
     }
 
     public class Struct
@@ -63,29 +71,22 @@ namespace DCPUC
 
     public class Scope
     {
-        internal const string TempRegister = "J";
-
         internal ScopeType type = ScopeType.Global;
         internal Scope parent = null;
         internal int parentDepth = 0;
         public List<Variable> variables = new List<Variable>();
         public List<Function> functions = new List<Function>();
         public List<Struct> structs = new List<Struct>();
-        public int stackDepth = 0;
+        public int variablesOnStack = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         public FunctionDeclarationNode activeFunction = null;
         internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
 
-        internal int StackOffset(int of)
-        {
-            return stackDepth - of - 1;
-        }
-
         internal Scope Push(Scope child)
         {
             child.parent = this;
-            child.stackDepth = stackDepth;
-            child.parentDepth = stackDepth;
+            child.variablesOnStack = variablesOnStack;
+            child.parentDepth = variablesOnStack;
             child.activeFunction = activeFunction;
             for (int i = 0; i < 8; ++i) child.registers[i] = registers[i];
             return child;
@@ -141,7 +142,7 @@ namespace DCPUC
 
         internal static bool IsBuiltIn(String s)
         {
-            if (s == "signed" || s == "unsigned") return true;
+            if (s == "word") return true;
             return false;
         }
 

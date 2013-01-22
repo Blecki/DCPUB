@@ -57,12 +57,12 @@ namespace DCPUC
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("POP"));
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
                 if (member.offset > 0)
                     r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"),
-                        DereferenceOffset(Scope.TempRegister, (ushort)member.offset));
+                        DereferenceOffset("A", (ushort)member.offset));
                 else
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Dereference(Scope.TempRegister));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Dereference("A"));
             }
             else
             {
@@ -83,9 +83,9 @@ namespace DCPUC
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.TempRegister), Operand("POP"));
-                target = Register.J;
-                scope.stackDepth -= 1;
+                //throw new CompileError("Why wasn't a register available?");
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+                target = Register.A;
             }
             if (member.offset > 0)
                 r.AddInstruction(opcode, DereferenceOffset(Scope.GetRegisterLabelFirst((int)target), (ushort)member.offset),

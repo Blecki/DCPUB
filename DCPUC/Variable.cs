@@ -10,7 +10,8 @@ namespace DCPUC
         Local,
         Static,
         Constant,
-        ConstantReference
+        ConstantLabel,
+        External
     }
 
     public class Variable
@@ -19,7 +20,7 @@ namespace DCPUC
         public Scope scope;
         public int stackOffset;
         public Register location;
-        public string staticLabel;
+        public Assembly.Label staticLabel;
         public int constantValue;
         public string typeSpecifier = "unsigned";
         public bool addressTaken = false;

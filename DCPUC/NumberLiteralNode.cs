@@ -17,26 +17,20 @@ namespace DCPUC
             foreach (var child in treeNode.ChildNodes)
                 AsString += child.FindTokenAndGetText();
 
-            if (AsString.EndsWith("u"))
-            {
-                ResultType = "unsigned";
-                AsString = AsString.Substring(0, AsString.Length - 1);
-                Value = (int)Convert.ToUInt16(AsString);
-            }
-            else if (AsString.StartsWith("0x"))
+            if (AsString.StartsWith("0x"))
             {
                 Value = Hex.atoh(AsString.Substring(2));
-                ResultType = "unsigned";
+                ResultType = "word";
             }
             else if (AsString.StartsWith("'"))
             {
                 Value = AsString[1];
-                ResultType = "unsigned";
+                ResultType = "word";
             }
             else
             {
                 Value = Convert.ToInt16(AsString);
-                ResultType = "signed";
+                ResultType = "word";
             }
         }
 
@@ -55,9 +49,9 @@ namespace DCPUC
             return Value;
         }
 
-        public override string GetConstantToken()
+        public override Assembly.Operand GetConstantToken()
         {
-            return Hex.hex((ushort)GetConstantValue());
+            return Constant((ushort)GetConstantValue());
         }
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
@@ -69,8 +63,7 @@ namespace DCPUC
         {
             var r = new Assembly.ExpressionNode();
             r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                Label(GetConstantToken()));
-            if (target == Register.STACK) scope.stackDepth += 1;
+                GetConstantToken());
             return r;
         }
 

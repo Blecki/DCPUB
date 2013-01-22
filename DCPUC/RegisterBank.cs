@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class RegisterBank
     {
-        internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
+        internal RegisterState[] registers = new RegisterState[] { RegisterState.Used, 0, 0, 0, 0, 0, 0, RegisterState.Used };
         internal RegisterBank functionBank = null;
 
         public RegisterBank Push()
@@ -24,6 +24,11 @@ namespace DCPUC
             for (int i = 0; i < 8; ++i) if (registers[i] == RegisterState.Free) return (Register)i;
             //for (int i = 0; i < 3; ++i) if (registers[i] == RegisterState.Free) return (Register)i;
             return Register.STACK;
+        }
+
+        internal bool RegisterInUse(Register r)
+        {
+            return registers[(int)r] == RegisterState.Used;
         }
 
         internal void FreeRegister(Register r) { registers[(int)r] = RegisterState.Free; }

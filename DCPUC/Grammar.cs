@@ -28,24 +28,23 @@ namespace DCPUC
             
 
             var stringLiteral = new StringLiteral("string", "\"");
+            stringLiteral.AstNodeType = typeof(StringLiteralNode);
             var characterLiteral = new StringLiteral("char", "'", StringOptions.IsChar);
            
 
             var inlineASM = new NonTerminal("inline", typeof(InlineASMNode));
 
             var numberLiteral = new NonTerminal("Number", typeof(NumberLiteralNode));
-            var blockLiteral = new NonTerminal("BlockLiteral", typeof(BlockLiteralNode));
-            var dataLiteral = new NonTerminal("Data");
-            var dataLiteralChain = new NonTerminal("DataChain", typeof(DataLiteralNode));
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
             var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
             var unaryNot = new NonTerminal("Unary Not", typeof(NotOperatorNode));
             var unaryNegate = new NonTerminal("Unary Negate", typeof(NegateOperatorNode));
             var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
-            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>";
-            var comparisonOperator = ToTerm("==") | "!=" | ">" | "<";
+            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "-*" | "-/" | "-%";
+            var comparisonOperator = ToTerm("==") | "!=" | ">" | "<" | "->" | "-<";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
+            var arrayInitialization = new NonTerminal("Array Initialization", typeof(ArrayInitializationNode));
             var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
             var statement = new NonTerminal("Statement");
             var statementList = new NonTerminal("Statement List", typeof(BlockNode));
@@ -69,38 +68,41 @@ namespace DCPUC
             var memberAccess = new NonTerminal("Member Access", typeof(MemberAccessNode));
             var @sizeof = new NonTerminal("sizeof", typeof(SizeofNode));
             var indexOperator = new NonTerminal("index", typeof(IndexOperatorNode));
-            var ternaryOperator = new NonTerminal("?:", typeof(TernarySelectionNode));
+            var dataList = new NonTerminal("Array Data");
+            var label = new NonTerminal("Label", typeof(LabelNode));
+            var @goto = new NonTerminal("Goto", typeof(GotoNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
-            blockLiteral.Rule = ToTerm("[") + expression + "]";
-            dataLiteral.Rule = MakePlusRule(dataLiteral, ToTerm(","), (numberLiteral | stringLiteral | blockLiteral));
-            dataLiteralChain.Rule = ToTerm("{") + dataLiteral + ToTerm("}");
 
-            expression.Rule = numberLiteral | binaryOperation | parenExpression | identifier
-                | dereference | functionCall | dataLiteralChain | addressOf | memberAccess | @sizeof | indexOperator
-                | ternaryOperator | unaryNot | unaryNegate;
+            expression.Rule = numberLiteral | parenExpression | identifier
+                | dereference | functionCall | addressOf | memberAccess | @sizeof | indexOperator
+                | unaryNot | unaryNegate | binaryOperation | stringLiteral;
 
-            assignment.Rule = (identifier | dereference | memberAccess | indexOperator) + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" ) + expression;
+            assignment.Rule = (identifier | dereference | memberAccess | indexOperator) 
+                + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" | "-*=" | "-/=" | "-%=" )
+                + expression;
             binaryOperation.Rule = expression + @operator + expression;
             unaryNot.Rule = ToTerm("!") + expression;
             unaryNegate.Rule = ToTerm("-") + expression;
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule =
-                (ToTerm("var") | "static" | "const") + identifier + (ToTerm(":") + identifier).Q()                
-                + "=" + (expression | blockLiteral);
+                (ToTerm("local") | "static" | "constant" | "external") + identifier + (ToTerm(":") + identifier).Q()
+                + (ToTerm("[") + expression + "]").Q()
+                + (ToTerm("=") + (expression | arrayInitialization)).Q();
             dereference.Rule = ToTerm("*") + expression;
             statement.Rule = inlineASM | (variableDeclaration + ";")
-                | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block 
+                | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block
                 | functionDeclaration | structDefinition | (functionCall + ";")
-                | (returnStatement + ";");
+                | (returnStatement + ";") | label | @goto;
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             addressOf.Rule = ToTerm("&") + identifier;
             memberAccess.Rule = expression + "." + identifier;
             @sizeof.Rule = ToTerm("sizeof") + "(" + identifier + ")";
             indexOperator.Rule = expression + "[" + expression + "]";
-            ternaryOperator.Rule = (expression | comparison) + "?" + expression + ":" + expression;
+            label.Rule = identifier + ":";
+            @goto.Rule = ToTerm("goto") + identifier + ";";
 
             registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
@@ -116,7 +118,9 @@ namespace DCPUC
                 + (ToTerm(":") + identifier).Q()
                 + block;
             returnStatement.Rule = ToTerm("return") + expression;
-            memberDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q() + ";";
+            arrayInitialization.Rule = ToTerm("{") + dataList + "}";
+            dataList.Rule = MakePlusRule(dataList, ToTerm(","), expression);
+            memberDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q() + (ToTerm("[") + expression + "]").Q() + ";";
             memberList.Rule = MakeStarRule(memberList, memberDeclaration);
             structDefinition.Rule = ToTerm("struct") + identifier + "{" + memberList + "}";
 
@@ -129,13 +133,14 @@ namespace DCPUC
             this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?", "!");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
-            this.RegisterOperators(1, Associativity.Right, "==", "!=", ">", "<");
-            this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=");
+            this.RegisterOperators(1, Associativity.Right, "==", "!=", ">", "<", "->", "-<");
+            this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=", "-*=", "-/=", "-%=");
             this.RegisterOperators(3, Associativity.Left, "+", "-");
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
-            this.RegisterOperators(5, Associativity.Left, "<<", ">>", "&", "|", "^", "!");
+            this.RegisterOperators(5, Associativity.Left, "-*", "-/", "-%");
+            this.RegisterOperators(6, Associativity.Left, "<<", ">>", "&", "|", "^", "!");
             
-            this.RegisterOperators(6, Associativity.Left, "{", "}", "[", "]");
+            this.RegisterOperators(7, Associativity.Left, "{", "}", "[", "]");
         }
 
     }
