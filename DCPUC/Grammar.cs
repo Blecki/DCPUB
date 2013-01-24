@@ -71,10 +71,11 @@ namespace DCPUC
             var dataList = new NonTerminal("Array Data");
             var label = new NonTerminal("Label", typeof(LabelNode));
             var @goto = new NonTerminal("Goto", typeof(GotoNode));
+            var cast = new NonTerminal("Cast", typeof(CastNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
 
-            expression.Rule = numberLiteral | parenExpression | identifier
+            expression.Rule = cast | numberLiteral | parenExpression | identifier
                 | dereference | functionCall | addressOf | memberAccess | @sizeof | indexOperator
                 | unaryNot | unaryNegate | binaryOperation | stringLiteral;
 
@@ -101,8 +102,9 @@ namespace DCPUC
             memberAccess.Rule = expression + "." + identifier;
             @sizeof.Rule = ToTerm("sizeof") + "(" + identifier + ")";
             indexOperator.Rule = expression + "[" + expression + "]";
-            label.Rule = identifier + ":";
+            label.Rule = ToTerm(":") + identifier;
             @goto.Rule = ToTerm("goto") + identifier + ";";
+            cast.Rule = expression + ":" + identifier;
 
             registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
@@ -139,8 +141,9 @@ namespace DCPUC
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
             this.RegisterOperators(5, Associativity.Left, "-*", "-/", "-%");
             this.RegisterOperators(6, Associativity.Left, "<<", ">>", "&", "|", "^", "!");
+            this.RegisterOperators(7, Associativity.Left, ":");
             
-            this.RegisterOperators(7, Associativity.Left, "{", "}", "[", "]");
+            this.RegisterOperators(8, Associativity.Left, "{", "}", "[", "]");
         }
 
     }

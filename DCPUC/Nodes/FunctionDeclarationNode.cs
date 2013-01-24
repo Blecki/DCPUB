@@ -50,6 +50,8 @@ namespace DCPUC
         {
             function.label = Assembly.Label.Make(function.name);
             footerLabel = Assembly.Label.Make(function.name + "_footer");
+            if (enclosingScope.type != ScopeType.Global)
+                throw new CompileError(this, "Functions must be at global scope.");
             enclosingScope.functions.Add(function);
             function.localScope.parent = enclosingScope;
 

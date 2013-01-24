@@ -64,6 +64,7 @@ namespace DCPUC
             if (variable != null)
             {
                 variable.addressTaken = true;
+                if (variable.isArray) throw new CompileError(this, "Can't take address of array.");
             }
         }
 
@@ -88,11 +89,29 @@ namespace DCPUC
                     {
                         r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                             Operand("J"));
-                        r.AddInstruction(Instructions.ADD, Operand("J"), Constant((ushort)variable.stackOffset));
+                        if (target != Register.STACK)
+                            r.AddInstruction(Instructions.ADD, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                                Constant((ushort)variable.stackOffset));
+                        else
+                            r.AddInstruction(Instructions.ADD, Operand("PEEK"), Constant((ushort)variable.stackOffset));
                     }
                     else
                         throw new CompileError("Variable should be on stack");
                 }
+                else if (variable.type == VariableType.External)
+                {
+                    r.AddInstruction(Assembly.Instructions.SET,
+                        Operand(Scope.GetRegisterLabelFirst((int)target)),
+                        Label(new Assembly.Label("EXTERNALS")));
+                    r.AddInstruction(Assembly.Instructions.ADD,
+                        (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
+                        Constant((ushort)variable.constantValue));
+                    r.AddInstruction(Assembly.Instructions.SET,
+                        (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
+                        (target == Register.STACK ? Dereference("PEEK") : Dereference(Scope.GetRegisterLabelSecond((int)target))));
+                }
+                else
+                    throw new CompileError(this, "Can't take the address of this variable.");
             }
             else if (function != null)
             {

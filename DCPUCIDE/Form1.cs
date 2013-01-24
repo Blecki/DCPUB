@@ -37,6 +37,7 @@ namespace DCPUCIDE
 
             inputBox.Multiline = true;
             inputBox.AcceptsTab = true;
+            inputBox.Font = new System.Drawing.Font(new FontFamily("Envy Code R"), 12);
             inputDock = MakeDockContent(inputBox, "input", DockState.Document);
             inputDock.Show(dockPanel);
             inputDock.CloseButtonVisible = false;
@@ -113,7 +114,6 @@ namespace DCPUCIDE
             codeOutputBox.Clear();
             var context = new DCPUC.CompileContext();
             var options = new DCPUC.CompileOptions();
-            options.p = false;
             context.Initialize(options);
             
             var errorCount = 0;

@@ -122,8 +122,13 @@ namespace DCPUC
             if (!Child(0).IsIntegralConstant())
                 Child(0).AssignRegisters(context, parentState, firstOperandResult);
 
-            if (!Child(1).IsIntegralConstant() && !(Child(1) is VariableNameNode))
+            if (!Child(1).IsIntegralConstant())
             {
+                if ((Child(1) is VariableNameNode) &&
+                    ((Child(1) as VariableNameNode).variable.type != VariableType.External &&
+                    !(Child(1) as VariableNameNode).variable.isArray))
+                    return;
+
                 secondOperandResult = parentState.FindAndUseFreeRegister();
                 Child(1).AssignRegisters(context, parentState, secondOperandResult);
                 parentState.FreeRegisters(secondOperandResult);
@@ -148,13 +153,16 @@ namespace DCPUC
 
             var opcode = opcodes[AsString];
 
-            if (Child(1) is VariableNameNode && (Child(1) as VariableNameNode).variable.type != VariableType.External)
+            DCPUC.Assembly.Operand fetchToken = null;
+            if (Child(1) is VariableNameNode) fetchToken = (Child(1) as VariableNameNode).GetFetchToken(scope);
+
+            if (Child(1) is VariableNameNode && fetchToken != null)
             {
                 if (firstOperandResult == Register.STACK)
-                    r.AddInstruction(opcode, Operand("PEEK"), (Child(1) as VariableNameNode).GetFetchToken(scope));
+                    r.AddInstruction(opcode, Operand("PEEK"), fetchToken);
                 else
                     r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)firstOperandResult)),
-                        (Child(1) as VariableNameNode).GetFetchToken(scope));
+                        fetchToken);
             }
             else if (Child(1).IsIntegralConstant())
             {
@@ -167,18 +175,16 @@ namespace DCPUC
             else
             {
                 r.AddChild(Child(1).Emit(context, scope));
-                //secondOperandResult = Child(1).actualTarget;
 
                 if (firstOperandResult == Register.STACK)
                 {
                     if (secondOperandResult == Register.STACK)
                     {
                         r.AddInstruction(opcode, Operand("PEEK"), Operand("POP"));
-                        //r.AddInstruction(Assembly.Instructions.SET, Scope.TempRegister, "POP");
-                        //r.AddInstruction(opcode, "PEEK", Scope.TempRegister);
                     }
                     else
-                        r.AddInstruction(opcode, Operand("PEEK"), Operand(Scope.GetRegisterLabelSecond((int)secondOperandResult)));
+                        r.AddInstruction(opcode, Operand("PEEK"),
+                            Operand(Scope.GetRegisterLabelSecond((int)secondOperandResult)));
                 }
                 else
                 {

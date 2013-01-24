@@ -76,7 +76,7 @@ namespace DCPUC
         {
             Assembly.OperandRegister opReg;
             if (!Enum.TryParse(r, out opReg)) 
-                throw new CompileError("Unmappable operand register");
+                throw new CompileError("Unmappable operand register: " + r);
             return new Assembly.Operand { register = opReg, semantics = semantics };
         }
 

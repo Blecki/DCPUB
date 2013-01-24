@@ -88,7 +88,7 @@ namespace DCPUCCL
                     context.Compile(Console.WriteLine);
                     var assembly = context.Emit(Console.WriteLine);
 
-                    if (options.b)
+                    if (options.binary)
                     {
                         var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
                         var bin = new List<DCPUC.Assembly.Box<ushort>>();

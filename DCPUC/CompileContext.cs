@@ -8,7 +8,7 @@ namespace DCPUC
 {
     public class CompileContext
     {
-        public static String Version { get { return "DCPUC 0.1"; } }
+        public static String Version { get { return "DCPUC 0.2"; } }
 
         public RootProgramNode rootNode = null;
         public Scope globalScope = new Scope();
@@ -138,7 +138,39 @@ namespace DCPUC
         {
             try
             {
-                var r = rootNode.CompileFunction(this);
+                var r = new Assembly.Node();
+
+                if (options.externals)
+                {
+                    r.AddInstruction(Assembly.Instructions.SET,
+                        new Assembly.Operand
+                        {
+                            register = Assembly.OperandRegister.PC
+                        }, new Assembly.Operand
+                        {
+                            semantics = Assembly.OperandSemantics.Label,
+                            label = new Assembly.Label("STARTOFPROGRAM")
+                        });
+                    r.AddChild(new Assembly.Annotation("External data block. Your assembler or program loader should fill these in."));
+                    r.AddLabel(new Assembly.Label("EXTERNALS"));
+                    foreach (var variable in globalScope.variables)
+                    {
+                        var blankList = new List<ushort>();
+                        blankList.Add(0);
+                        if (variable.type == VariableType.External)
+                        {
+                            r.AddChild(new Assembly.StaticData
+                            {
+                                label = new Assembly.Label("__external_" + variable.name),
+                                data = blankList
+                            });
+                        }
+                    }
+
+                    r.AddLabel(new Assembly.Label("STARTOFPROGRAM"));
+                }
+
+                r.AddChild(rootNode.CompileFunction(this));
                 foreach (var dataItem in dataElements)
                 {
                     if (dataItem.Item2 is Assembly.Label)

@@ -35,7 +35,10 @@ namespace DCPUC
             var r = new Assembly.Node();
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
-                r.AddInstruction(Assembly.Instructions.SET, Operand("PEEK"), Dereference("PEEK"));
+            {
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("PEEK"));
+                r.AddInstruction(Assembly.Instructions.SET, Operand("PEEK"), Dereference("A"));
+            }
             else
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                     Dereference(Scope.GetRegisterLabelSecond((int)target)));
@@ -55,9 +58,8 @@ namespace DCPUC
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                throw new CompileError("Shouldn't happen");
-                r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
-                target = Register.J;
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+                target = Register.A;
             }
             r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),
                 Operand(Scope.GetRegisterLabelSecond((int)from)));

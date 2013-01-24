@@ -100,18 +100,30 @@ namespace DCPUC
                 r.AddInstruction(Assembly.Instructions.SET,
                     (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
                     (target == Register.STACK ? Dereference("PEEK") : Dereference(Scope.GetRegisterLabelSecond((int)target))));
+                r.AddInstruction(Assembly.Instructions.SET,
+                    (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
+                    (target == Register.STACK ? Dereference("PEEK") : Dereference(Scope.GetRegisterLabelSecond((int)target))));
             }
             else if (variable.type == VariableType.Static)
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                    DereferenceLabel(variable.staticLabel));
+                    variable.isArray ? Label(variable.staticLabel) : DereferenceLabel(variable.staticLabel));
             }
             else if (variable.type == VariableType.Local)
             {
                 if (variable.location == Register.STACK)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                        DereferenceOffset("J", (ushort)(variable.stackOffset)));
+                    if (variable.isArray)
+                    {
+                        r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            Operand("J"));
+                        r.AddInstruction(Assembly.Instructions.ADD, 
+                            target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            Constant((ushort)variable.stackOffset));
+                    }
+                    else
+                        r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            DereferenceOffset("J", (ushort)(variable.stackOffset)));
                 }
                 else if (variable.location == target)
                 {
@@ -119,6 +131,7 @@ namespace DCPUC
                 }
                 else
                 {
+                    throw new CompileError(this, "All variables should be on the stack.");
                     r.AddInstruction(Assembly.Instructions.SET,
                         Operand(Scope.GetRegisterLabelFirst((int)target)),
                         Operand(Scope.GetRegisterLabelSecond((int)variable.location)));
@@ -131,6 +144,7 @@ namespace DCPUC
         public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
         {
             var r = new Assembly.ExpressionNode();
+            if (variable.isArray) throw new CompileError("Can't assign to arrays.");
             if (variable.type == VariableType.Constant || variable.type == VariableType.External)
                 throw new CompileError(this, "Can't assign to constant values");
 
@@ -153,9 +167,13 @@ namespace DCPUC
         public override Assembly.Operand GetFetchToken(Scope scope)
         {
             if (variable.type == VariableType.Static)
-                return DereferenceLabel(variable.staticLabel);
+            {
+                if (variable.isArray) return Label(variable.staticLabel);
+                else return DereferenceLabel(variable.staticLabel);
+            }
             else if (variable.type == VariableType.Local)
             {
+                if (variable.isArray) return null;
                 if (variable.location == Register.STACK)
                 {
                     return DereferenceOffset("J", (ushort)(variable.stackOffset));

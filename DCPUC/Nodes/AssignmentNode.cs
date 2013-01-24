@@ -22,7 +22,7 @@ namespace DCPUC
             AddChild("LValue", treeNode.ChildNodes[0].ChildNodes[0]);
             AddChild("RValue", treeNode.ChildNodes[2]);
             @operator = treeNode.ChildNodes[1].FindTokenAndGetText();
-            ResultType = "void";
+            ResultType = "word";
 
             if (opcodes == null)
             {

@@ -89,43 +89,44 @@
     </Compile>
     <Compile Include="AssignableNode.cs" />
     <Compile Include="CompileOptions.cs" />
-    <Compile Include="AddressOfNode.cs" />
-    <Compile Include="ArrayInitializationNode.cs" />
-    <Compile Include="StringLiteralNode.cs" />
-    <Compile Include="GotoNode.cs" />
-    <Compile Include="LabelNode.cs" />
-    <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\HardwareDevice.cs" />
     <Compile Include="Emulator\Keyboard.cs" />
+    <Compile Include="Emulator\LEM1802.cs" />
+    <Compile Include="Nodes\AddressOfNode.cs" />
+    <Compile Include="Nodes\ArrayInitializationNode.cs" />
+    <Compile Include="Nodes\CastNode.cs" />
+    <Compile Include="Nodes\StringLiteralNode.cs" />
+    <Compile Include="Nodes\GotoNode.cs" />
+    <Compile Include="Nodes\LabelNode.cs" />
+    <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\KeyboardWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Emulator\KeyboardWindow.Designer.cs">
       <DependentUpon>KeyboardWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Emulator\LEM1802.cs" />
     <Compile Include="Emulator\LEM1802Window.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Emulator\LEM1802Window.Designer.cs">
       <DependentUpon>LEM1802Window.cs</DependentUpon>
     </Compile>
-    <Compile Include="NegateOperatorNode.cs" />
-    <Compile Include="NotOperatorNode.cs" />
-    <Compile Include="IndexOperatorNode.cs" />
-    <Compile Include="SizeofNode.cs" />
-    <Compile Include="MemberAccessNode.cs" />
-    <Compile Include="StructDeclarationNode.cs" />
+    <Compile Include="Nodes\NegateOperatorNode.cs" />
+    <Compile Include="Nodes\NotOperatorNode.cs" />
+    <Compile Include="Nodes\IndexOperatorNode.cs" />
+    <Compile Include="Nodes\SizeofNode.cs" />
+    <Compile Include="Nodes\MemberAccessNode.cs" />
+    <Compile Include="Nodes\StructDeclarationNode.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Hex.cs" />
-    <Compile Include="AssignmentNode.cs">
+    <Compile Include="Nodes\AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BinaryOperationNode.cs">
+    <Compile Include="Nodes\BinaryOperationNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BlockNode.cs">
+    <Compile Include="Nodes\BlockNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CompilableNode.cs">
@@ -134,33 +135,33 @@
     <Compile Include="CompileError.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ComparisonNode.cs" />
+    <Compile Include="Nodes\ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
     <Compile Include="Variable.cs" />
-    <Compile Include="WhileStatementNode.cs" />
-    <Compile Include="FunctionCallNode.cs" />
-    <Compile Include="FunctionDeclarationNode.cs" />
-    <Compile Include="DereferenceNode.cs" />
-    <Compile Include="IfStatementNode.cs">
+    <Compile Include="Nodes\WhileStatementNode.cs" />
+    <Compile Include="Nodes\FunctionCallNode.cs" />
+    <Compile Include="Nodes\FunctionDeclarationNode.cs" />
+    <Compile Include="Nodes\DereferenceNode.cs" />
+    <Compile Include="Nodes\IfStatementNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="InlineASMNode.cs" />
+    <Compile Include="Nodes\InlineASMNode.cs" />
     <Compile Include="Grammar.cs" />
-    <Compile Include="NumberLiteralNode.cs">
+    <Compile Include="Nodes\NumberLiteralNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReturnStatementNode.cs">
+    <Compile Include="Nodes\ReturnStatementNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Scope.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="VariableDeclarationNode.cs">
+    <Compile Include="Nodes\VariableDeclarationNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="VariableNameNode.cs">
+    <Compile Include="Nodes\VariableNameNode.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -172,9 +173,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assembly\Peephole\peepholedef.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="libdcpuc.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

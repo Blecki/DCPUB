@@ -64,6 +64,8 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
+            if (enclosingScope.type != ScopeType.Global)
+                throw new CompileError(this, "Structs must be declared at global scope.");
             foreach (var child in ChildNodes)
                 @struct.members.Add((child as MemberNode).member);
             enclosingScope.structs.Add(@struct);

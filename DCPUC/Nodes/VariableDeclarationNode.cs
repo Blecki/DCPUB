@@ -41,6 +41,7 @@ namespace DCPUC
             variable.name = treeNode.ChildNodes[1].FindTokenAndGetText();
             variable.typeSpecifier = treeNode.ChildNodes[2].FindTokenAndGetText();
             variable.assignedBy = this;
+            variable.isArray = isArray;
             if (variable.typeSpecifier == null) variable.typeSpecifier = "word";
         }
 
@@ -53,7 +54,7 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
-
+            
             enclosingScope.variables.Add(variable);
             variable.scope = enclosingScope;
             
@@ -74,8 +75,10 @@ namespace DCPUC
             }
             else if (declLabel == "external")
             {
+                if (context.options.externals == false)
+                    throw new CompileError(this, "Compile with -externals to support externals.");
                 if (enclosingScope.type != ScopeType.Global)
-                    throw new CompileError("Externals can only be declared at global scope.");
+                    throw new CompileError(this, "Externals can only be declared at global scope.");
                 variable.type = VariableType.External;
             }
         }

@@ -16,14 +16,9 @@ namespace DCPUC
             AddChild("deref", treeNode.ChildNodes[0]);
 
             var expressionNode = new BinaryOperationNode();
-            //var mulNode = new BinaryOperationNode();
-            //mulNode.SetOp("*");
-            //structSizeNode = new NumberLiteralNode();
-            //mulNode.ChildNodes.Add(structSizeNode);
-            //mulNode.ChildNodes.Add(Child(0));
 
             expressionNode.SetOp("+");
-            expressionNode.ChildNodes.Add(Child(0));//mulNode); //offset
+            expressionNode.ChildNodes.Add(Child(0)); //offset
             expressionNode.ChildNodes.Add(Child(1)); //base pointer
             baseNode = Child(1);
 
@@ -37,14 +32,6 @@ namespace DCPUC
             this.ResultType = baseNode.ResultType;
         }
 
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            //var baseType = context.globalScope.FindType(baseNode.ResultType);
-            //if (baseType != null)
-            //    structSizeNode.Value = baseType.size;
-            //else
-            //    structSizeNode.Value = 1;
-            return base.FoldConstants(context);
-        }
+        
     }
 }
