@@ -17,6 +17,7 @@ namespace DCPUCIDE
 
         private RichTextBox inputBox = new RichTextBox();
         private RichTextBox codeOutputBox = new RichTextBox();
+        private RichTextBox preprocessorOutput = new RichTextBox();
 
         private DockPanel dockPanel = new DockPanel();
 
@@ -24,6 +25,7 @@ namespace DCPUCIDE
         private DockContent outputDock;
         private DockContent astDock;
         private DockContent assemblyDock;
+        private DockContent preprocessorDock;
 
         private String documentPath = "untitled.dc";
 
@@ -53,11 +55,19 @@ namespace DCPUCIDE
             outputBox.Font = new System.Drawing.Font("Fixedsys Excelsior 2.00", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             outputBox.ScrollBars = ScrollBars.Vertical;
 
+
+
             codeOutputBox.Multiline = true;
             codeOutputBox.ReadOnly = true;
             assemblyDock = MakeDockContent(codeOutputBox, "assembly", DockState.DockRight);
             assemblyDock.Show(dockPanel);
             assemblyDock.CloseButtonVisible = false;
+
+            preprocessorOutput.Multiline = true;
+            preprocessorOutput.ReadOnly = true;
+            preprocessorDock = MakeDockContent(preprocessorOutput, "preprocessor", DockState.DockRight);
+            preprocessorDock.Show(dockPanel);
+            preprocessorDock.CloseButtonVisible = false;
 
             this.Text = documentPath;
         }
@@ -124,18 +134,21 @@ namespace DCPUCIDE
             if (context.Parse(inputBox.Text, (s) => { outputBox.AppendText(s); errorCount += 1; }))
             {
                 context.Compile((s) => { outputBox.AppendText(s); errorCount += 1; });
-                var assembly = context.Emit((s) => { outputBox.AppendText(s); errorCount += 1; });
+                if (errorCount == 0)
+                {
+                    var assembly = context.Emit((s) => { outputBox.AppendText(s); errorCount += 1; });
 
-                astBox.Nodes.Clear();
-                astBox.Nodes.Add(buildAstTree(context.rootNode));
-                foreach (var func in context.rootNode.function.localScope.functions)
-                    astBox.Nodes.Add(buildAstTree(func.Node));
-                foreach (var substruct in context.rootNode.function.localScope.structs)
-                    astBox.Nodes.Add(buildAstTree(substruct.Node));
+                    astBox.Nodes.Clear();
+                    astBox.Nodes.Add(buildAstTree(context.rootNode));
+                    foreach (var func in context.rootNode.function.localScope.functions)
+                        astBox.Nodes.Add(buildAstTree(func.Node));
+                    foreach (var substruct in context.rootNode.function.localScope.structs)
+                        astBox.Nodes.Add(buildAstTree(substruct.Node));
 
-                var emitter = new TextBoxStream(codeOutputBox);
-                codeOutputBox.Clear();
-                if (assembly != null) assembly.Emit(emitter);
+                    var emitter = new TextBoxStream(codeOutputBox);
+                    codeOutputBox.Clear();
+                    if (assembly != null) assembly.Emit(emitter);
+                }
             }
 
             if (errorCount == 0)
@@ -150,6 +163,21 @@ namespace DCPUCIDE
             var stream = new System.IO.StreamWriter(file);
             stream.Write(inputBox.Text);
             stream.Close();
+        }
+
+        private void preprocessToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var file = inputBox.Text;
+                var state = new DCPUC.Preprocessor.ParseState("");
+                state.readIncludeFile += (filename) => { return System.IO.File.ReadAllText(filename); };
+                preprocessorOutput.Text = DCPUC.Preprocessor.Parser.Preprocess(file, state);
+            }
+            catch (Exception exp)
+            {
+                preprocessorOutput.Text = exp.Message;
+            }
         }
 
     }

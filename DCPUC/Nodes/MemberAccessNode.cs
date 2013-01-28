@@ -34,10 +34,10 @@ namespace DCPUC
         {
             Child(0).ResolveTypes(context, enclosingScope);
             _struct = enclosingScope.FindType(Child(0).ResultType);
-            if (_struct == null) throw new CompileError("Result of expression is not a struct");
+            if (_struct == null) throw new CompileError(this, "Result of expression is not a struct");
             foreach (var _member in _struct.members)
                 if (_member.name == memberName) member = _member;
-            if (member == null) throw new CompileError("Member " + memberName + " not found on " + _struct.name);
+            if (member == null) throw new CompileError(this, "Member " + memberName + " not found on " + _struct.name);
             ResultType = member.typeSpecifier;
         }
 

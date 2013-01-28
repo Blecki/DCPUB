@@ -8,8 +8,6 @@ namespace DCPUC
 {
     public class ComparisonNode : CompilableNode
     {
-        private static Dictionary<String, String> opcodes = null;
-
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -46,6 +44,16 @@ namespace DCPUC
                     WasFolded = true
                 };
                 if (AsString == "<") return new NumberLiteralNode
+                {
+                    Value = (firstValue < secondValue ? (ushort)1 : (ushort)0),
+                    WasFolded = true
+                };
+                if (AsString == "->") return new NumberLiteralNode
+                {
+                    Value = (firstValue > secondValue ? (ushort)1 : (ushort)0),
+                    WasFolded = true
+                };
+                if (AsString == "-<") return new NumberLiteralNode
                 {
                     Value = (firstValue < secondValue ? (ushort)1 : (ushort)0),
                     WasFolded = true

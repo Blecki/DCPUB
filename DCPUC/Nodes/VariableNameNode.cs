@@ -54,12 +54,20 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             var scope = enclosingScope;
+            bool ignoreLocals = false;
             while (variable == null && scope != null)
             {
                 foreach (var v in scope.variables)
                     if (v.name == variableName)
-                        variable = v;
-                if (variable == null) scope = scope.parent;
+                    {
+                        if (v.type == VariableType.Local && ignoreLocals) variable = null;
+                        else variable = v;
+                    }
+                if (variable == null)
+                {
+                    if (scope.type == ScopeType.Function) ignoreLocals = true;
+                    scope = scope.parent;
+                }
             }
 
             if (variable == null)

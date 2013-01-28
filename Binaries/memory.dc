@@ -1,0 +1,58 @@
+#ifndef DCPUC_MEMORY
+#define DCPUC_MEMORY
+
+//Uses a simple heap to divide memory blocks
+
+struct free_block
+{
+	size;
+	next_free_block;
+}
+	
+
+static heap_head = 0;
+static free_list_head:free_block = 0;
+
+function initialize_free_list(head, size)
+{
+	heap_head = head;
+	free_list_head = head;
+	free_list_head.size = size;
+	free_list_head.next_free_block = 0;
+}
+
+function malloc(size)
+{
+	if (size == 0) return 0;
+	local current_block:free_block = free_list_head;
+	local previous_block:free_block = 0;
+	while (current_block != 0 & (current_block.size < (size + 1)))
+	{
+		previous_block = current_block;
+		current_block = current_block.next_free_block;
+	}
+	if (current_block == 0) return 0; //No block big enough found.
+	local final_size = size + 1;
+	if (current_block.size < (final_size + 2)) //Not enough space left to split the block - waste the last word.
+	{
+		if (previous_block == 0) free_list_head = current_block.next_free_block;
+		else previous_block.next_free_block = current_block.next_free_block;
+		return current_block + 1;
+	}
+	local new_free_block:free_block = current_block + final_size; //Don't need to worry about overwriting the current block since final_size is always >= 2.
+	new_free_block.size = current_block.size - final_size;
+	new_free_block.next_free_block = current_block.next_free_block;
+	if (previous_block == 0) free_list_head = new_free_block;
+	else previous_block.next_free_block = new_free_block;
+	current_block.size = final_size;
+	return current_block + 1;
+}
+
+function free(block)
+{
+	local memory_block:free_block = block - 1;
+	memory_block.next_free_block = free_list_head;
+	free_list_head = memory_block;
+}
+
+#endif

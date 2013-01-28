@@ -121,6 +121,22 @@ namespace DCPUC
             end_of_program.staticLabel = new Assembly.Label("ENDOFPROGRAM");
             globalScope.variables.Add(end_of_program);
 
+            globalScope.variables.Add(new Variable
+            {
+                name = "true",
+                location = Register.CONST,
+                type = VariableType.Constant,
+                constantValue = 1
+            });
+
+            globalScope.variables.Add(new Variable
+            {
+                name = "false",
+                location = Register.CONST,
+                type = VariableType.Constant,
+                constantValue = 0
+            });
+
             try
             {
                 rootNode.GatherSymbols(this, globalScope);

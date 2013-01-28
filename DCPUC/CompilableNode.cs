@@ -64,7 +64,7 @@ namespace DCPUC
 
         public virtual void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-
+            foreach (var child in ChildNodes) (child as CompilableNode).AssignRegisters(context, parentState, target);
         }
 
         public virtual int CountRegistersUsed()

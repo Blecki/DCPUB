@@ -31,6 +31,8 @@ namespace DCPUC
             }
             this.AsString = "If";
 
+            if (!(ChildNodes[1] is BlockNode)) ChildNodes[1] = BlockNode.Wrap(Child(1));
+            if (ChildNodes.Count == 3 && !(ChildNodes[2] is BlockNode)) ChildNodes[2] = BlockNode.Wrap(Child(2));
         }
 
         public override string TreeLabel()

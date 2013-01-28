@@ -80,6 +80,7 @@ namespace DCPUC
         public int variablesOnStack = 0;
         public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
         public FunctionDeclarationNode activeFunction = null;
+        public BlockNode activeBlock = null;
         internal RegisterState[] registers = new RegisterState[] { RegisterState.Free, 0, 0, 0, 0, 0, 0, RegisterState.Used };
 
         internal Scope Push(Scope child)

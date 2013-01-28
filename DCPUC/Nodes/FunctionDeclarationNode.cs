@@ -23,6 +23,7 @@ namespace DCPUC
                 treeNode.ChildNodes[2].Span.EndPosition - this.Span.Location.Position);
 
             AddChild("Block", treeNode.ChildNodes[4]);
+           
             foreach (var parameter in treeNode.ChildNodes[2].ChildNodes)
             {
                 var name = parameter.ChildNodes[0].FindTokenAndGetText();
@@ -48,6 +49,8 @@ namespace DCPUC
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
+            (Child(0) as BlockNode).bypass = true;
+            
             function.label = Assembly.Label.Make(function.name);
             footerLabel = Assembly.Label.Make(function.name + "_footer");
             if (enclosingScope.type != ScopeType.Global)
@@ -71,7 +74,7 @@ namespace DCPUC
                 
             }
 
-            Child(0).GatherSymbols(context, function.localScope);
+            base.GatherSymbols(context, function.localScope);
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
@@ -91,7 +94,7 @@ namespace DCPUC
             var localBank = new RegisterBank();
             localBank.functionBank = usedRegisters;
             
-            Child(0).AssignRegisters(context, localBank, Register.DISCARD);
+            base.AssignRegisters(context, localBank, Register.DISCARD);
 
             foreach (var nestedFunction in function.localScope.functions)
                 nestedFunction.Node.AssignRegisters(context, parentState, Register.DISCARD);
@@ -131,8 +134,8 @@ namespace DCPUC
 
             var localScope = function.localScope;
 
-            r.AddChild(Child(0).Emit(context, localScope));
-
+            foreach (var child in ChildNodes)
+                r.AddChild((child as CompilableNode).Emit(context, localScope));
             
             r.AddLabel(footerLabel);            
 

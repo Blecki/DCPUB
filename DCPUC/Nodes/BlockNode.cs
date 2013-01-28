@@ -8,6 +8,11 @@ namespace DCPUC
 {
     public class BlockNode : CompilableNode
     {
+        public Assembly.Label breakLabel = null;
+        public Assembly.Label continueLabel = null;
+        public Scope blockScope;
+        public bool bypass = true;
+
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
@@ -15,17 +20,53 @@ namespace DCPUC
                 AddChild("Statement", f);
         }
 
+        public static Irony.Interpreter.Ast.AstNode Wrap(CompilableNode node)
+        {
+            var r = new BlockNode();
+            r.ChildNodes.Add(node);
+            return r;
+        }
+
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            if (bypass) base.GatherSymbols(context, enclosingScope);
+            else
+            {
+                blockScope = enclosingScope.Push();
+                base.GatherSymbols(context, blockScope);
+            }
+        }
+
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        {
+            base.ResolveTypes(context, bypass ? enclosingScope : blockScope);
+        }
+
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             foreach (var child in ChildNodes)
-                (child as CompilableNode).AssignRegisters(context,parentState, Register.DISCARD);
+                (child as CompilableNode).AssignRegisters(context, parentState, Register.DISCARD);
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.StatementNode();
-            foreach (var child in ChildNodes)
-                r.AddChild((child as CompilableNode).Emit(context, scope));
+
+            if (bypass)
+            {
+                foreach (var child in ChildNodes)
+                    r.AddChild((child as CompilableNode).Emit(context, scope));
+            }
+            else
+            {
+                var localScope = scope.Push(blockScope);
+                localScope.activeBlock = this;
+                foreach (var child in ChildNodes)
+                    r.AddChild((child as CompilableNode).Emit(context, localScope));
+                //if (breakLabel != null) r.AddLabel(breakLabel);
+                if (blockScope.variablesOnStack - scope.variablesOnStack > 0)
+                    r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
+            }
             return r;
         }
 

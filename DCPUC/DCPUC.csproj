@@ -95,6 +95,7 @@
     <Compile Include="Nodes\AddressOfNode.cs" />
     <Compile Include="Nodes\ArrayInitializationNode.cs" />
     <Compile Include="Nodes\CastNode.cs" />
+    <Compile Include="Nodes\BreakNode.cs" />
     <Compile Include="Nodes\StringLiteralNode.cs" />
     <Compile Include="Nodes\GotoNode.cs" />
     <Compile Include="Nodes\LabelNode.cs" />
@@ -117,6 +118,8 @@
     <Compile Include="Nodes\SizeofNode.cs" />
     <Compile Include="Nodes\MemberAccessNode.cs" />
     <Compile Include="Nodes\StructDeclarationNode.cs" />
+    <Compile Include="Preprocessor\Parser.cs" />
+    <Compile Include="Preprocessor\ParseState.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Hex.cs" />
@@ -138,6 +141,7 @@
     <Compile Include="Nodes\ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
+    <Compile Include="Upsert.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Nodes\WhileStatementNode.cs" />
     <Compile Include="Nodes\FunctionCallNode.cs" />
@@ -191,7 +195,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) $(ProjectDir)..\Binaries\$(TargetFileName)</PostBuildEvent>
+    <PostBuildEvent>copy $(TargetPath) $(SolutionDir)\Binaries\$(TargetFileName)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

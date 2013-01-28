@@ -121,7 +121,11 @@ namespace DCPUC.Assembly
                     return new Tuple<ushort,Box<ushort>>(0x1b, null);
             }
             if (op.register == OperandRegister.PEEK)
-                return new Tuple<ushort,Box<ushort>>(0x19, null);
+            {
+                if (op.semantics == OperandSemantics.Dereference)
+                    throw new CompileError("Can't dereference peek.");
+                return new Tuple<ushort, Box<ushort>>(0x19, null);
+            }
 
             var r = (ushort)op.register;
             if ((op.semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference)

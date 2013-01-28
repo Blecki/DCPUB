@@ -18,6 +18,8 @@ namespace DCPUC
             this.AsString = "While";
             headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
                 treeNode.ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
+            if (!(Child(1) is BlockNode)) ChildNodes[1] = BlockNode.Wrap(Child(1));
+            (Child(1) as BlockNode).bypass = false;
         }
 
         public override string TreeLabel()
@@ -30,8 +32,6 @@ namespace DCPUC
             base.FoldConstants(context);
             switch (clauseOrder)
             {
-                case ClauseOrder.ConstantPass:
-                    return Child(1);
                 case ClauseOrder.ConstantFail:
                     return null;
                 default:
@@ -44,14 +44,26 @@ namespace DCPUC
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
             var topLabel = Assembly.Label.Make("BEGIN_WHILE");
+            (Child(1) as BlockNode).continueLabel = topLabel;
+            
             r.AddLabel(topLabel);
             r.AddChild(base.Emit(context, scope));
             switch (clauseOrder)
             {
+                case ClauseOrder.ConstantPass:
+                    {
+                        var endLabel = Assembly.Label.Make("END_WHILE");
+                        (Child(1) as BlockNode).breakLabel = endLabel;
+                        r.AddChild(EmitBlock(context, scope, Child(1)));
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(topLabel));
+                        r.AddLabel(endLabel);
+                    }
+                    break;
                 case ClauseOrder.FailFirst:
                     {
                         var yesLabel = Assembly.Label.Make("YES");
                         var endLabel = Assembly.Label.Make("END_WHILE");
+                        (Child(1) as BlockNode).breakLabel = endLabel;
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(yesLabel));
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
                         r.AddLabel(yesLabel);
