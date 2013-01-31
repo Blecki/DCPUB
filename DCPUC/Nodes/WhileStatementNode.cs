@@ -18,7 +18,7 @@ namespace DCPUC
             this.AsString = "While";
             headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
                 treeNode.ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
-            if (!(Child(1) is BlockNode)) ChildNodes[1] = BlockNode.Wrap(Child(1));
+            ChildNodes[1] = BlockNode.Wrap(Child(1));
             (Child(1) as BlockNode).bypass = false;
         }
 

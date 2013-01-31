@@ -20,6 +20,7 @@ namespace DCPUC
         public CompileOptions options = new CompileOptions();
         public Action<String> onWarning = null;
         public Variable end_of_program = null;
+        public Assembly.Peephole.Peepholes peepholes;
         
         public String GetLabel()
         {
@@ -82,11 +83,13 @@ namespace DCPUC
         public void Initialize(CompileOptions options)
         {
             this.options = options;
-            Assembly.Peephole.Peepholes.InitializePeepholes();
+            //Assembly.Peephole.Peepholes.InitializePeepholes();
         }
 
         public bool Parse(String code, Action<string> onError)
         {
+            if (!String.IsNullOrEmpty(options.peephole)) peepholes = new Assembly.Peephole.Peepholes(options.peephole);
+
             source = code;
             globalScope = new Scope();
             dataElements.Clear();
@@ -195,7 +198,9 @@ namespace DCPUC
                         r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<ushort> });
                 }
                 r.AddLabel(end_of_program.staticLabel);
-                r.CollapseTree();
+
+                
+                r.CollapseTree(peepholes);
                 return r;
             }
             catch (DCPUC.CompileError c)

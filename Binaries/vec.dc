@@ -52,9 +52,9 @@ function veccat(from:vec, to:vec)
 		to.header = ((to_cap & 0x00FF) << 8) + (total_length & 0x00FF);
 }
 	
-function vecalo(capacity)
+function vecalo(capacity, page)
 {
-	local mem_block:vec = malloc(capacity + 1);
+	local mem_block:vec = allocate_memory(capacity + 1, page);
 	if (mem_block != 0)
 		mem_block.header = (capacity & 0x00FF) << 8;
 	return mem_block;

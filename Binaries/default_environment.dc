@@ -1,0 +1,58 @@
+#ifndef DCPUC_DEFAULT_ENVIRONMENT
+#define DCPUC_DEFAULT_ENVIRONMENT
+
+#include lem.dc
+#include console.dc
+#include vec.dc
+
+static lem;
+lem = detect_lem();							//Find a lem screen
+static lem_vram;
+lem_vram = __endofprogram;					//Stick video ram at the end of the program.
+initialize_lem(lem, lem_vram);				//Initialize the lem display
+static console[sizeof(console)];			//Allocate space for the console
+console_make(console, lem_vram);			//Create the console
+
+static printf;
+printf = &__printf;
+
+#define VARARG(which, into) asm (A = which; B = &into; C = 0) { SET C, J; ADD C, A; SET [B], [C] }
+
+function __printf(string)
+{
+	local index = 0;
+	local strlen = veclen(string);
+	local parameter_index = 3; //The first parameter is at J + 2.
+	local number_buffer[32];
+	while (index < strlen)
+	{
+		if (string[index + 1] == '%') //Found a key code.
+		{
+			local parameter = 0;
+			VARARG(parameter_index, parameter);
+			parameter_index += 1;
+			itoa(parameter, number_buffer);
+			console_stringout(console, number_buffer);
+		}
+		else
+		{
+			console_charout(console, string[index + 1]);
+		}
+		index += 1;
+	}
+}
+
+function __itoa(number, buffer:vec)
+{
+	if (number > 9) __itoa(number / 10, buffer);
+	buffer[0] += 1;
+	buffer[buffer[0]] = '0' + (number % 10);
+}
+
+function itoa(number, buffer:vec)
+{
+	buffer[0] = 0;
+	__itoa(number, buffer);
+}
+
+#endif

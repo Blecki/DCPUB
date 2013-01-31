@@ -151,10 +151,13 @@ namespace DCPUC
 
         public static Assembly.Node EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
         {
+
             if (block is BlockNode)
                 return block.Emit(context, scope);
 
             var r = new Assembly.StatementNode();
+            r.AddChild(new Assembly.Annotation("Entering branchnode emit block"));
+
             var blockScope = scope.Push();
             r.AddChild(block.Emit(context, blockScope));
             if (restoreStack && blockScope.variablesOnStack - scope.variablesOnStack > 0)

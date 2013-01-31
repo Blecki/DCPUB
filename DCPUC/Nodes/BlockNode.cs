@@ -22,8 +22,15 @@ namespace DCPUC
 
         public static Irony.Interpreter.Ast.AstNode Wrap(CompilableNode node)
         {
+            if (node is BlockNode)
+            {
+                (node as BlockNode).bypass = false;
+                return node;
+            }
+
             var r = new BlockNode();
             r.ChildNodes.Add(node);
+            r.bypass = false;
             return r;
         }
 
@@ -52,8 +59,11 @@ namespace DCPUC
         {
             var r = new Assembly.StatementNode();
 
+            r.AddChild(new Assembly.Annotation("Entering blocknode emit"));
             if (bypass)
             {
+                r.AddChild(new Assembly.Annotation("bypassed"));
+
                 foreach (var child in ChildNodes)
                     r.AddChild((child as CompilableNode).Emit(context, scope));
             }
@@ -67,6 +77,8 @@ namespace DCPUC
                 if (blockScope.variablesOnStack - scope.variablesOnStack > 0)
                     r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
             }
+            r.AddChild(new Assembly.Annotation("Leaving blocknode emit"));
+
             return r;
         }
 

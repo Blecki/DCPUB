@@ -1,61 +1,6 @@
 #include lem.dc
-#include keyboard.dc
-//#include vec.dc
+#include console.dc
+#include default_environment.dc
 
-local lem = -1;
-local lem_vram[lem_vram_size];
 
-lem = detect_lem();
-initialize_lem(lem, lem_vram);
-
-local str = "Hello World!";
-local str_len = *str; //Strings are stored in length prefix form.
-local i = 0;
-while (i < str_len)
-{
-	lem_vram[i] = 0xF000 | str[i + 1];
-	i += 1;
-}
-
-local kb = find_keyboard();
-static cursor_position = 0;
-constant console_size = lem_vram_size;
-static console_buffer = 0;
-static color = 0xF000;
-constant console_width = 32;
-
-console_buffer = lem_vram;
-
-/*
-function scroll_console(lines)
-{
-	local chars = lines * console_width;
-	if (chars > console_size) chars = console_size;
-	chars = console_size - chars;
-	local place = 0;
-	while ((place < chars) & ((place + chars) < console_size))
-	{
-		console_buffer[place] = console_buffer[place + chars];
-		place += 1;
-	}
-	while (place < console_size)
-	{
-		console_buffer[place] = 0;
-		place += 1;
-	}
-	cursor_position = 0;
-}*/
-
-function out(char)
-{
-	console_buffer[cursor_position] = color | char;
-	cursor_position += 1;
-	//if (cursor_position > (console_size - 1))
-	//	scroll_console(1);
-}
-
-while (true)
-{
-	local key = kb_getkey(kb);
-	if (key != 0) out(key);
-}
+printf("Test %", 32);

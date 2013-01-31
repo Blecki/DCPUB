@@ -153,7 +153,8 @@ namespace DCPUC
         {
             var r = new Assembly.ExpressionNode();
             if (variable.isArray) throw new CompileError("Can't assign to arrays.");
-            if (variable.type == VariableType.Constant || variable.type == VariableType.External)
+            if (variable.type == VariableType.Constant || variable.type == VariableType.External 
+                || variable.type == VariableType.ConstantLabel)
                 throw new CompileError(this, "Can't assign to constant values");
 
             if (variable.type == VariableType.Local)
@@ -178,6 +179,10 @@ namespace DCPUC
             {
                 if (variable.isArray) return Label(variable.staticLabel);
                 else return DereferenceLabel(variable.staticLabel);
+            }
+            else if (variable.type == VariableType.ConstantLabel)
+            {
+                return Label(variable.staticLabel);
             }
             else if (variable.type == VariableType.Local)
             {

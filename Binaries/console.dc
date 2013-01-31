@@ -1,0 +1,63 @@
+#ifndef DCPUC_CONSOLE
+#define DCPUC_CONSOLE
+
+#include vec.dc
+
+constant console_size = 384;
+constant console_width = 32;
+
+struct console
+{
+	console_buffer;
+	cursor_position;
+	color;
+}
+
+function console_make(console:console, vram)
+{
+	console.console_buffer = vram;
+	console.cursor_position = 0;
+	console.color = 0xF000;
+}
+
+function console_scroll(console:console, lines)
+{
+	local chars = lines * console_width;
+	if (chars > console_size) chars = console_size;
+	local place = 0;
+	while (place < (console_size - chars))
+	{
+		console.console_buffer[place] = console.console_buffer[place + chars];
+		place += 1;
+	}
+	while (place < console_size)
+	{
+		console.console_buffer[place] = 0;
+		place += 1;
+	}
+	console.cursor_position -= chars;
+}
+
+function console_charout(console:console, char)
+{
+	console.console_buffer[console.cursor_position] = console.color | char;
+	console.cursor_position += 1;
+	if (console.cursor_position > (console_size - 1))
+		console_scroll(console, 1);
+}
+
+function console_stringout(console:console, string)
+{
+	local strlen = veclen(string);
+	if ((console.cursor_position + strlen) > (console_size - 1))
+		console_scroll(console, strlen / console_width);
+	local place = 0;
+	while (place < strlen)
+	{
+		console.console_buffer[console.cursor_position] = console.color | string[place + 1];
+		console.cursor_position += 1;
+		place += 1;
+	}
+}
+
+#endif

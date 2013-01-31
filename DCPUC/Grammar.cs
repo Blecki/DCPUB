@@ -74,6 +74,7 @@ namespace DCPUC
             var @goto = new NonTerminal("Goto", typeof(GotoNode));
             var cast = new NonTerminal("Cast", typeof(CastNode));
             var @break = new NonTerminal("Break", typeof(BreakNode));
+            var nullStatement = new NonTerminal("NullStatement", typeof(NullStatementNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
 
@@ -97,7 +98,8 @@ namespace DCPUC
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block
                 | functionDeclaration | structDefinition | (functionCall + ";")
-                | (returnStatement + ";") | label | @goto | (@break + ";");
+                | (returnStatement + ";") | label | @goto | (@break + ";") | nullStatement;
+            nullStatement.Rule = ToTerm(";");
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             addressOf.Rule = ToTerm("&") + identifier;

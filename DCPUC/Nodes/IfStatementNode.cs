@@ -31,8 +31,8 @@ namespace DCPUC
             }
             this.AsString = "If";
 
-            if (!(ChildNodes[1] is BlockNode)) ChildNodes[1] = BlockNode.Wrap(Child(1));
-            if (ChildNodes.Count == 3 && !(ChildNodes[2] is BlockNode)) ChildNodes[2] = BlockNode.Wrap(Child(2));
+            ChildNodes[1] = BlockNode.Wrap(Child(1));
+            if (ChildNodes.Count == 3) ChildNodes[2] = BlockNode.Wrap(Child(2));
         }
 
         public override string TreeLabel()
@@ -75,8 +75,8 @@ namespace DCPUC
                         var thenClauseAssembly = EmitBlock(context, scope, Child(1));
                         Assembly.Node elseClauseAssembly = ChildNodes.Count == 3 ? EmitBlock(context, scope, Child(2)) : null;
 
-                        thenClauseAssembly.CollapseTree();
-                        if (elseClauseAssembly != null) elseClauseAssembly.CollapseTree();
+                        thenClauseAssembly.CollapseTree(context.peepholes);
+                        if (elseClauseAssembly != null) elseClauseAssembly.CollapseTree(context.peepholes);
 
                         if (thenClauseAssembly.InstructionCount() == 0 &&
                             (elseClauseAssembly == null || elseClauseAssembly.InstructionCount() == 0))

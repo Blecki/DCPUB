@@ -96,6 +96,7 @@
     <Compile Include="Nodes\ArrayInitializationNode.cs" />
     <Compile Include="Nodes\CastNode.cs" />
     <Compile Include="Nodes\BreakNode.cs" />
+    <Compile Include="Nodes\NullStatementNode.cs" />
     <Compile Include="Nodes\StringLiteralNode.cs" />
     <Compile Include="Nodes\GotoNode.cs" />
     <Compile Include="Nodes\LabelNode.cs" />
@@ -174,11 +175,6 @@
       <Project>{D81F5C91-D7DB-46E5-BC99-49488FB6814C}</Project>
       <Name>010.Irony.2010</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Assembly\Peephole\peepholedef.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Emulator\KeyboardWindow.resx">

@@ -37,10 +37,10 @@ namespace DCPUC.Assembly
             if (children.Count > 1) stream.indentDepth -= 1;
         }
 
-        public virtual List<Node> CollapseTree() 
+        public virtual List<Node> CollapseTree(Peephole.Peepholes peepholes) 
         {
             var result = new List<Node>();
-            foreach (var child in children) result.AddRange(child.CollapseTree());
+            foreach (var child in children) result.AddRange(child.CollapseTree(peepholes));
             children = result;
             return new List<Node>(new Node[]{this}); 
         }
@@ -61,21 +61,19 @@ namespace DCPUC.Assembly
 
     public class StatementNode : Node 
     {
-        public override List<Node> CollapseTree()
+        public override List<Node> CollapseTree(Peephole.Peepholes peepholes)
         {
-            var r = base.CollapseTree();
-            Peephole.Peepholes.InitializePeepholes();
-            if (Peephole.Peepholes.root != null)
-                Peephole.Peepholes.root.ProcessAssembly(children);
+            var r = base.CollapseTree(peepholes);
+            if (peepholes != null) peepholes.ProcessAssembly(children);
             return r;
         }
     }
 
     public class ExpressionNode : Node 
     {
-        public override List<Node> CollapseTree()
+        public override List<Node> CollapseTree(Peephole.Peepholes peepholes)
         {
-            base.CollapseTree();
+            base.CollapseTree(peepholes);
             return children;
         }
     }
