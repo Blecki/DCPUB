@@ -1,53 +1,8 @@
 DCPUC, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game 0x10c. 
-
 This compiler targets DCPU assembly. http://pastebin.com/raw.php?i=Q4JvQvnM
 
-NOTE THAT THIS LANGUAGE MAKES NO ATTEMPT TO SUPPORT HARDWARE FEATURES LIKE INTERRUPTS OR HARDWARE DEVICES. But, it DOES provide inline assembly.
-Nor does it emit any instructions that use the EX register. A library implementing larger sized types wouldn't have any trouble using it, though.
-
-I know of no emulators that support the new spec. 
-
-There is a simple GUI compiler included (DCPUCIDE). Try compiling this program:
-
-function fib(n) 
-{
-	if (2 > n) return n;
-	return fib(n-1) + fib(n-2);
-}
-
-var a = fib(6);
-
-Compiles too...
-
-; var a = fib(6);
-      SET A, 0x0006
-      JSR L1fib
-      SET PUSH, A
-   :L0main_footer
-   SUB PC, 0x0001
-;DCPUC FUNCTION fib L1fib 1
-; function fib(n)
-      :L1fib
-; if (2 > n)
-            IFA 0x0002, A
-; return n;
-               SET PC, POP
-; return fib(n-1) + fib(n-2);
-            SET PUSH, A
-            SUB A, 0x0001
-            JSR L1fib
-            SET PUSH, A
-            SET A, [0x0001+SP]
-            SUB A, 0x0002
-            JSR L1fib
-            ADD A, POP
-            ADD SP, 0x0001
-            SET PC, POP
-      :L2fib_footer
-      SET PC, POP
-;END FUNCTION
-
-   :ENDOFPROGRAM
-
-
-Have fun, and read the language spec!
+DCPUC quick start -
+Download 'DCPUC release.zip' from the repository. Within you will find pre-built versions of the preprocessor (bin/pre.exe) and the compiler (bin/b.exe).
+Preprocess the helloworld sample with "pre helloworld.dc helloworld.pdc".
+Compile with "b -in "helloworld.pdc" -out "helloworld.dasm"".
+The compiler can produce binary output with the -binary flag. It defaults to little-endian, but will produce big-endian output with the -be flag.

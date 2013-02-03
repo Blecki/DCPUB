@@ -22,6 +22,7 @@ namespace DCPUC
             var integerLiteral = new NumberLiteral("integer",
                 NumberOptions.IntOnly | NumberOptions.AllowSign | NumberOptions.AllowLetterAfter);
             integerLiteral.AddPrefix("0x", NumberOptions.Hex);
+            integerLiteral.AddPrefix("0b", NumberOptions.Binary);
             integerLiteral.AddSuffix("u", TypeCode.UInt16);
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             identifier.AstNodeType = typeof(VariableNameNode);
@@ -41,7 +42,8 @@ namespace DCPUC
             var unaryNot = new NonTerminal("Unary Not", typeof(NotOperatorNode));
             var unaryNegate = new NonTerminal("Unary Negate", typeof(NegateOperatorNode));
             var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
-            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "-*" | "-/" | "-%";
+            var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "-*" | "-/" | "-%"
+                | "==" | "!=" | ">" | "->" | "<" | "-<";
             var comparisonOperator = ToTerm("==") | "!=" | ">" | "<" | "->" | "-<";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
             var arrayInitialization = new NonTerminal("Array Initialization", typeof(ArrayInitializationNode));
@@ -71,10 +73,12 @@ namespace DCPUC
             var dataList = new NonTerminal("Array Data");
             var label = new NonTerminal("Label", typeof(LabelNode));
             var @goto = new NonTerminal("Goto", typeof(GotoNode));
+            var cast = new NonTerminal("Cast", typeof(CastNode));
+            var @break = new NonTerminal("Break", typeof(BreakNode));
+            var nullStatement = new NonTerminal("NullStatement", typeof(NullStatementNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
-
-            expression.Rule = numberLiteral | parenExpression | identifier
+            expression.Rule = cast | numberLiteral | parenExpression | identifier
                 | dereference | functionCall | addressOf | memberAccess | @sizeof | indexOperator
                 | unaryNot | unaryNegate | binaryOperation | stringLiteral;
 
@@ -94,22 +98,25 @@ namespace DCPUC
             statement.Rule = inlineASM | (variableDeclaration + ";")
                 | (assignment + ";") | ifStatement | ifElseStatement | whileStatement | block
                 | functionDeclaration | structDefinition | (functionCall + ";")
-                | (returnStatement + ";") | label | @goto;
+                | (returnStatement + ";") | label | @goto | (@break + ";") | nullStatement;
+            nullStatement.Rule = ToTerm(";");
             block.Rule = ToTerm("{") + statementList + "}";
             statementList.Rule = MakeStarRule(statementList, statement);
             addressOf.Rule = ToTerm("&") + identifier;
             memberAccess.Rule = expression + "." + identifier;
             @sizeof.Rule = ToTerm("sizeof") + "(" + identifier + ")";
             indexOperator.Rule = expression + "[" + expression + "]";
-            label.Rule = identifier + ":";
+            label.Rule = ToTerm(":") + identifier;
             @goto.Rule = ToTerm("goto") + identifier + ";";
+            cast.Rule = expression + ":" + identifier;
+            @break.Rule = ToTerm("break");
 
             registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
             inlineASM.Rule = ToTerm("asm") + (ToTerm("(") + registerBindingList + ")").Q() + "{" + new FreeTextLiteral("inline asm", "}") + "}";
-            ifStatement.Rule = ToTerm("if") + "(" + (expression | comparison) + ")" + statement;
+            ifStatement.Rule = ToTerm("if") + "(" + (comparison | expression) + ")" + statement;
             ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;
-            whileStatement.Rule = ToTerm("while") + "(" + (expression | comparison) + ")" + statement;
+            whileStatement.Rule = ToTerm("while") + "(" + (comparison | expression) + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = expression + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q();
@@ -139,8 +146,9 @@ namespace DCPUC
             this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
             this.RegisterOperators(5, Associativity.Left, "-*", "-/", "-%");
             this.RegisterOperators(6, Associativity.Left, "<<", ">>", "&", "|", "^", "!");
+            this.RegisterOperators(7, Associativity.Left, ":");
             
-            this.RegisterOperators(7, Associativity.Left, "{", "}", "[", "]");
+            this.RegisterOperators(8, Associativity.Left, "{", "}", "[", "]");
         }
 
     }

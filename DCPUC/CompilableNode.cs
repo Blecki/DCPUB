@@ -14,7 +14,7 @@ namespace DCPUC
 
         public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
         public virtual int GetConstantValue() { return 0; }
-        public virtual Assembly.Operand GetConstantToken() { return Constant(0x0000); }
+        public virtual Assembly.Operand GetConstantToken() { return null; }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
 
@@ -64,7 +64,7 @@ namespace DCPUC
 
         public virtual void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-
+            foreach (var child in ChildNodes) (child as CompilableNode).AssignRegisters(context, parentState, target);
         }
 
         public virtual int CountRegistersUsed()
@@ -76,7 +76,7 @@ namespace DCPUC
         {
             Assembly.OperandRegister opReg;
             if (!Enum.TryParse(r, out opReg)) 
-                throw new CompileError("Unmappable operand register");
+                throw new CompileError("Unmappable operand register: " + r);
             return new Assembly.Operand { register = opReg, semantics = semantics };
         }
 

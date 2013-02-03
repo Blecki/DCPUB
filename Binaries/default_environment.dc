@@ -1,0 +1,49 @@
+#ifndef DCPUC_DEFAULT_ENVIRONMENT
+#define DCPUC_DEFAULT_ENVIRONMENT
+
+#include lem.dc
+#include console.dc
+#include vec.dc
+#include itoa.dc
+#include keyboard.dc
+
+static lem;
+lem = detect_lem();							//Find a lem screen
+static lem_vram;
+lem_vram = __endofprogram;					//Stick video ram at the end of the program.
+initialize_lem(lem, lem_vram);				//Initialize the lem display
+static console[sizeof(console)];			//Allocate space for the console
+console_make(console, lem_vram);			//Create the console
+static keyboard;
+keyboard = find_keyboard();
+
+#define VARARG(which, into) asm (A = which; B = &into; C = 0) { SET C, J; ADD C, A; SET [B], [C] }
+
+static printf;
+printf = &__printf;
+
+function __printf(string)
+{
+	local index = 0;
+	local strlen = veclen(string);
+	local parameter_index = 4; //The first parameter is at J + 2; We want parameter 3 and onwards.
+	local number_buffer[32];
+	while (index < strlen)
+	{
+		if (string[index + 1] == '%') //Found a key code.
+		{
+			local parameter = 0;
+			VARARG(parameter_index, parameter);
+			parameter_index += 1;
+			itoa(parameter, number_buffer);
+			console_stringout(console, number_buffer);
+		}
+		else
+		{
+			console_charout(console, string[index + 1]);
+		}
+		index += 1;
+	}
+}
+
+#endif

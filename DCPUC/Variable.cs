@@ -26,6 +26,7 @@ namespace DCPUC
         public bool addressTaken = false;
         public Struct structType = null;
         public VariableType type;
+        public bool isArray = false;
 
         public CompilableNode assignedBy = null;
     }

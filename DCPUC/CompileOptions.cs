@@ -9,7 +9,9 @@ namespace DCPUC
     {
         public string @in = null;
         public string @out = null;
-        public bool p = false;
-        public bool b = false;
+        public bool binary = false;
+        public bool externals = false;
+        public string peephole = null;
+        public bool be = false;
     }
 }
