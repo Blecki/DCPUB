@@ -1,10 +1,10 @@
-// A test of language features
-
-static vram_ptr = 0x8000;
-
-function print(a)
+function fib(n) 
 {
-	while (*a != 0)
+	if (2 > n) return n;
+	return fib(n-1) + fib(n-2);
+}
+
+var a = fib(6);a != 0)
 	{
 		if (*a == 10)
 		{
@@ -43,3 +43,4 @@ if (spill(1,2,3,4,5,6,7,8) == -21)
 	print({"Spill passed", 10, 0});
 else
 	print({"Spill failed", 10, 0});
+

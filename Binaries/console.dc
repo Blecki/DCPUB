@@ -5,12 +5,14 @@
 
 constant console_size = 384;
 constant console_width = 32;
+constant console_height = 12;
 
 struct console
 {
 	console_buffer;
 	cursor_position;
 	color;
+	backspace_point;
 }
 
 function console_make(console:console, vram)
@@ -18,6 +20,12 @@ function console_make(console:console, vram)
 	console.console_buffer = vram;
 	console.cursor_position = 0;
 	console.color = 0xF000;
+	console.backspace_point = 0;
+}
+
+function console_setcursor(console:console, cursor_position)
+{
+	console.cursor_position = cursor_position;
 }
 
 function console_scroll(console:console, lines)
@@ -58,6 +66,13 @@ function console_stringout(console:console, string)
 		console.cursor_position += 1;
 		place += 1;
 	}
+}
+
+function console_backspace(console:console)
+{
+	if (console.cursor_position == console.backspace_point) return 0;
+	console.cursor_position -= 1;
+	console.console_buffer[console.cursor_position] = console.color;
 }
 
 #endif

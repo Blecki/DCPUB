@@ -37,10 +37,10 @@ Key numbers are:
  
 #include hardware.dc
  
- static generic_keyboard_id[2] = { 0x30cf, 0x7406 };
+static generic_keyboard_id[2] = { 0x30cf, 0x7406 };
  
- function find_keyboard()
- {
+function find_keyboard()
+{
 	return detect_hardware(generic_keyboard_id);
 }
  

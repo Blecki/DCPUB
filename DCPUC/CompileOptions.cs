@@ -12,5 +12,6 @@ namespace DCPUC
         public bool binary = false;
         public bool externals = false;
         public string peephole = null;
+        public bool be = false;
     }
 }

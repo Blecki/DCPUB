@@ -48,7 +48,12 @@ namespace DCPUC
 
         public override Assembly.Operand GetConstantToken()
         {
-            return Constant((ushort)GetConstantValue());
+            if (variable.type == VariableType.ConstantLabel)
+                return Label(variable.staticLabel);
+            else if (variable.type == VariableType.Constant)
+                return Constant((ushort)GetConstantValue());
+            else
+                return null;
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)

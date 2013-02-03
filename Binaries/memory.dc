@@ -24,13 +24,13 @@ function allocate_memory(size, page)
 	if (size == 0) return 0;
 	local current_block:free_block = *page;
 	local previous_block:free_block = 0;
-	while (current_block != 0 & (current_block.size < (size + 1)))
+	local final_size = size + 1;
+	while ((current_block != 0) & (current_block.size < final_size))
 	{
 		previous_block = current_block;
 		current_block = current_block.next_free_block;
 	}
 	if (current_block == 0) return 0; //No block big enough found.
-	local final_size = size + 1;
 	if (current_block.size < (final_size + 2)) //Not enough space left to split the block - waste the last word.
 	{
 		if (previous_block == 0) *page = current_block.next_free_block;

@@ -1,0 +1,61 @@
+struct num32
+{
+	high;
+	low;
+}
+
+function compare32(a:num32, b:num32)
+{
+	if (a.high != b.high) return 0;
+	if (a.low != b.low) return 0;
+	return 1;
+}
+
+static lem = -1;
+static lem_hardware_id[2] = { 0x7349, 0xf615 };
+static lem_vram[384];
+
+function detect_lem()
+{
+	local num_hardware = 0;
+	asm (B = &num_hardware)
+	{
+		HWN [B]
+	}
+
+	local n = 0;
+	while (n < num_hardware)
+	{
+		local hardware_id[2];
+		asm ( A = n; I = &hardware_id )
+		{
+			HWQ A
+			SET [I + 0x0001], A
+			SET [I], B
+		}
+		if (compare32(&hardware_id, &lem_hardware_id) != 0)
+		{
+			lem = n;
+		}
+		n += 1;
+	}
+
+} 
+
+detect_lem();
+
+asm (C = lem; B = &lem_vram)
+{
+	SET A, 0
+	HWI C
+}
+
+local vptr = &lem_vram;
+local c = 0;
+:fill_screen
+*vptr = c;
+c += 1;
+vptr += 1;
+if (vptr > &lem_vram + 383)
+	vptr = &lem_vram;
+goto fill_screen;

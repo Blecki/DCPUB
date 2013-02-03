@@ -22,6 +22,7 @@ namespace DCPUC
             var integerLiteral = new NumberLiteral("integer",
                 NumberOptions.IntOnly | NumberOptions.AllowSign | NumberOptions.AllowLetterAfter);
             integerLiteral.AddPrefix("0x", NumberOptions.Hex);
+            integerLiteral.AddPrefix("0b", NumberOptions.Binary);
             integerLiteral.AddSuffix("u", TypeCode.UInt16);
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             identifier.AstNodeType = typeof(VariableNameNode);
@@ -77,7 +78,6 @@ namespace DCPUC
             var nullStatement = new NonTerminal("NullStatement", typeof(NullStatementNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
-
             expression.Rule = cast | numberLiteral | parenExpression | identifier
                 | dereference | functionCall | addressOf | memberAccess | @sizeof | indexOperator
                 | unaryNot | unaryNegate | binaryOperation | stringLiteral;

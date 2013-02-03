@@ -129,8 +129,14 @@ namespace DCPUC
                 if (hasInitialValue)
                 {
                     if (!Child(0).IsIntegralConstant())
-                        throw new CompileError(this, "Statics must be initialized to a constant value.");
-                    context.AddData(variable.staticLabel, (ushort)Child(0).GetConstantValue());
+                    {
+                        var constantToken = Child(0).GetConstantToken();
+                        if (constantToken == null)
+                            throw new CompileError(this, "Statics must be initialized to a constant value.");
+                        context.AddData(variable.staticLabel, constantToken.label);
+                    }
+                    else
+                        context.AddData(variable.staticLabel, (ushort)Child(0).GetConstantValue());
                 }
                 else
                     context.AddData(variable.staticLabel, 0);

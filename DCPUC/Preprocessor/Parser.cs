@@ -215,9 +215,29 @@ namespace DCPUC.Preprocessor
             return r;
         }
 
+        public static String CollapseLineEscapes(String file)
+        {
+            var result = new StringBuilder();
+            var state = new ParseState(file);
+            while (!state.AtEnd())
+            {
+                if (state.MatchNext("\\\n") || state.MatchNext("\\\r"))
+                {
+                    state.Advance();
+                    SkipWhitespace(state);
+                }
+                else
+                {
+                    result.Append(state.Next());
+                    state.Advance();
+                }
+            }
+            return result.ToString();
+        }
+
         public static String Preprocess(String file, ParseState parentState)
         {
-            var state = new ParseState(file);
+            var state = new ParseState(CollapseLineEscapes(file));
             if (parentState != null)
             {
                 state.macros = parentState.macros;
@@ -228,7 +248,7 @@ namespace DCPUC.Preprocessor
 
         public static String Preprocess(String file, Func<String,String> fileSource)
         {
-            var state = new ParseState(file);
+            var state = new ParseState(CollapseLineEscapes(file));
             state.readIncludeFile = fileSource;
             return ParseBlock(null, state);
         }

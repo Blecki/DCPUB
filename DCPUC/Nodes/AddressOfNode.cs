@@ -12,6 +12,7 @@ namespace DCPUC
         public Variable variable = null;
         public Function function = null;
         public String variableName;
+        public Label label = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -32,6 +33,16 @@ namespace DCPUC
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             
+        }
+
+        public override Operand GetConstantToken()
+        {
+            if (function != null)
+                return Label(function.label);
+            else if (label != null)
+                return Label(label.realName);
+            else
+                return null;
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
@@ -56,7 +67,16 @@ namespace DCPUC
                     if (function == null) scope = scope.parent;
                 }
 
-                if (function == null) throw new CompileError(this, "Could not find symbol " + variableName);
+                if (function == null)
+                {
+                    foreach (var l in enclosingScope.activeFunction.function.labels)
+                    {
+                        if (l.declaredName == variableName)
+                            label = l;
+                    }
+                    if (label == null)
+                        throw new CompileError(this, "Could not find symbol " + variableName);
+                }
             } 
 
             ResultType = "word";
@@ -116,6 +136,10 @@ namespace DCPUC
             else if (function != null)
             {
                 r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(function.label));
+            }
+            else if (label != null)
+            {
+                r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(label.realName));
             }
 
             return r;

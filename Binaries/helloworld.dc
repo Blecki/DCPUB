@@ -1,6 +1,3 @@
-#include lem.dc
-#include console.dc
 #include default_environment.dc
 
-
-printf("Test %", 32);
+printf("Hello world!");

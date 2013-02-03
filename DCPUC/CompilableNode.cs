@@ -14,7 +14,7 @@ namespace DCPUC
 
         public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
         public virtual int GetConstantValue() { return 0; }
-        public virtual Assembly.Operand GetConstantToken() { return Constant(0x0000); }
+        public virtual Assembly.Operand GetConstantToken() { return null; }
         public virtual bool IsIntegralConstant() { return false; }
         public virtual string TreeLabel() { return AsString; }
 

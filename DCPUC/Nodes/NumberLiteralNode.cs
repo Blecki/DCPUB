@@ -22,6 +22,12 @@ namespace DCPUC
                 Value = Hex.atoh(AsString.Substring(2));
                 ResultType = "word";
             }
+            else if (AsString.StartsWith("0b"))
+            {
+                if (AsString.Length != 18) throw new CompileError(this, "Binary literals must be 16 bits");
+                Value = Hex.atob(AsString.Substring(2));
+                ResultType = "word";
+            }
             else if (AsString.StartsWith("'"))
             {
                 Value = AsString[1];

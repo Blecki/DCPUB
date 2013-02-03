@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Emulator", "Emulator\Emulat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCPUBPreprocessor", "DCPUBPreprocessor\DCPUBPreprocessor.csproj", "{A13FCB40-F0F4-4770-8904-BDC3E01577FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FontDumper", "FontDumper\FontDumper.csproj", "{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,16 @@ Global
 		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|Mixed Platforms.Build.0 = Release|x86
 		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|x86.ActiveCfg = Release|x86
 		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|x86.Build.0 = Release|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Debug|x86.ActiveCfg = Debug|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Debug|x86.Build.0 = Debug|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Release|Any CPU.ActiveCfg = Release|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Release|Mixed Platforms.Build.0 = Release|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Release|x86.ActiveCfg = Release|x86
+		{87ED53F0-5762-47D7-B0D2-0A9AAA3C5195}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
