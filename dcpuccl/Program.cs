@@ -88,13 +88,19 @@ namespace DCPUCCL
                     context.Compile(Console.WriteLine);
                     var assembly = context.Emit(Console.WriteLine);
 
-                    if (options.b)
+                    if (options.binary)
                     {
                         var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
                         var bin = new List<DCPUC.Assembly.Box<ushort>>();
                         assembly.EmitBinary(bin);
                         foreach (var word in bin)
-                            writer.Write(word.data);
+                        {
+                            if (options.be)
+                                writer.Write((ushort)(
+                                    ((word.data & 0x00FF) << 8) + ((word.data & 0xFF00) >> 8)));
+                            else
+                                writer.Write(word.data);
+                        }
                         writer.Close();
                     }
                     else

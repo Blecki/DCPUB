@@ -1,0 +1,22 @@
+#include lem.dc
+#include keyboard.dc
+#include console.dc
+
+local lem = -1;
+local lem_vram[lem_vram_size];
+
+lem = detect_lem();
+initialize_lem(lem, lem_vram);
+
+local kb = find_keyboard();
+
+local console[sizeof(console)];
+console_make(console, lem_vram);
+
+console_stringout(console, "Hello world!");
+
+while (true)
+{
+	local key = kb_getkey(kb);
+	if (key != 0) console_charout(console, key);
+}

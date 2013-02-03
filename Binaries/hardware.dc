@@ -1,0 +1,33 @@
+#ifndef HARDWARE
+#define HARDWARE
+
+#include number32.dc
+
+function detect_hardware(id:num32)
+{
+	local num_hardware = 0;
+	asm (B = &num_hardware)
+	{
+		HWN [B]
+	}
+
+	local n = 0;
+	while (n < num_hardware)
+	{
+		local hardware_id[2];
+		asm ( A = n; I = hardware_id )
+		{
+			HWQ A
+			SET [I + 0x0001], A
+			SET [I], B
+		}
+		if (compare32(hardware_id, id) != 0)
+		{
+			return n;
+		}
+		n += 1;
+	}
+	return -1;
+} 
+
+#endif

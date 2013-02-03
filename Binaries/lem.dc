@@ -1,0 +1,22 @@
+#ifndef LEM
+#define LEM
+
+#include hardware.dc
+
+static lem_hardware_id[2] = { 0x7349, 0xf615 };
+constant lem_vram_size = 384;
+
+function detect_lem()
+{
+	return detect_hardware(lem_hardware_id);
+}
+
+function initialize_lem(id, vram)
+{
+	asm (A = 0; B = vram; C = id)
+	{
+		HWI C
+	}
+}
+
+#endif

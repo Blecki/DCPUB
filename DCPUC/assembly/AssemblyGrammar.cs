@@ -41,7 +41,7 @@ namespace DCPUC.Assembly
             var line = new NonTerminal("line");
             line.Rule = dat | instruction | label | Empty;
             var instructionList = new NonTerminal("inslist", typeof(InstructionListAstNode));
-            instructionList.Rule = MakeStarRule(instructionList, NewLine, line);
+            instructionList.Rule = MakeStarRule(instructionList, NewLine | ToTerm(";"), line);
 
             this.Root = instructionList;
 

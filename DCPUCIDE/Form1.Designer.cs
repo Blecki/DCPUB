@@ -34,6 +34,7 @@
             this.compileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.preprocessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -43,7 +44,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openFileToolStripMenuItem,
             this.saveFileToolStripMenuItem,
-            this.compileToolStripMenuItem});
+            this.compileToolStripMenuItem,
+            this.preprocessToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(826, 24);
@@ -87,6 +89,13 @@
             this.statusLabel.Size = new System.Drawing.Size(0, 17);
             this.statusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // preprocessToolStripMenuItem
+            // 
+            this.preprocessToolStripMenuItem.Name = "preprocessToolStripMenuItem";
+            this.preprocessToolStripMenuItem.Size = new System.Drawing.Size(76, 20);
+            this.preprocessToolStripMenuItem.Text = "preprocess";
+            this.preprocessToolStripMenuItem.Click += new System.EventHandler(this.preprocessToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -115,6 +124,7 @@
         private System.Windows.Forms.ToolStripMenuItem saveFileToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        private System.Windows.Forms.ToolStripMenuItem preprocessToolStripMenuItem;
     }
 }
 

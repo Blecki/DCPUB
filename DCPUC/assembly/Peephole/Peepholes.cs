@@ -7,17 +7,21 @@ namespace DCPUC.Assembly.Peephole
 {
     public class Peepholes
     {
-        public static RuleSet root = null;
+        public RuleSet root = null;
         public static Irony.Parsing.Parser operandParser = new Irony.Parsing.Parser(new OperandGrammar());
 
-        public static void InitializePeepholes()
+        public Peepholes(string defFile)
         {
-            if (root != null) return;
             var Parser = new Irony.Parsing.Parser(new Grammar());
-            var defs = System.IO.File.ReadAllText("Assembly/Peephole/peepholedef.txt");
+            var defs = System.IO.File.ReadAllText(defFile);
             var _root = Parser.Parse(defs);
             if (_root.HasErrors()) root = new RuleSet();
             else root = _root.Root.AstNode as RuleSet; 
+        }
+
+        public void ProcessAssembly(List<Node> assembly)
+        {
+            root.ProcessAssembly(assembly);
         }
     }
 }
