@@ -1,16 +1,22 @@
-#ifndef LEM
-#define LEM
+// Functions for interfacing with Lem1802 devices.
+
+#ifndef DCPUC_LIB_LEM
+#define DCPUC_LIB_LEM
 
 #include hardware.dc
 
-static lem_hardware_id[2] = { 0x7349, 0xf615 };
-constant lem_vram_size = 384;
+static LEM_HARDWARE_ID[2] = { 0x7349, 0xf615 };
+constant LEM_VRAM_SIZE = 384;
 
+// Find a Lem device. Returns 0xFFFF if no Lem device is connected.
 function detect_lem()
 {
-	return detect_hardware(lem_hardware_id);
+	return detect_hardware(LEM_HARDWARE_ID);
 }
 
+// Assign video memory to a Lem device. vram should be a pointer to
+// a memory block of size LEM_VRAM_SIZE.
+// Disregard return value.
 function initialize_lem(id, vram)
 {
 	asm (A = 0; B = vram; C = id)
