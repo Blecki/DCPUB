@@ -12,7 +12,7 @@ initialize_memory_page(outer_memory, 0x8000);	//program makes for a smaller stac
 static lem_display;
 lem_display = detect_lem();						
 
-local lem_vram = allocate_memory(lem_vram_size, outer_memory); //Allocate vram.
+local lem_vram = allocate_memory(LEM_VRAM_SIZE, outer_memory); //Allocate vram.
 if (lem_vram == 0)
 {
 	error_string = "Err alloc vram";

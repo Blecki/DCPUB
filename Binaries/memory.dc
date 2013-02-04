@@ -47,7 +47,7 @@ function allocate_memory(size, page)
 }
 
 //Free memory allocated from a page.
-function free(block, page)
+function free_memory(block, page)
 {
 	//Assume the block has been returned to the correct page. If not - kaboom.
 	local memory_block:free_block = block - 1;
