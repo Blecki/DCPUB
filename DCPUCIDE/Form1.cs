@@ -85,17 +85,17 @@ namespace DCPUCIDE
             return content;
         }
 
-        TreeNode buildAstTree(DCPUC.CompilableNode node)
+        TreeNode buildAstTree(DCPUB.CompilableNode node)
         {
             var tree_node = new TreeNode(node.TreeLabel() + (node.WasFolded ? " FOLDED" : ""));
             foreach (var child in node.ChildNodes)
             {
-                tree_node.Nodes.Add(buildAstTree(child as DCPUC.CompilableNode));
-                if (child is DCPUC.FunctionDeclarationNode)
+                tree_node.Nodes.Add(buildAstTree(child as DCPUB.CompilableNode));
+                if (child is DCPUB.FunctionDeclarationNode)
                 {
-                    foreach (var subfunc in (child as DCPUC.FunctionDeclarationNode).function.localScope.functions)
+                    foreach (var subfunc in (child as DCPUB.FunctionDeclarationNode).function.localScope.functions)
                         tree_node.Nodes.Add(buildAstTree(subfunc.Node));
-                    foreach (var substruct in (child as DCPUC.FunctionDeclarationNode).function.localScope.structs)
+                    foreach (var substruct in (child as DCPUB.FunctionDeclarationNode).function.localScope.structs)
                         tree_node.Nodes.Add(buildAstTree(substruct.Node));
                 }
             }
@@ -122,8 +122,8 @@ namespace DCPUCIDE
         {
             outputBox.Clear();
             codeOutputBox.Clear();
-            var context = new DCPUC.CompileContext();
-            var options = new DCPUC.CompileOptions();
+            var context = new DCPUB.CompileContext();
+            var options = new DCPUB.CompileOptions();
             context.Initialize(options);
             
             var errorCount = 0;
@@ -170,9 +170,9 @@ namespace DCPUCIDE
             try
             {
                 var file = inputBox.Text;
-                var state = new DCPUC.Preprocessor.ParseState("");
+                var state = new DCPUB.Preprocessor.ParseState("");
                 state.readIncludeFile += (filename) => { return System.IO.File.ReadAllText(filename); };
-                preprocessorOutput.Text = DCPUC.Preprocessor.Parser.Preprocess(file, state);
+                preprocessorOutput.Text = DCPUB.Preprocessor.Parser.Preprocess(file, state);
             }
             catch (Exception exp)
             {

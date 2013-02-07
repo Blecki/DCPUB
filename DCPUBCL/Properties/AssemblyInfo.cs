@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DCPUB")]
+[assembly: AssemblyTitle("DCPUBCL")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Holy Donut Games")]
-[assembly: AssemblyProduct("DCPUB")]
-[assembly: AssemblyCopyright("Copyright © Holy Donut Games 2012")]
+[assembly: AssemblyProduct("DCPUBCL")]
+[assembly: AssemblyCopyright("Copyright © Holy Donut Games 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("f6f5ef6d-566f-42a6-a02e-b211a0219fa4")]
+[assembly: Guid("14b0e02d-074d-4312-9a30-d97acfaac631")]
 
 // Version information for an assembly consists of the following four values:
 //

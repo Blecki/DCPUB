@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace DCPUCIDE
 {
-    public class TextBoxStream : DCPUC.Assembly.EmissionStream
+    public class TextBoxStream : DCPUB.Assembly.EmissionStream
     {
         public RichTextBox textBox = null;
 

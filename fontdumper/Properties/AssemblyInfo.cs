@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DCPUB")]
+[assembly: AssemblyTitle("FontDumper")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Holy Donut Games")]
-[assembly: AssemblyProduct("DCPUB")]
-[assembly: AssemblyCopyright("Copyright © Holy Donut Games 2012")]
+[assembly: AssemblyCompany("Hewlett-Packard")]
+[assembly: AssemblyProduct("FontDumper")]
+[assembly: AssemblyCopyright("Copyright © Hewlett-Packard 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("f6f5ef6d-566f-42a6-a02e-b211a0219fa4")]
+[assembly: Guid("5468b028-a23b-4c06-a04b-dcdec472d969")]
 
 // Version information for an assembly consists of the following four values:
 //
