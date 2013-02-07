@@ -1,22 +1,46 @@
 DCPUB, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game 0x10c. 
 This compiler targets DCPU assembly. http://pastebin.com/raw.php?i=Q4JvQvnM
 
-DCPUB quick start -
-Download 'DCPUB release.zip' from the repository. Within you will find pre-built versions of the preprocessor (bin/pre.exe) and the compiler (bin/b.exe).
-Preprocess the helloworld sample with "pre helloworld.dc helloworld.pdc".
-Compile with "b -in "helloworld.pdc" -out "helloworld.dasm"".
-The compiler can produce binary output with the -binary flag. It defaults to little-endian, but will produce big-endian output with the -be flag.
+# DCPUB quick start
 
+On windows;
+- Download 'DCPUB release.zip' from the repository. Within you will find pre-built versions of the preprocessor (bin/pre.exe) and the compiler (bin/b.exe) for windows.
+- Navigate a command line window to wherever you extracted the zip.
+- Preprocess the helloworld sample with "bin/pre" helloworld.dc helloworld.pdc
+- Compile the helloworld sample with "bin/b" -in "helloworld.pdc" -out "helloworld.bin" -binary -be
+- Run the binary produced with the Lettuce emulator. https://github.com/SirCmpwn/Tomato Lettuce binaries are included in the binary release.
 
-# Features
+# DCPUB Features
 
-* Top-level code. Execution of a DCPUB program begins at the top of the file. 
+* A straight forward language with familiar c-like syntax.
+* Predictable and effecient assembly generation.
+* Top-level code. Execution of a DCPUB program begins at the top of the file, not in an arbitrary main function. This allows library code to initialize static variables without resorting to hacks to insert code at program start.
 * Separate preprocessor. The preprocessor is a separate executable. You can choose to invoke it or not, and you can modify it's output before you compile it.
-* Peephole optimizations. Supply the '-peepholes definition-file' switch to the compiler to enable peephole optimizations with a definition file you supply. A basic definition file is in Binaries.
+* A minimalist standard library including display and keyboard abstractions, a memory allocator, and a basic implementation of printf.
+* Peephole optimizations. Supply the '-peepholes definition-file' switch to the compiler to enable peephole optimizations with a definition file you supply. A basic definition file is included in the binary release.
 
-# Thinking the DCPUB way
+# Building DCPUB
+DCPUB is written in C#. When you build the solution, it will copy necessary files to Binaries/bin.
 
-DCPUB is not a safe language. It is a very, very dangerous language. It makes no attempt to protect the programmer from his mistakes. The language is based on B, the predecessor to C. Some features have been added and some have been removed to put the language more in-line with the target processor. In the general case, if there were two ways to do something in DCPUB, one of those ways was removed. If error checking kept a DCPUB program from being written elegantly, the error checking was removed. A good example of this is the implementation of function pointers: that is, there isn't one. Function pointers were 'implemented' by allowing operator() to be applied to any expression. Possibly the single biggest design goal for this language is to avoid supporting anything at the language level that the DCPU can't do natively. The DCPU only has instructions for one size of value, so DCPUB only works with one size of value. The DCPU doesn't have virtual memory, so DCPUB doesn't manage any memory. The list goes on. However, all of these things can be done with libraries - possibly written in DCPUB itself. In fact, you'll find a simple allocator in Binaries/memory.dc. This allocator reflects another design principle of DCPUB. It doesn't create a heap in all available memory, it creates one in some block of memory you give it. You can place the heap where you like, and even have more of them. A good idea, if you want to create lots of the same small object, is to create a heap just for them. This will avoid the problem of heap fragmentation, because all of your free blocks will be the same size.
+# Usage
+
+## DCPUBCL or B - The compiler
+Compiles DCPUB source to assembly or machine language.
+'dcpubcl.exe' will be renamed to 'b.exe' when it is copied to Binaries/bin.
+### Arguments and switches
+- -in "filename" : Specify the file to be compiled. Not optional.
+- -out "filename" : Specify the file to write the compiled program to. Not optional.
+- -binary : Emit a binary file. If not supplied, the compiler will emit unassembled DCPU assembly.
+- -be : Emit in big endian. Only valid if paired with -binary. If not supplied, binary output will be in little endian.
+
+## pre - the preprocessor
+Expands macros and file inclusions
+"pre in-file out-file"
+pre has no switches or options.
+Preprocessor directives will cause errors in the compiler. If they are used in the program, it must be preprocessed first.
+
+## DCPUBIDE - A simple 'IDE'
+DCPUBIDE is useful for debugging DCPUB. Not programs written in DCPUB, but DCPUB itself. DCPUBIDE will allow you to look at the syntax tree generated by the DCPUB compiler and how it was modified by the constant folding process.
 
 # DCPUB syntax
 
@@ -148,3 +172,11 @@ Function calls look like this: a(arguments).
 ## The preprocessor
 
 The preprocessor is very basic. It supports uncomplicated defines with or without arguments. You can also include other files. It supports conditional compilation with #ifdef/#ifndef/#endif.
+
+# Thinking the DCPUB way
+
+DCPUB is not a safe language. It is a very, very dangerous language. It makes no attempt to protect the programmer from his mistakes. The language is based on B, the predecessor to C. Some features have been added and some have been removed to put the language more in-line with the target processor. In the general case, if there were two ways to do something in DCPUB, one of those ways was removed. If error checking kept a DCPUB program from being written elegantly, the error checking was removed. A good example of this is the implementation of function pointers: that is, there isn't one. Function pointers were 'implemented' by allowing operator() to be applied to any expression. Possibly the single biggest design goal for this language is to avoid supporting anything at the language level that the DCPU can't do natively. The DCPU only has instructions for one size of value, so DCPUB only works with one size of value. The DCPU doesn't have virtual memory, so DCPUB doesn't manage any memory. The list goes on. However, all of these things can be done with libraries - possibly written in DCPUB itself. In fact, you'll find a simple allocator in Binaries/memory.dc. This allocator reflects another design principle of DCPUB. It doesn't create a heap in all available memory, it creates one in some block of memory you give it. You can place the heap where you like, and even have more of them. A good idea, if you want to create lots of the same small object, is to create a heap just for them. This will avoid the problem of heap fragmentation, because all of your free blocks will be the same size.
+
+# Reporting bugs, making suggestions, and finding help
+
+If you're reading this on github, you're already in the best place to report bugs, make suggestions, and look for help. https://github.com/Blecki/DCPUB
