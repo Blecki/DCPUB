@@ -1,3 +1,10 @@
+// Functions for interfacing with generic keyboard devices.
+ 
+#ifndef DCPUC_LIB_KEYBOARD
+#define DCPUC_LIB_KEYBOARD
+ 
+#include hardware.dc
+
 /*
 Name: Generic Keyboard (compatible)
 ID: 0x30cf7406
@@ -30,24 +37,22 @@ Key numbers are:
   0x83: Arrow right
   0x90: Shift
   0x91: Control
- */
- 
-#ifndef HARDWARE_KEYBOARD
-#define HARDWARE_KEYBOARD
- 
-#include hardware.dc
+*/
  
 static generic_keyboard_id[2] = { 0x30cf, 0x7406 };
  
+// Find the first attached keyboard.
 function find_keyboard()
 {
 	return detect_hardware(generic_keyboard_id);
 }
- 
- function kb_getkey(id)
- {
+
+// Get the last key pressed.
+// Returns 0 if no key data present.
+function kb_getkey(id)
+{
 	local r;
-	asm (B = id; X = &r)
+	asm (B = id; X = &r; C = 0) // C = 0 here causes the function to preserve the C register. 
 	{
 		SET A, 1
 		HWI B
