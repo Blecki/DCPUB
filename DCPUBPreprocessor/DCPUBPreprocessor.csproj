@@ -47,9 +47,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DCPUC\DCPUC.csproj">
+    <ProjectReference Include="..\DCPUB\DCPUB.csproj">
       <Project>{B78D4E89-82C5-4405-ABDF-DCE40D5EC086}</Project>
-      <Name>DCPUC</Name>
+      <Name>DCPUB</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

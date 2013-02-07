@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DCPUC;
+using DCPUB;
 using System.Windows.Forms;
 
 namespace Emulator
@@ -88,9 +88,9 @@ namespace Emulator
                 for (int i = 0; i < shorts.Length; ++i)
                     shorts[i] = (ushort)((int)file[i * 2] + (int)(file[(i * 2) + 1] << 8));
                 //Console.WriteLine(String.Join(" ", shorts.Select((u) => { return DCPUC.Hex.hex(u); })));
-                var emu = new DCPUC.Emulator.Emulator();
+                var emu = new DCPUB.Emulator.Emulator();
                 emu.Load(shorts);
-                var lem = new DCPUC.Emulator.LEM1802(emu);
+                var lem = new DCPUB.Emulator.LEM1802(emu);
                 emu.AttachDevice(lem);
 
                 bool running = true;
