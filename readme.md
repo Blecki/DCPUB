@@ -1,8 +1,8 @@
-DCPUC, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game 0x10c. 
+DCPUB, A C-like language for the DCPU-16, the 16-bit 'hardware' in Mojang's game 0x10c. 
 This compiler targets DCPU assembly. http://pastebin.com/raw.php?i=Q4JvQvnM
 
-DCPUC quick start -
-Download 'DCPUC release.zip' from the repository. Within you will find pre-built versions of the preprocessor (bin/pre.exe) and the compiler (bin/b.exe).
+DCPUB quick start -
+Download 'DCPUB release.zip' from the repository. Within you will find pre-built versions of the preprocessor (bin/pre.exe) and the compiler (bin/b.exe).
 Preprocess the helloworld sample with "pre helloworld.dc helloworld.pdc".
 Compile with "b -in "helloworld.pdc" -out "helloworld.dasm"".
 The compiler can produce binary output with the -binary flag. It defaults to little-endian, but will produce big-endian output with the -be flag.
@@ -10,15 +10,15 @@ The compiler can produce binary output with the -binary flag. It defaults to lit
 
 # Features
 
-* Top-level code. Execution of a DCPUC program begins at the top of the file. 
+* Top-level code. Execution of a DCPUB program begins at the top of the file. 
 * Separate preprocessor. The preprocessor is a separate executable. You can choose to invoke it or not, and you can modify it's output before you compile it.
 * Peephole optimizations. Supply the '-peepholes definition-file' switch to the compiler to enable peephole optimizations with a definition file you supply. A basic definition file is in Binaries.
 
-# Thinking the DCPUC way
+# Thinking the DCPUB way
 
-DCPUC is not a safe language. It is a very, very dangerous language. It makes no attempt to protect the programmer from his mistakes. The language is based on B, the predecessor to C. Some features have been added and some have been removed to put the language more in-line with the target processor. In the general case, if there were two ways to do something in DCPUC, one of those ways was removed. If error checking kept a DCPUC program from being written elegantly, the error checking was removed. A good example of this is the implementation of function pointers: that is, there isn't one. Function pointers were 'implemented' by allowing operator() to be applied to any expression. Possibly the single biggest design goal for this language is to avoid supporting anything at the language level that the DCPU can't do natively. The DCPU only has instructions for one size of value, so DCPUC only works with one size of value. The DCPU doesn't have virtual memory, so DCPUC doesn't manage any memory. The list goes on. However, all of these things can be done with libraries - possibly written in DCPUC itself. In fact, you'll find a simple allocator in Binaries/memory.dc. This allocator reflects another design principle of DCPUC. It doesn't create a heap in all available memory, it creates one in some block of memory you give it. You can place the heap where you like, and even have more of them. A good idea, if you want to create lots of the same small object, is to create a heap just for them. This will avoid the problem of heap fragmentation, because all of your free blocks will be the same size.
+DCPUB is not a safe language. It is a very, very dangerous language. It makes no attempt to protect the programmer from his mistakes. The language is based on B, the predecessor to C. Some features have been added and some have been removed to put the language more in-line with the target processor. In the general case, if there were two ways to do something in DCPUB, one of those ways was removed. If error checking kept a DCPUB program from being written elegantly, the error checking was removed. A good example of this is the implementation of function pointers: that is, there isn't one. Function pointers were 'implemented' by allowing operator() to be applied to any expression. Possibly the single biggest design goal for this language is to avoid supporting anything at the language level that the DCPU can't do natively. The DCPU only has instructions for one size of value, so DCPUB only works with one size of value. The DCPU doesn't have virtual memory, so DCPUB doesn't manage any memory. The list goes on. However, all of these things can be done with libraries - possibly written in DCPUB itself. In fact, you'll find a simple allocator in Binaries/memory.dc. This allocator reflects another design principle of DCPUB. It doesn't create a heap in all available memory, it creates one in some block of memory you give it. You can place the heap where you like, and even have more of them. A good idea, if you want to create lots of the same small object, is to create a heap just for them. This will avoid the problem of heap fragmentation, because all of your free blocks will be the same size.
 
-# DCPUC syntax
+# DCPUB syntax
 
 ## Statements
 
@@ -50,20 +50,20 @@ Statements take only a few forms.
 
 ### Control flow
 
-- DCPUC includes if/else statements and while loops. Both will be simplified if the conditional is a constant expression. If statements may be simplified further if the body of the else or then block is a single instruction.
+- DCPUB includes if/else statements and while loops. Both will be simplified if the conditional is a constant expression. If statements may be simplified further if the body of the else or then block is a single instruction.
 - If the conditional results in 0, it fails. Any other value is deemed to be true.
 - If statements can be chained, however there is no 'elseif' keyword. Put a space between the else and the chained if statement as in 'if (a) {} else if (b) {}'
 
 ### ASM blocks
 
-An ASM block allows the programmer to write assembly code in their DCPUC program. This is useful for places where DCPUC provides no abstraction over the hardware. For example, accessing hardware devices like the Lem display. An ASM block looks like
+An ASM block allows the programmer to write assembly code in their DCPUB program. This is useful for places where DCPUB provides no abstraction over the hardware. For example, accessing hardware devices like the Lem display. An ASM block looks like
 
     asm (A = expression)
     {
     	ADD A, 2
     }
 
-'A' can be any DCPU register name. 'expression' is evaluated and assigned to that register. Any of the registers can be used to pass values into the asm block, however, using J is bad practice. J is used by the language as a frame pointer and assigning to J can make the register assignments behave in odd ways. It's a good idea to declare all the registers you will be using in the assembly block in the asm block header, even if you only assign 0 to them. This will let DCPUC know you've used these registers so they can be properly preserved by the enclosing function.
+'A' can be any DCPU register name. 'expression' is evaluated and assigned to that register. Any of the registers can be used to pass values into the asm block, however, using J is bad practice. J is used by the language as a frame pointer and assigning to J can make the register assignments behave in odd ways. It's a good idea to declare all the registers you will be using in the assembly block in the asm block header, even if you only assign 0 to them. This will let DCPUB know you've used these registers so they can be properly preserved by the enclosing function.
 ASM blocks support labels and dat statements as well.
 
 ## Expressions
@@ -114,7 +114,7 @@ A unary operation takes the form operator expression. The supported operators ar
 
 ### Dereferencing
 
-In DCPUC, any expression can be dereferenced. It looks like this: *(a). The result of a is treated as a pointer.
+In DCPUB, any expression can be dereferenced. It looks like this: *(a). The result of a is treated as a pointer.
 
    local a = 5;
    local b = &a;

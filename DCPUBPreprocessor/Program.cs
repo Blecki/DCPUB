@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DCPUC;
+using DCPUB;
 
 namespace DCPUBPreprocessor
 {
@@ -19,7 +19,7 @@ namespace DCPUBPreprocessor
             try
             {
                 var file = System.IO.File.ReadAllText(args[0]);
-                var processedFile = DCPUC.Preprocessor.Parser.Preprocess(file, (str) =>
+                var processedFile = DCPUB.Preprocessor.Parser.Preprocess(file, (str) =>
                     { return System.IO.File.ReadAllText(str); });
                 System.IO.File.WriteAllText(args[1], processedFile);
                 Console.WriteLine("Done.");
