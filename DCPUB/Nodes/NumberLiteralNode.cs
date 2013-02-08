@@ -20,7 +20,7 @@ namespace DCPUB
 
             if (AsString.StartsWith("0x"))
             {
-                Value = ushort.Parse(AsString.Substring(2), NumberStyles.HexNumber);
+                Value = Convert.ToUInt16(AsString.Substring(2), 16);
                 ResultType = "word";
             }
             else if (AsString.StartsWith("0b"))
