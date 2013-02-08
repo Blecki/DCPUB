@@ -35,7 +35,7 @@ namespace DCPUB
                 {
                     Child(0).GatherSymbols(context, enclosingScope);
                 }
-                catch (CompileError e)
+                catch (CompileError)
                 {
                     functionName = (Child(0) as VariableNameNode).variableName;
                 }
