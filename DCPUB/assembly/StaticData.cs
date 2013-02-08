@@ -12,7 +12,7 @@ namespace DCPUB.Assembly
 
         public override void Emit(EmissionStream stream)
         {
-            var str = ":" + label + " DAT " + String.Join(" ", data.Select((u)=>{return Hex.hex(u); }));
+            var str = ":" + label + " DAT " + String.Join(" ", data.Select((u)=>{return string.Format("0x{0:X}", u); }));
             stream.WriteLine(str);
         }
 

@@ -105,7 +105,6 @@
     <Compile Include="Nodes\StructDeclarationNode.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
-    <Compile Include="Hex.cs" />
     <Compile Include="Nodes\AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>
