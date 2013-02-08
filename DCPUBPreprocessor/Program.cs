@@ -10,7 +10,12 @@ namespace DCPUBPreprocessor
     {
         static void Main(string[] args)
         {
-            if (args.Length != 2)
+            bool useStandardOut = false;
+            if (args.Length == 1)
+            {
+                useStandardOut = true;
+            }
+            else if (args.Length != 2)
             {
                 WriteHelp();
                 return;
@@ -21,7 +26,10 @@ namespace DCPUBPreprocessor
                 var file = System.IO.File.ReadAllText(args[0]);
                 var processedFile = DCPUB.Preprocessor.Parser.Preprocess(file, (str) =>
                     { return System.IO.File.ReadAllText(str); });
-                System.IO.File.WriteAllText(args[1], processedFile);
+                if (useStandardOut)
+                    Console.Out.Write(processedFile);
+                else
+                    System.IO.File.WriteAllText(args[1], processedFile);
                 Console.WriteLine("Done.");
             }
             catch (Exception e)

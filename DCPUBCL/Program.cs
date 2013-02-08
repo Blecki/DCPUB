@@ -65,10 +65,12 @@ namespace DCPUCCL
             }
 
             ParseCommandLine(args, options, (s) => { Console.WriteLine(s); });
+            bool readFromStdin = false;
 
             if (String.IsNullOrEmpty(options.@in))
             {
-                Console.WriteLine("Specify the file to compile with -in \"filename\"");
+                readFromStdin = true;
+                //Console.WriteLine("Specify the file to compile with -in \"filename\"");
                 return;
             }
 
@@ -80,7 +82,12 @@ namespace DCPUCCL
 
             try
             {
-                var file = System.IO.File.ReadAllText(options.@in);
+                String file;
+                if (readFromStdin)
+                    file = Console.In.ReadToEnd();
+                else
+                    file = System.IO.File.ReadAllText(options.@in);
+
                 var context = new DCPUB.CompileContext();
                 context.Initialize(options);
                 if (context.Parse(file, Console.WriteLine))
