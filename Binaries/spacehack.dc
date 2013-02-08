@@ -20,8 +20,8 @@ if (lem_vram == 0)
 }	
 
 initialize_lem(lem_display, lem_vram);			
-static console[sizeof(console)];				//Allocate static space for the console
-console_make(console, lem_vram);				//Create the console
+static console[sizeof(Console)];				//Allocate static space for the console
+console_initialize(console, lem_vram);				//Create the console
 static keyboard;
 keyboard = find_keyboard();
 
@@ -102,17 +102,17 @@ function draw_board(vram, world, x, y)
 	local _x = 0;
 	local _y = 0;
 
-	while (_x < console_width)
+	while (_x < CONSOLE_WIDTH)
 	{
 		_y = 0;
-		while (_y < console_height)
+		while (_y < CONSOLE_HEIGHT)
 		{
 			local tx = _x + x;
 			local ty = _y + y;
 			if ((tx < world_width) & (ty < world_height))
 			{
 				local tile:tile = get_tile(tx, ty, world);
-				vram[(_y * console_width) + _x] = 0xF000 | tile.type;
+				vram[(_y * CONSOLE_WIDTH) + _x] = 0xF000 | tile.type;
 			}
 			_y += 1;
 		}
@@ -127,16 +127,16 @@ while (current_actor != 0)
 {
 	local tx = current_actor.x - 0;
 	local ty = current_actor.y - 0;
-	if ((tx < console_width) & (ty < console_height))
+	if ((tx < CONSOLE_WIDTH) & (ty < CONSOLE_HEIGHT))
 	{
-		lem_vram[(ty * console_width) + tx] = 0xF000 | current_actor.character;
+		lem_vram[(ty * CONSOLE_WIDTH) + tx] = 0xF000 | current_actor.character;
 	}
 	current_actor = current_actor.next_actor;
 }
 
 :error_exit;
 initialize_lem(lem_display, __endofprogram);
-console_make(console, __endofprogram);
+console_initialize(console, __endofprogram);
 if (error_string != 0)
 {
 	console_stringout(console, error_string);

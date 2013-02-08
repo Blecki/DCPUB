@@ -7,10 +7,15 @@ namespace DCPUB.Preprocessor
 {    
     public class Parser
     {
-        private static string identifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-        public static bool IsIdentifier(char c) { return identifier.Contains(c); }
-        private static string whitespace = " \t\r\n";
-        public static bool IsWhitespace(char c) { return whitespace.Contains(c); }
+        public static bool IsIdentifier(char c) 
+        {
+            return char.IsLetter(c) | char.IsDigit(c) | c == '_';
+        }
+
+        public static bool IsWhitespace(char c) 
+        {
+            return char.IsWhiteSpace(c);
+        }
 
         public static string ParseIdentifier(ParseState state)
         {
