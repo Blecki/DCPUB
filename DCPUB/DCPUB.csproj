@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DCPUB</RootNamespace>
-    <AssemblyName>DCPUC</AssemblyName>
+    <AssemblyName>DCPUB</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>../Binaries/bin/</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,7 +26,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>../Binaries/bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -89,9 +89,6 @@
     </Compile>
     <Compile Include="AssignableNode.cs" />
     <Compile Include="CompileOptions.cs" />
-    <Compile Include="Emulator\HardwareDevice.cs" />
-    <Compile Include="Emulator\Keyboard.cs" />
-    <Compile Include="Emulator\LEM1802.cs" />
     <Compile Include="Nodes\AddressOfNode.cs" />
     <Compile Include="Nodes\ArrayInitializationNode.cs" />
     <Compile Include="Nodes\CastNode.cs" />
@@ -100,27 +97,12 @@
     <Compile Include="Nodes\StringLiteralNode.cs" />
     <Compile Include="Nodes\GotoNode.cs" />
     <Compile Include="Nodes\LabelNode.cs" />
-    <Compile Include="Emulator\Emulator.cs" />
-    <Compile Include="Emulator\KeyboardWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Emulator\KeyboardWindow.Designer.cs">
-      <DependentUpon>KeyboardWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Emulator\LEM1802Window.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Emulator\LEM1802Window.Designer.cs">
-      <DependentUpon>LEM1802Window.cs</DependentUpon>
-    </Compile>
     <Compile Include="Nodes\NegateOperatorNode.cs" />
     <Compile Include="Nodes\NotOperatorNode.cs" />
     <Compile Include="Nodes\IndexOperatorNode.cs" />
     <Compile Include="Nodes\SizeofNode.cs" />
     <Compile Include="Nodes\MemberAccessNode.cs" />
     <Compile Include="Nodes\StructDeclarationNode.cs" />
-    <Compile Include="Preprocessor\Parser.cs" />
-    <Compile Include="Preprocessor\ParseState.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Hex.cs" />
@@ -176,24 +158,7 @@
       <Name>010.Irony.2010</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Emulator\KeyboardWindow.resx">
-      <DependentUpon>KeyboardWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Emulator\LEM1802Window.resx">
-      <DependentUpon>LEM1802Window.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Emulator\DefaultFont.dat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent Condition="'$OS'=='Windows_NT'">copy $(TargetPath) $(SolutionDir)\Binaries\bin\$(TargetFileName)</PostBuildEvent>
-    <PostBuildEvent Condition="'$OS'!='Windows_NT'">cp $(TargetPath) $(SolutionDir)/Binaries/bin/$(TargetFileName)</PostBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
