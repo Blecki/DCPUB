@@ -41,14 +41,14 @@ namespace DCPUB.Assembly
                     reg = root.FirstChild.FindTokenAndGetText();
                 }
                 r.register = (OperandRegister)Enum.Parse(typeof(OperandRegister), reg);
-                if (constant.StartsWith("0x")) r.constant = Hex.atoh(constant.Substring(2));
+                if (constant.StartsWith("0x")) r.constant = Convert.ToUInt16(constant.Substring(2), 16);
                 else r.constant = Convert.ToUInt16(constant);
             }
             else if (root.Term.Name == "integer")
             {
                 r.semantics |= OperandSemantics.Constant;
                 var constant = root.FindTokenAndGetText();
-                if (constant.StartsWith("0x")) r.constant = Hex.atoh(constant.Substring(2));
+                if (constant.StartsWith("0x")) r.constant = Convert.ToUInt16(constant.Substring(2), 16);
                 else r.constant = Convert.ToUInt16(constant);
             }
            

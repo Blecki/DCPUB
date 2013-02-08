@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
@@ -19,13 +20,13 @@ namespace DCPUB
 
             if (AsString.StartsWith("0x"))
             {
-                Value = Hex.atoh(AsString.Substring(2));
+                Value = Convert.ToUInt16(AsString.Substring(2), 16);
                 ResultType = "word";
             }
             else if (AsString.StartsWith("0b"))
             {
                 if (AsString.Length != 18) throw new CompileError(this, "Binary literals must be 16 bits");
-                Value = Hex.atob(AsString.Substring(2));
+                Value = Convert.ToUInt16(AsString.Substring(2), 2);
                 ResultType = "word";
             }
             else if (AsString.StartsWith("'"))
@@ -42,7 +43,7 @@ namespace DCPUB
 
         public override string TreeLabel()
         {
-            return "literal " + ResultType + " (" + Hex.hex(Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
+            return "literal " + ResultType + " (" + string.Format("0x{0:X}", Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
         }
 
         public override bool IsIntegralConstant()

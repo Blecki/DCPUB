@@ -45,8 +45,8 @@ namespace DCPUB.Assembly
             var s = "";
             if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference) s += "[";
             if ((semantics & OperandSemantics.Label) == OperandSemantics.Label) s += label;
-            else if ((semantics & OperandSemantics.Constant) == OperandSemantics.Constant) s += Hex.hex(constant);
-            else if ((semantics & OperandSemantics.Offset) == OperandSemantics.Offset) s += Hex.hex(constant) + "+" + register.ToString();
+            else if ((semantics & OperandSemantics.Constant) == OperandSemantics.Constant) s += string.Format("0x{0:X}", constant);
+            else if ((semantics & OperandSemantics.Offset) == OperandSemantics.Offset) s += string.Format("0x{0:X}", constant) + "+" + register.ToString();
             else s += register.ToString();
             if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference) s += "]";
             return s;
