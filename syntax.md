@@ -1,5 +1,78 @@
 # DCPUB syntax
 
+## BNF Specification
+
+program = 		statement*
+
+statement = 	variable-declaration 
+				| function-declaration 
+				| structure-declaration 
+				| assignment
+				| if 
+				| while 
+				| break 
+				| return
+				| label
+				| goto
+				| function-call ;
+				| ;
+				| asm
+
+variable-declaration = ("local" | "static" | "extern") identifier (:type)? ([expression])? (= expression)?
+
+function-declaration = "function" identifier(argument-declaration*,) (:type)? { statement* }
+
+argument-declaration = identifier (:type)?
+
+structure-declaration = "struct" identifier { member-declaration+ }
+
+member-declaration = identifier (:type)? ;
+
+assignment = 	expression "=" expression ;
+
+expression = 	literal
+				| function-call
+				| unary-operation
+				| binary-operation
+				| identifier
+				| cast
+				| index
+				| member-access
+
+literal = 		integer | string
+
+function-call = expression "(" expression*, ")"
+
+unary-operation = ( "*" | "!" | "-" | "&" ) expression
+
+binary-operation = expression operator expression
+
+operator = 		"*" | "/" | "+" | "-" | "%" | "&" | "|" | "^" 
+				| "==" | "!=" | ">" | "<" | "->" | "-<" | "-*" 
+				| "-/" | "-%" | "<<" | ">>"
+
+cast = 			expression ":" identifier
+
+index = 		expression "[" expression "]"
+
+member-access = expression "." identifier
+
+if = 			"if" "(" expression ")" { statement* } (else { statement* })?
+
+while = 		"while" "(" expression ")" { statement* }
+
+break = 		"break" ;
+
+return = 		"return" expression ;
+
+label =			":" identifier
+
+goto = 			"goto" identifier;
+
+asm =			"asm" (register-assignment*;) { inline-assembly }
+
+register-assignment = (A | B | C | I | J | X | Y | Z) "=" expression
+
 ## Statements
 
 Statements take only a few forms. 
@@ -67,8 +140,6 @@ A binary operation takes the form expression operator expression. The supported 
 - * : Multiplication
 - / : Division
 - % : Modulus
-- -+ : Signed addition
-- -- : Signed subtraction
 - -* : Signed multiplication
 - -/ : Signed division
 - -% : Signed modulus
