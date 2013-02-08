@@ -68,7 +68,7 @@ function console_charout(console:Console, char)
 function console_stringout(console:Console, string /* A pointer to string data. */)
 {
 	// Strings are assumed to be in length-prefix format.
-	local strlen = *string & 0x00FF; // Masking with 0x00FF allows this function to work with vecs as well. See vec.dc
+	local strlen = (*string) & 0x00FF; // Masking with 0x00FF allows this function to work with vecs as well. See vec.dc
 	// Don't need to worry about strings filling the entire screen and then some - length is truncated to 256 words.
 	if ((console.cursor_position + strlen) > (CONSOLE_SIZE - 1))
 		console_scroll(console, strlen / CONSOLE_WIDTH); // Make enough space on the screen for the string.

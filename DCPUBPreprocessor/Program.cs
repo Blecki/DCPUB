@@ -21,8 +21,11 @@ namespace DCPUBPreprocessor
                 var file = System.IO.File.ReadAllText(args[0]);
                 var processedFile = DCPUB.Preprocessor.Parser.Preprocess(file, (str) =>
                     { return System.IO.File.ReadAllText(str); });
-                System.IO.File.WriteAllText(args[1], processedFile);
-                Console.WriteLine("Done.");
+
+                if (args[1] == "-")
+                    Console.Out.Write(processedFile);
+                else
+                    System.IO.File.WriteAllText(args[1], processedFile);
             }
             catch (Exception e)
             {
@@ -33,7 +36,7 @@ namespace DCPUBPreprocessor
         static void WriteHelp()
         {
             Console.WriteLine("DCPUB Preprocessor 1.0");
-            Console.WriteLine("Requires two arguments. Input file first, output filename second.");
+            Console.WriteLine("pre inputfile outputfile");
         }
     }
 }

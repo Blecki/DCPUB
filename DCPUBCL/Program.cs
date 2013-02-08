@@ -8,79 +8,106 @@ namespace DCPUCCL
 {
     class Program
     {
-        public static bool ParseCommandLine(string[] arguments, CompileOptions options, Action<string> onError)
-        {
-            for (int i = 0; i < arguments.Length; )
-            {
-                var argName = arguments[i];
-                ++i;
-
-                if (argName[0] == '-')
-                {
-                    argName = argName.Substring(1);
-                    var field = typeof(CompileOptions).GetField(argName);
-                    if (field == null)
-                    {
-                        onError("Unknown option '" + argName + "'.");
-                        return false;
-                    }
-
-                    if (field.FieldType == typeof(Boolean))
-                        field.SetValue(options, true);
-                    else
-                    {
-                        if (i >= arguments.Length)
-                        {
-                            onError("Argument required for option '" + argName + "'.");
-                            return false;
-                        }
-                        field.SetValue(options, System.Convert.ChangeType(arguments[i], field.FieldType));
-                        ++i;
-                    }
-                }
-                else if (argName[0] == '"')
-                {
-                    options.@in = argName.Substring(1, argName.Length - 2);
-                }
-                else
-                {
-                    onError("Unknown option '" + argName + "'.");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-
         static void Main(string[] args)
         {
-            var options = new DCPUB.CompileOptions();
-
             if (args.Length == 0)
             {
                 Console.WriteLine(CompileContext.Version);
-
                 return;
             }
 
-            ParseCommandLine(args, options, (s) => { Console.WriteLine(s); });
+            var options = new DCPUB.CompileOptions();
+
+            int argumentIndex = 0;
+            while (argumentIndex < args.Length)
+            {
+                var argument = args[argumentIndex];
+                if (argument == "-b" || argument == "--binary")
+                {
+                    options.binary = true;
+                    argumentIndex += 1;
+                }
+                else if (argument == "-be" || argument == "--big-endian")
+                {
+                    options.be = true;
+                    argumentIndex += 1;
+                }
+                else if (argument == "-p" || argument == "--peepholes")
+                {
+                    if (argumentIndex == args.Length - 1)
+                    {
+                        Console.WriteLine("Specify a peephole definition file.");
+                        return;
+                    }
+                    options.peephole = args[argumentIndex + 1];
+                    argumentIndex += 2;
+                }
+                else if (argument == "-in" || argument == "--input-file")
+                {
+                    if (argumentIndex == args.Length - 1)
+                    {
+                        Console.WriteLine("Specify an input file.");
+                        return;
+                    }
+                    options.@in = args[argumentIndex + 1];
+                    argumentIndex += 2;
+                }
+                else if (argument == "-out" || argument == "--output-file")
+                {
+                    if (argumentIndex == args.Length - 1)
+                    {
+                        Console.WriteLine("Specify an output file.");
+                        return;
+                    }
+                    options.@out = args[argumentIndex + 1];
+                    argumentIndex += 2;
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(options.@in))
+                    {
+                        options.@in = argument;
+                        argumentIndex += 1;
+                    }
+                    else if (String.IsNullOrEmpty(options.@out))
+                    {
+                        options.@out = argument;
+                        argumentIndex += 1;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not understand argument '" + argument + "'");
+                        return;
+                    }
+                }
+            }
 
             if (String.IsNullOrEmpty(options.@in))
             {
-                Console.WriteLine("Specify the file to compile with -in \"filename\"");
+                Console.WriteLine("Specify an input file. Use -in \"filename\"");
                 return;
             }
 
             if (String.IsNullOrEmpty(options.@out))
             {
-                Console.WriteLine("Specify the file to write to with -out \"filename\"");
-                return;
+                if (options.@in == "-")
+                {
+                    Console.WriteLine("Specify an output file. Use -out \"filename\"");
+                    return;
+                }
+
+                options.@out = System.IO.Path.ChangeExtension(options.@in,
+                    options.binary ? "bin" : "dasm");
             }
 
             try
             {
-                var file = System.IO.File.ReadAllText(options.@in);
+                String file;
+                if (options.@in == "-")
+                    file = Console.In.ReadToEnd();
+                else
+                    file = System.IO.File.ReadAllText(options.@in);
+
                 var context = new DCPUB.CompileContext();
                 context.Initialize(options);
                 if (context.Parse(file, Console.WriteLine))
@@ -110,8 +137,6 @@ namespace DCPUCCL
                         assembly.Emit(stream);
                         writer.Close();
                     }
-
-                    Console.WriteLine("Done.");
                 }
 
             }
