@@ -42,14 +42,15 @@ DCPUB is written in C#, and may be built with Microsoft.NET on Windows, or Mono 
 
 Compiles DCPUB source to assembly or machine language.
 
-    b [flags]
+    b [flags] in-file [out-file]
 
 **Flags**:
 
-* -in "filename": Specify the file to be compiled. Not optional.
-* -out "filename": Specify the file to write the compiled program to. Not optional.
-* -binary : Emit a binary file. If not supplied, the compiler will emit unassembled DCPU assembly.
-* -be : Emit in big endian. Only valid if paired with -binary. If not supplied, binary output will be in little endian.
+* -b --binary : Emit a binary, machine-language file. If not supplied, emit unassembled DCPU assembly.
+* -be --big-endian : Emit in big endian. Only valid if paired with -binary. If not supplied, binary output will be in little endian.
+* (-p | --peepholes) filename : Specify a peephole definition file.
+* (-in | --input-file) filename : Specify the file to be compiled. If used, don't include input file at end of arguments.
+* (-out | --out-file) filename : Specify the file to write the compiled program to. If not present, default is 'input.bin' or 'input.dasm' depending on presence of --binary switch.
 
 ### pre - Preprocessor
 
