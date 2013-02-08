@@ -44,47 +44,47 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assembly\Annotation.cs">
+    <Compile Include="assembly\Annotation.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\InstructionAstNode.cs" />
-    <Compile Include="Assembly\EmissionStream.cs">
+    <Compile Include="assembly\InstructionAstNode.cs" />
+    <Compile Include="assembly\EmissionStream.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Function.cs">
+    <Compile Include="assembly\Function.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Label.cs" />
-    <Compile Include="Assembly\Operand.cs" />
-    <Compile Include="Assembly\AssemblyGrammar.cs" />
-    <Compile Include="Assembly\OperandGrammar.cs" />
-    <Compile Include="Assembly\Peephole\InstructionMatcher.cs" />
-    <Compile Include="Assembly\Peephole\Grammar.cs" />
-    <Compile Include="Assembly\Inline.cs">
+    <Compile Include="assembly\Label.cs" />
+    <Compile Include="assembly\Operand.cs" />
+    <Compile Include="assembly\AssemblyGrammar.cs" />
+    <Compile Include="assembly\OperandGrammar.cs" />
+    <Compile Include="assembly\Peephole\InstructionMatcher.cs" />
+    <Compile Include="assembly\Peephole\Grammar.cs" />
+    <Compile Include="assembly\Inline.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Instruction.cs">
+    <Compile Include="assembly\Instruction.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Instructions.cs">
+    <Compile Include="assembly\Instructions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\LabelNode.cs">
+    <Compile Include="assembly\LabelNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Node.cs">
+    <Compile Include="assembly\Node.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Peephole\Matcher.cs" />
-    <Compile Include="Assembly\Peephole\Replacement.cs" />
-    <Compile Include="Assembly\Peephole\Rule.cs" />
-    <Compile Include="Assembly\Peephole\WholeInstructionMatcher.cs">
+    <Compile Include="assembly\Peephole\Matcher.cs" />
+    <Compile Include="assembly\Peephole\Replacement.cs" />
+    <Compile Include="assembly\Peephole\Rule.cs" />
+    <Compile Include="assembly\Peephole\WholeInstructionMatcher.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Peephole\OperandMatcher.cs" />
-    <Compile Include="Assembly\Peephole\Peepholes.cs" />
-    <Compile Include="Assembly\OperandAstNode.cs" />
-    <Compile Include="Assembly\StaticData.cs">
+    <Compile Include="assembly\Peephole\OperandMatcher.cs" />
+    <Compile Include="assembly\Peephole\Peepholes.cs" />
+    <Compile Include="assembly\OperandAstNode.cs" />
+    <Compile Include="assembly\StaticData.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AssignableNode.cs" />
@@ -191,7 +191,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) $(SolutionDir)\Binaries\bin\$(TargetFileName)</PostBuildEvent>
+    <PostBuildEvent Condition="'$OS'=='Windows_NT'">copy $(TargetPath) $(SolutionDir)\Binaries\bin\$(TargetFileName)</PostBuildEvent>
+    <PostBuildEvent Condition="'$OS'!='Windows_NT'">cp $(TargetPath) $(SolutionDir)/Binaries/bin/$(TargetFileName)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
