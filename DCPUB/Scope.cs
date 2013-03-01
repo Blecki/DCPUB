@@ -30,6 +30,7 @@ namespace DCPUB
         public Struct referencedStruct;
         public int offset;
         public int size;
+        public bool isArray;
     }
 
     public class Struct

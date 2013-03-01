@@ -42,6 +42,11 @@ namespace DCPUCCL
                     options.peephole = args[argumentIndex + 1];
                     argumentIndex += 2;
                 }
+                else if (argument == "-e" || argument == "--externals")
+                {
+                    options.externals = true;
+                    argumentIndex += 1;
+                }
                 else if (argument == "-in" || argument == "--input-file")
                 {
                     if (argumentIndex == args.Length - 1)

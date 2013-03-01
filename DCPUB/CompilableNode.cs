@@ -67,11 +67,6 @@ namespace DCPUB
             foreach (CompilableNode child in ChildNodes) child.AssignRegisters(context, parentState, target);
         }
 
-        public virtual int CountRegistersUsed()
-        {
-            return 0;
-        }
-
         public static Assembly.Operand Operand(String r, Assembly.OperandSemantics semantics = Assembly.OperandSemantics.None)
         {
             Assembly.OperandRegister opReg;
