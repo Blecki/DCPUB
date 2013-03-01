@@ -32,11 +32,15 @@ namespace DCPUB
             {
                 if (!Child(0).IsIntegralConstant()) throw new CompileError("Array sizes must be compile time constants.");
                 member.size = Child(0).GetConstantValue();
+                member.isArray = true;
                 //var _struct = context.globalScope.FindType(member.typeSpecifier);
                 //if (_struct != null) member.size *= _struct.size;
             }
             else
+            {
                 member.size = 1;
+                member.isArray = false;
+            }
             return this;
         }
 

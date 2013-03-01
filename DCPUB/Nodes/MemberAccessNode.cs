@@ -44,7 +44,10 @@ namespace DCPUB
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (IsAssignedTo)
+            {
+                if (member.isArray) throw new CompileError(this, "Can't assign to arrays.");
                 this.target = parentState.FindAndUseFreeRegister();
+            }
             else
                 this.target = target;
             Child(0).AssignRegisters(context, parentState, this.target);
@@ -57,21 +60,27 @@ namespace DCPUB
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
-                if (member.offset > 0)
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"),
-                        DereferenceOffset("A", (ushort)member.offset));
-                else
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Dereference("A"));
+                if (!member.isArray)
+                {
+                    r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+                    if (member.offset > 0)
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"),
+                            DereferenceOffset("A", (ushort)member.offset));
+                    else
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Dereference("A"));
+                }
             }
             else
             {
-                if (member.offset > 0)
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                        DereferenceOffset(Scope.GetRegisterLabelFirst((int)target), (ushort)member.offset));
-                else
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                        Dereference(Scope.GetRegisterLabelFirst((int)target)));
+                if (!member.isArray)
+                {
+                    if (member.offset > 0)
+                        r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            DereferenceOffset(Scope.GetRegisterLabelFirst((int)target), (ushort)member.offset));
+                    else
+                        r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            Dereference(Scope.GetRegisterLabelFirst((int)target)));
+                }
             }
             return r;
         }
