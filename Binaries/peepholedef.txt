@@ -23,3 +23,6 @@ SET A, B / SET X, A => SET X, B;
 
 // Pointless stack cleanup
 ADD "SP", "0x0000" => ;
+
+//INCREMENT
+SET A, B / ADD C, A => ADD C, B;

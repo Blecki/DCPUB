@@ -30,31 +30,31 @@ namespace DCPUB
         public virtual int ReferencesVariable(Variable v)
         {
             var r = 0;
-            foreach (var child in ChildNodes)
-                r += (child as CompilableNode).ReferencesVariable(v);
+            foreach (CompilableNode child in ChildNodes)
+                r += child.ReferencesVariable(v);
             return r;
         }
 
         public virtual void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            foreach (var child in ChildNodes)
-                (child as CompilableNode).ResolveTypes(context, enclosingScope);
+            foreach (CompilableNode child in ChildNodes)
+                child.ResolveTypes(context, enclosingScope);
         }
 
         public CompilableNode Child(int n) { return ChildNodes[n] as CompilableNode; }
 
         public virtual void GatherSymbols(CompileContext context, Scope enclosingScope) 
         {
-            foreach (var child in ChildNodes)
-                (child as CompilableNode).GatherSymbols(context, enclosingScope);
+            foreach (CompilableNode child in ChildNodes)
+                child.GatherSymbols(context, enclosingScope);
         }
 
         public virtual CompilableNode FoldConstants(CompileContext context)
         {
             var childrenCopy = new AstNodeList();
-            foreach (var child in ChildNodes)
+            foreach (CompilableNode child in ChildNodes)
             {
-                var nChild = (child as CompilableNode).FoldConstants(context);
+                var nChild = child.FoldConstants(context);
                 if (nChild != null) childrenCopy.Add(nChild);
             }
             ChildNodes.Clear();
@@ -64,12 +64,7 @@ namespace DCPUB
 
         public virtual void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-            foreach (var child in ChildNodes) (child as CompilableNode).AssignRegisters(context, parentState, target);
-        }
-
-        public virtual int CountRegistersUsed()
-        {
-            return 0;
+            foreach (CompilableNode child in ChildNodes) child.AssignRegisters(context, parentState, target);
         }
 
         public static Assembly.Operand Operand(String r, Assembly.OperandSemantics semantics = Assembly.OperandSemantics.None)

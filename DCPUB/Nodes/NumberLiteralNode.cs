@@ -19,18 +19,24 @@ namespace DCPUB
 
             if (AsString.StartsWith("0x"))
             {
-                Value = Hex.atoh(AsString.Substring(2));
+                Value = Convert.ToUInt16(AsString.Substring(2), 16);
                 ResultType = "word";
             }
             else if (AsString.StartsWith("0b"))
             {
-                if (AsString.Length != 18) throw new CompileError(this, "Binary literals must be 16 bits");
-                Value = Hex.atob(AsString.Substring(2));
+                if (AsString.Length > 18) throw new CompileError(this, "Binary literals cannot be longer than 16 bits");
+                Value = Convert.ToUInt16(AsString.Substring(2), 2);
                 ResultType = "word";
             }
             else if (AsString.StartsWith("'"))
             {
-                Value = AsString[1];
+                if (AsString.StartsWith("'\\"))
+                {
+                    if (AsString[2] == 'n') Value = '\n';
+                    else Value = AsString[2];
+                }
+                else
+                    Value = AsString[1];
                 ResultType = "word";
             }
             else
@@ -42,7 +48,7 @@ namespace DCPUB
 
         public override string TreeLabel()
         {
-            return "literal " + ResultType + " (" + Hex.hex(Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
+            return "literal " + ResultType + " (" + string.Format("0x{0:X}", (ushort)Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
         }
 
         public override bool IsIntegralConstant()

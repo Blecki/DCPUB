@@ -35,8 +35,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -105,7 +103,6 @@
     <Compile Include="Nodes\StructDeclarationNode.cs" />
     <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
-    <Compile Include="Hex.cs" />
     <Compile Include="Nodes\AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>

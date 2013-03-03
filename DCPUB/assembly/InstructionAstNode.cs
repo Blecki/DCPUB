@@ -100,14 +100,14 @@ namespace DCPUB.Assembly
                     else if (token.StartsWith("0x"))
                     {
                         dataNode.semantics |= OperandSemantics.Constant;
-                        dataNode.constant = Hex.atoh(token.Substring(2));
+                        dataNode.constant = Convert.ToUInt16(token.Substring(2), 16);
                     }
                     else
                     {
                         try {
                             dataNode.constant = Convert.ToUInt16(token);
                             dataNode.semantics |= OperandSemantics.Constant;
-                        } catch (Exception e)
+                        } catch (Exception)
                         {
                             dataNode.semantics |= OperandSemantics.Label;
                             dataNode.label = new Label(token);
