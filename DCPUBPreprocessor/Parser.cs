@@ -11,12 +11,7 @@ namespace DCPUB.Preprocessor
         {
             return char.IsLetter(c) | char.IsDigit(c) | c == '_';
         }
-
-        public static bool IsWhitespace(char c) 
-        {
-            return char.IsWhiteSpace(c);
-        }
-
+                
         public static string ParseIdentifier(ParseState state)
         {
             string r = "";
@@ -41,7 +36,7 @@ namespace DCPUB.Preprocessor
 
         public static void SkipWhitespace(ParseState state)
         {
-            while (!state.AtEnd() && IsWhitespace(state.Next())) state.Advance();
+            while (!state.AtEnd() && char.IsWhiteSpace(state.Next())) state.Advance();
         }
 
         public static void SkipExcludedBlock(ParseState state)
@@ -80,7 +75,7 @@ namespace DCPUB.Preprocessor
         public static String ParseDirective(ParseState state)
         {
             var directive = "";
-            while (!state.AtEnd() && !IsWhitespace(state.Next()))
+            while (!state.AtEnd() && !char.IsWhiteSpace(state.Next()))
             {
                 directive += state.Next();
                 state.Advance();

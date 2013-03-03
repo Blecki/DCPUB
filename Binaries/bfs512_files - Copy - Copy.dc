@@ -1,0 +1,204 @@
+// Functions for reading files from a disc formatted with the bfs512 file system.
+
+#ifndef DCPUB_LIB_BFS512_FILES
+#define DCPUB_LIB_BFS512_FILES
+
+#include m35fd.dc
+#include vec.dc
+
+// This stuff rightly belongs to an OS. The filesystem really should only worry about a single disc at a time.
+static sfs_drives[4] = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
+static sfs_num_drives = 0;
+
+function sfs_initialize()
+{
+	sfs_num_drives = m35fd_enumerate(sfs_drives, 4);
+}
+
+/* The structure of a disc.
+
+A) Header
+B) Free Mask [1440 bits or 90 words]
+C) File Allocation Table [ 1440 words]
+
+Total size : 1530 words + header
+Leaving 6 words for the header.
+Total book keeping overhead is 3 sectors or 1536 words.
+
+Filenames and directories are beyond the scope of this filesystem. A suggested implementation strategy is to
+make directories files. Place the root directory at sector 3, the first non-header sector.
+*/
+
+struct sfs_SYSTEM_HEADER
+{
+	version;
+	reserved[5];
+	free_mask[90];
+	allocation_table[1440];
+}
+
+function sfs_load_disc(drive, header /* Pointer to sizeof(sfs_SYSTEM_HEADER) words of memory.*/)
+{
+	m35fd_blocking_read(drive, 0, header);
+	m35fd_blocking_read(drive, 1, header + 512);
+	m35fd_blocking_read(drive, 2, header + 1024);
+}
+
+// New sectors can be allocated and freed by modifying the free_mask. Sectors can be chained into larger files
+// using the allocation_table.
+
+
+//	Files are split among multiple sectors. Each sector begin with a FILE_HEADER
+struct sfs_FILE_HEADER
+{
+	size_left; //Words left in file, including this header. Never going to be more than 512.
+	next_sector; //0xFFFF if last sector of file.
+}
+
+struct sfs_ROOT_HEADER
+{
+	size_left;
+	next_sector;
+	first_free_sector; //Free sectors form a singly-linked-list using the 'sfs_FREE_SECTOR' struct.
+	//Should store some information pointing to the first free file table entry here.
+} 
+
+struct sfs_FREE_SECTOR
+{
+	blocks; //Number of consecutive blocks in this free chunk. Storing free space this way means extra workd
+			//when allocating a block, but no need to write entire disc to format it.
+	next_sector; //The next free sector.
+}
+
+struct sfs_FILE_ENTRY
+{
+	name[8]; 	//The name of the file. Fill unused spaces at end with 0.
+	head;		//The first sector that makes up the file.
+	reserved[3]; //Pad structure to 12 words and allow for future changes.
+}
+
+//Using these structures for tracking files and free sectors, it is possible to 'quick format' a disc
+//by writing an sfs_ROOT_HEADER of form {1, 0xFFFF, 0x0001} to the sector 0 and an sfs_FREE_SECTOR of
+//form {M35FD_SECTOR_COUNT - 1, 0xFFFF} to sector 1.
+function sfs_format_disc(drive)
+{
+	local buffer[M35FD_SECTOR_SIZE];
+	buffer[0] = 1;
+	buffer[1] = 0xFFFF;
+	buffer[2] = 0x0001;
+	sfs_write_sector(drive, 0, buffer);
+
+	buffer[0] = M35FD_SECTOR_COUNT - 1;
+	buffer[1] = 0xFFFF;
+	sfs_write_sector(drive, 1, buffer);
+}
+
+function sfs_FILENAME_COMPARE(d /*Raw filename array from disc*/, f /*A vec or length-prefixed string*/ )
+{
+	local l = veclen(f);
+	local i = 0;
+	if (l > 8) return 0;
+	while (i < 8)
+	{
+		if ((i == l) & (d[i] != 0)) return 0;
+		if (i == l) return 1;
+		if (d[i] != f[i + 1]) return 0;
+		i += 1;
+	}	
+}
+
+function sfs_find_file(drive, filename /*Length-prefixed string.*/)
+{
+	local drive_header:sfs_FILE_HEADER[M35FD_SECTOR_SIZE];
+	if (sfs_read(drive, 0, drive_header) != M35FD_ERROR_NONE) return 0xFFFF;
+
+	//42 file entries can fit in a single sector. The first one should start at header+sizeof(sfs_ROOT_HEADER)
+	local file_entry:sfs_FILE_ENTRY = drive_header + sizeof(sfs_ROOT_HEADER);
+	
+	FILE_CHECK_LOOP:
+
+	if (sfs_FILENAME_COMPARE(file_entry.name, filename) == 1)
+		return file_entry.head;
+
+	file_entry += sizeof(sfs_FILE_ENTRY);
+	if ( (file_entry + sizeof(sfs_FILE_ENTRY) - 1) > (drive_header + M35FD_SECTOR_SIZE))
+	{
+		if (drive_header.next_sector == 0xFFFF) return 0xFFFF;
+		if (sfs_read(drive, drive_header.next_sector, drive_header) != M35FD_ERROR_NONE) return 0xFFFF;
+		file_entry = drive_header + sizeof(sfs_FILE_HEADER); //In subsequent blocks, we can pack better.
+	}
+	if (file_entry.name[0] == 0) return 0xFFFF;
+	goto FILE_CHECK_LOOP;
+}
+
+function sfs_create_file(){}
+
+struct sfs_FILE
+{
+	size;
+	drive;
+	sector;
+	next;
+	pos;
+	buffer:sfs_FILE_HEADER[M35FD_SECTOR_SIZE];
+}
+
+function sfs_open_file(file:sfs_FILE, drive, sector)
+{
+	if (sfs_read_sector(drive, sector, file.buffer) != M35FD_ERROR_NONE) return 0;
+	file.size = file.buffer.size_left;
+	file.next = file.buffer.next_sector;
+	file.drive = drive;
+	file.sector = sector;
+	file.pos = 2; //Skip header
+	return 1;
+}
+
+//Read size words from file into 'into'. 
+function sfs_read(file:sfs_FILE, into, size)
+{
+	local i = 0;
+	while (i < size)
+	{
+		//Expect file blocks to have a size of M35FD_SECTOR_SIZE unless they are the last block in the file.
+		if (file.pos == M35FD_SECTOR_SIZE) //Advance file to next sector.
+		{
+			if (file.next == 0xFFFF) return 0; //End of file.
+			if (sfs_open_file(file, file.drive, file.next) == 0) return 0;
+		}
+		if (file.pos == file.size) return 0;
+
+		into[i] = file.buffer[file.pos];
+		i += 1;
+	}
+	return 1;
+}
+
+function sfs_allocate_sector(drive)
+{
+	local header:sfs_ROOT_HEADER[M35FD_SECTOR_SIZE];
+	sfs_read_sector(drive, 0, header);
+	if (header.first_free_sector == 0xFFFF) return 0xFFFF; //No recorded free space.
+	local free_block:sfs_FREE_SECTOR[M35FD_SECTOR_SIZE];
+	sfs_read_sector(drive, header.first_free_sector, free_block);
+	if (free_block.blocks == 1)
+	{
+		local result = header.first_free_sector;
+		header.first_free_sector = free_block.next_sector;
+		sfs_write_sector(drive, 0, header);
+		return result;
+	} 
+	else
+	{
+		//Need to prepare header for next consecutive block.
+		local result = header.first_free_sector;
+		free_block.blocks -= 1;
+		header.first_free_sector = result + 1;
+		sfs_write_sector(drive, 0, header);
+		sfs_write_sector(drive, header.first_free_sector, free_block);
+		return result;
+	}
+}
+
+
+#endif

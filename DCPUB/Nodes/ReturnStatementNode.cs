@@ -8,8 +8,6 @@ namespace DCPUB
 {
     public class ReturnStatementNode : CompilableNode
     {
-        Register target;
-
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);

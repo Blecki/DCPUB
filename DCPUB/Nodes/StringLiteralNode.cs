@@ -11,12 +11,34 @@ namespace DCPUB
         public string value;
         public Assembly.Label staticLabel;
 
+        public static String UnescapeString(String s)
+        {
+            var place = 0;
+            var r = "";
+            while (place < s.Length)
+            {
+                if (s[place] == '\\')
+                {
+                    if (place < s.Length - 1 && s[place + 1] == 'n')
+                        r += '\n';
+                    place += 2;
+                }
+                else
+                {
+                    r += s[place];
+                    ++place;
+                }
+            }
+            return r;
+        }
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
             AsString = "";
             value = treeNode.FindTokenAndGetText();
             value = value.Substring(1, value.Length - 2);
+
+            value = UnescapeString(value);
         }
 
         public override string TreeLabel()

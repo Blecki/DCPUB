@@ -7,7 +7,6 @@ namespace DCPUB
 {
     class IndexOperatorNode : DereferenceNode
     {
-        public NumberLiteralNode structSizeNode;
         public CompilableNode baseNode;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)

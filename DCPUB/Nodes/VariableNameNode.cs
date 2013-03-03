@@ -145,9 +145,9 @@ namespace DCPUB
                 else
                 {
                     throw new CompileError(this, "All variables should be on the stack.");
-                    r.AddInstruction(Assembly.Instructions.SET,
-                        Operand(Scope.GetRegisterLabelFirst((int)target)),
-                        Operand(Scope.GetRegisterLabelSecond((int)variable.location)));
+                    //r.AddInstruction(Assembly.Instructions.SET,
+                    //    Operand(Scope.GetRegisterLabelFirst((int)target)),
+                    //    Operand(Scope.GetRegisterLabelSecond((int)variable.location)));
                 }
             }
 

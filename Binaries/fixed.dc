@@ -1,0 +1,37 @@
+#ifndef DCPUB_LIB_FIXED
+#define DCPUC_LIB_FIXED
+
+#define fix_to_int(a) ((a) >> 8)
+#define fix_from_int(a) ((a) << 8)
+#define fix_add(a, b) ((a) + (b))
+#define fix_sub(a, b) ((a) - (b))
+
+function fix_mul(a, b)
+{
+	asm (A = a; B = b, C = &a)
+	{
+		MLI A, B
+		SET B, EX
+		SHR A, 0x0008
+		SHL B, 0x0008
+		ADD A, B
+		SET [C], A
+	}
+	return a;
+}
+
+function fix_div(a, b)
+{
+	asm (A = a; B = b, C = &a)
+	{
+		DVI A, B
+		SET B, EX
+		SHL A, 0x0008
+		SHR B, 0x0008
+		ADD A, B
+		SET [C], A
+	}
+	return a;
+}
+
+#endif

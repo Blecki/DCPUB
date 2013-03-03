@@ -30,7 +30,7 @@ function __printf(string /* Followed by some number of arguments */)
 {
 	local index = 0;
 	local strlen = *string;
-	local parameter_index = 4; //The first parameter is at J + 2; We want parameter 3 and onwards.
+	local parameter_index = 3; //The first parameter is at J + 2; We want parameter 3 and onwards.
 	local number_buffer[32];
 	while (index < strlen)
 	{
@@ -44,7 +44,12 @@ function __printf(string /* Followed by some number of arguments */)
 		}
 		else
 		{
-			console_charout(console, string[index + 1]);
+			if (string[index + 1] == '\n')
+			{
+				while ((console.cursor_position % 32) != 0) console_charout(console, ' ');
+			}
+			else
+				console_charout(console, string[index + 1]);
 		}
 		index += 1;
 	}
