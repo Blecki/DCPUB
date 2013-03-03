@@ -69,6 +69,9 @@ namespace DCPUB
                     else
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Dereference("A"));
                 }
+                else
+                    if (member.offset > 0)
+                        r.AddInstruction(Assembly.Instructions.ADD, Operand("PEEK"), Constant((ushort)member.offset));
             }
             else
             {
@@ -81,6 +84,10 @@ namespace DCPUB
                         r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                             Dereference(Scope.GetRegisterLabelFirst((int)target)));
                 }
+                else
+                    if (member.offset > 0)
+                        r.AddInstruction(Assembly.Instructions.ADD, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                            Constant((ushort)member.offset));
             }
             return r;
         }

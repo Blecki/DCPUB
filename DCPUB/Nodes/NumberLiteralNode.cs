@@ -30,7 +30,13 @@ namespace DCPUB
             }
             else if (AsString.StartsWith("'"))
             {
-                Value = AsString[1];
+                if (AsString.StartsWith("'\\"))
+                {
+                    if (AsString[2] == 'n') Value = '\n';
+                    else Value = AsString[2];
+                }
+                else
+                    Value = AsString[1];
                 ResultType = "word";
             }
             else
