@@ -1,0 +1,78 @@
+#ifndef DCPUB_LIB_VEC3D
+#define DCPUB_LIB_VEC3D
+
+#include fixed.dc
+
+struct vec3d
+{
+	x;
+	y;
+	z;
+}
+
+function vec3d_make(vec3d:vec3d, x, y, z)
+{
+	vec3d.x = x;
+	vec3d.y = y;
+	vec3d.z = z;
+}
+
+function vec3d_add(a:vec3d, b:vec3d)
+{
+	a.x += b.x;
+	a.y += b.y;
+	c.z += b.z;
+}
+
+struct matrix
+{
+	value[16];
+}
+
+#define mi(m,x,y) *(m + (4 * y) + x)
+
+function matrix_mul(a:matrix, b:matrix, out:matrix)
+{													
+	local x = 0;
+	local y = 0;
+	local i = 0;
+	local t = 0;
+
+	while (x < 4)
+	{
+		y = 0;
+		while (y < 4)
+		{
+			i = 0;
+			t = 0;
+			while (i < 4)
+			{
+				t += fix_mul( mi(a,i,y), mi(b,x,i) );
+				i += 1;
+			}
+			mi(out, x, y) = t;
+			y += 1;
+		}
+	x += 1;
+	}
+}
+
+
+
+struct sped
+{
+	first;
+	second;
+}
+
+//Each vertex occupies two words of information in the main DCPU RAM. The data is
+//encoded as (in LSB-0 format):
+// First word: YYYYYYYYXXXXXXXX
+//Second word: 00000ICCZZZZZZZZ
+function vec3d_to_sped(vec:vec3d, sped:sped, color)
+{
+	sped.first = (fix_to_int(vec.y) << 8) + fix_to_int(vec.x);
+	sped.second = ((color & 0b11) << 8) + fix_to_int(vec.z);
+}
+
+#endif

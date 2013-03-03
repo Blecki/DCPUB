@@ -5,7 +5,7 @@
 
 #include number32.dc
 
-static M35FD_HARDWARE_ID[2] = { 0x24C5, 0x4FD5 };
+static M35FD_HARDWARE_ID[2] = { 0x4FD5, 0x24C5 };
 
 #define M35FD_SECTOR_SIZE 		512
 #define M35FD_SECTOR_COUNT 		1440
@@ -121,6 +121,31 @@ function m35fd_write(hardware_id, sector, buffer)
 		SET [C], B
 	}
 	return result;
+}
+
+// Read a sector from disc. Does not return until sector is finished reading.
+function m35fd_blocking_read(drive, sector, into /* Pointer to M35FD_SECTOR_SIZE words of memory*/)
+{
+	if (m35fd_read(drive, sector, into) != 1)
+		return m35fd_poll_error(drive);
+	else
+	{
+		while (m35fd_poll_state(drive) == M35FD_BUSY) {}
+		return M35FD_ERROR_NONE;
+	}
+}
+
+// Write a sector to disc. Does not return until sector is finished writing.
+function m35fd_blocking_write(drive, sector, from /* Pointer to M35FD_SECTOR_SIZE words of memory*/)
+{
+	if (m35fd_write(drive, sector, from) != 1)
+		return m35fd_poll_error(drive);
+	else
+	{
+		while (m35fd_poll_state(drive) == M35FD_BUSY) {}
+		return M35FD_ERROR_NONE;
+	}
+	return M35FD_ERROR_NONE;
 }
 
 #endif
