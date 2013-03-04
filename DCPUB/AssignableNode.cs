@@ -8,6 +8,6 @@ namespace DCPUB
     public interface AssignableNode
     {
         bool IsAssignedTo { set; }
-        Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode);
+        Assembly.Node EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode);
     }
 }

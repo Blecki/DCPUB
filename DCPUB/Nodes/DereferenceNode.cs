@@ -52,7 +52,7 @@ namespace DCPUB
             IsAssignedTo = false;
         }
 
-        Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
+        Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
             var r = new Assembly.ExpressionNode();
             r.AddChild(Child(0).Emit(context, scope));
@@ -62,7 +62,7 @@ namespace DCPUB
                 target = Register.A;
             }
             r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),
-                Operand(Scope.GetRegisterLabelSecond((int)from)));
+                from);
             return r;
         }
     }
