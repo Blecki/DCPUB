@@ -102,7 +102,14 @@ namespace DCPUB.Assembly
             }
 
             if ((op.semantics & OperandSemantics.Constant) == OperandSemantics.Constant)
-                return new Tuple<ushort,Box<ushort>>(0x1f, new Box<ushort>{ data = op.constant });
+            {
+                if (usage == OperandUsage.A && op.constant == 0xFFFF)
+                    return new Tuple<ushort, Box<ushort>>(0x20, null);
+                if (usage == OperandUsage.A && op.constant <= 30)
+                    return new Tuple<ushort, Box<ushort>>((ushort)(0x21u + op.constant), null);
+
+                return new Tuple<ushort, Box<ushort>>(0x1f, new Box<ushort> { data = op.constant });
+            }
 
             if (op.register == OperandRegister.EX) return new Tuple<ushort,Box<ushort>>(0x1d, null);
             if (op.register == OperandRegister.PC) return new Tuple<ushort,Box<ushort>>(0x1c, null);

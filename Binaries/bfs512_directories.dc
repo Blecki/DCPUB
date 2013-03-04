@@ -80,13 +80,13 @@ function bfs512_create_directory(file_system:bfs512_SYSTEM_HEADER, drive, sector
 {
 	local _file:bfs512_FILE[sizeof(bfs512_FILE)];
 	local err = bfs512_open_write(_file, file_system, drive, sector);
-	if (err != BFS512_ERR_NONE) return 510;;
+	if (err != BFS512_ERR_NONE) return err;;
 	local header:bfs512_DIRECTORY_HEADER[sizeof(bfs512_DIRECTORY_HEADER)];
 	header.child_count = 0;
 	err = bfs512_write(_file, header, sizeof(bfs512_DIRECTORY_HEADER));
 	if (err != BFS512_ERR_NONE) return err;
 	err = bfs512_flush(_file);
-	if (err != BFS512_ERR_NONE) return 513;
+	if (err != BFS512_ERR_NONE) return err;
 	return BFS512_ERR_NONE;
 }
 
@@ -96,24 +96,6 @@ function bfs512_read_directory_entry(directory:bfs512_OPEN_DIRECTORY, out:bfs512
 	if (directory.children_left == 0) return BFS512_ERR_EOF;
 	directory.children_left -= 1;
 	return bfs512_read(directory.file, out, sizeof(bfs512_DIRECTORY_ENTRY));
-}
-
-//Scan a directory looking for a specific name. If found, return 1. 'out' will contain the entry.
-// If not found, return 0. 'out' will contain the last entry or garbage.
-function bfs512_scan_directory(file_system:bfs512_SYSTEM_HEADER, drive, sector, for, out:bfs512_DIRECTORY_ENTRY)
-{
-	local _file:bfs512_OPEN_DIRECTORY[sizeof(bfs512_OPEN_DIRECTORY)];
-	local err = bfs512_open_directory(file_system, drive, sector, _file);
-	if (err != BFS512_ERR_NONE) return err;
-
-	local entry:bfs512_DIRECTORY_ENTRY[sizeof(bfs512_DIRECTORY_ENTRY)];
-	while (true)
-	{
-		err = bfs512_read_directory_entry(_file, entry);
-		if (err != BFS512_ERR_NONE) return 0;
-		if (bfs512_compare_filenames(entry.name, for) == 1)
-			return 1;
-	}
 }
 
 //Add a new entry to a directory file.
@@ -175,9 +157,9 @@ function bfs512_remove_from_directory(file_system:bfs512_SYSTEM_HEADER, drive, s
 		while (current_sector != 0xFFFF)
 		{
 			//If current_sector is linked to 0xFFFF, it is the last sector. Link the previous sector to 0xFFFF.
-			local next_sector = bfs512_next_sector(file_system, current_sector);
+			local next_sector = file_system.link_table[current_sector];
 			if (next_sector == 0xFFFF)
-				bfs512_link_sectors(file_system, previous_sector, 0xFFFF);
+				file_system.link_table[previous_sector] = 0xFFFF;
 			previous_sector = current_sector;
 			current_sector = next_sector;
 		}

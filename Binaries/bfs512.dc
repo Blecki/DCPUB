@@ -33,7 +33,7 @@ struct bfs512_SYSTEM_HEADER
 	version;
 	reserved[5];
 	free_mask[BFS512_SECTOR_WORDS];
-	allocation_table[M35FD_SECTOR_COUNT];
+	link_table[M35FD_SECTOR_COUNT];
 }
 
 //Load a disc header from an m35fd device.
@@ -42,7 +42,6 @@ function bfs512_load_disc(device, header:bfs512_SYSTEM_HEADER /* Pointer to size
 	m35fd_blocking_read(device, 0, header);
 	m35fd_blocking_read(device, 1, header + M35FD_SECTOR_SIZE);
 	m35fd_blocking_read(device, 2, header + (M35FD_SECTOR_COUNT * 2));
-	//header.device = device;
 }
 
 //Find free sector
@@ -69,31 +68,8 @@ function bfs512_find_free_sector(header:bfs512_SYSTEM_HEADER)
 }
 
 //Allocate sector
-function bfs512_allocate_sector(header:bfs512_SYSTEM_HEADER, sector)
-{
-	header[6 + (sector / 16)] &= !(1 << (sector % 16));
-}
-
-//Free sector
-function bfs512_free_sector(header:bfs512_SYSTEM_HEADER, sector)
-{
-	local word = sector / 16;
-	local bit = sector % 16;
-	local mask = 1 << bit;  //Set bit.
-	header.free_mask[word] |= mask;
-}
-
-//Link sectors - Also works as unlink (link to 0xFFFF)
-function bfs512_link_sectors(header:bfs512_SYSTEM_HEADER, sector, to)
-{
-	header.allocation_table[sector] = to;
-}
-
-//Read a sector link
-function bfs512_next_sector(header:bfs512_SYSTEM_HEADER, sector)
-{
-	return header.allocation_table[sector];
-}
+#define bfs512_allocate_sector(header, sector) header[6 + (sector / 16)] &= !(1 << (sector % 16));
+#define bfs512_free_sector(header, sector) header[6 + (sector / 16)] |= (1 << (sector % 16));
 
 //Save header back to the device. If files are modified and the disc is removed before this header is saved,
 //files on the disc may be corrupted.

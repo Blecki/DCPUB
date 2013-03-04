@@ -17,7 +17,8 @@ namespace DCPUB
         {
             base.Init(context, treeNode);
             targetRegisterName = treeNode.ChildNodes[0].FindTokenAndGetText();
-            AddChild("expression", treeNode.ChildNodes[2]);
+            if (treeNode.ChildNodes[1].FirstChild.ChildNodes.Count > 0)
+                AddChild("expression", treeNode.ChildNodes[1].FirstChild.ChildNodes[1]);
         }
 
         public override string TreeLabel()
@@ -27,29 +28,31 @@ namespace DCPUB
 
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
-            if (parentState.registers[(int)targetRegister] == RegisterState.Used) preserveTarget = true;
+            //Never preserve register A. ASM blocks can only be at top-level, so A will never be in use.
+            if (targetRegister != Register.A && parentState.registers[(int)targetRegister] == RegisterState.Used) 
+                preserveTarget = true;
             parentState.UseRegister(targetRegister);
 
-            Child(0).AssignRegisters(context, parentState, targetRegister);
+            if (ChildNodes.Count > 0) Child(0).AssignRegisters(context, parentState, targetRegister);
         }
 
         public override void  ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             targetRegister = (Register)Enum.Parse(typeof(Register), this.targetRegisterName);
             rememberScope = enclosingScope;
-            Child(0).ResolveTypes(context, enclosingScope);
+            if (ChildNodes.Count > 0) Child(0).ResolveTypes(context, enclosingScope);
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.Node();
-            r.AddChild(new Assembly.Annotation("Inline assembly"));
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             if (preserveTarget)
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), 
                     Operand(Scope.GetRegisterLabelSecond((int)targetRegister)));
             }
-            r.AddChild(Child(0).Emit(context, scope));
+            if (ChildNodes.Count > 0) r.AddChild(Child(0).Emit(context, scope));
             return r;
         }
 
