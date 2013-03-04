@@ -111,7 +111,7 @@ namespace DCPUB
             cast.Rule = expression + ":" + identifier;
             @break.Rule = ToTerm("break");
 
-            registerBinding.Rule = /*((ToTerm("?") + integerLiteral) | */identifier/*)*/ + "=" + expression;
+            registerBinding.Rule = identifier + (ToTerm("=") + expression).Q();
             registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
             inlineASM.Rule = ToTerm("asm") + (ToTerm("(") + registerBindingList + ")").Q() + "{" + new FreeTextLiteral("inline asm", "}") + "}";
             ifStatement.Rule = ToTerm("if") + "(" + (comparison | expression) + ")" + statement;
@@ -124,7 +124,7 @@ namespace DCPUB
             functionDeclaration.Rule = ToTerm("function") + identifier + "(" + parameterListDeclaration + ")" 
                 + (ToTerm(":") + identifier).Q()
                 + block;
-            returnStatement.Rule = ToTerm("return") + expression;
+            returnStatement.Rule = ToTerm("return") + expression.Q();
             arrayInitialization.Rule = ToTerm("{") + dataList + "}";
             dataList.Rule = MakePlusRule(dataList, ToTerm(","), expression);
             memberDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q() + (ToTerm("[") + expression + "]").Q() + ";";
