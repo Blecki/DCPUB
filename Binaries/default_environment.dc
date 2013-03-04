@@ -21,7 +21,7 @@ local keyboard = find_keyboard();
 #define free(block) free_memory(block, allocatable_memory)
 #define VARARG(which, into) asm (A = which; B = &into; C = 0) { SET C, J; ADD C, A; SET [B], [C] }
 
-local printf = &__printf;
+static printf = &__printf;
 	// Alias printf. DCPUC checks argument counts for directly referenced functions but can't check
 	// them for aliased ones. This is a hack to support varidic arguments to printf.
 

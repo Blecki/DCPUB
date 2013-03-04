@@ -69,24 +69,36 @@ namespace DCPUB
             if (target != Register.DISCARD)
                 throw new CompileError("Assignment should always target discard");
 
-            rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+            if (!Child(1).IsIntegralConstant())
+            {
+                rvalueTargetRegister = parentState.FindAndUseFreeRegister();
+                Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
+            }
+            
             (Child(0) as AssignableNode).IsAssignedTo = true;
             Child(0).AssignRegisters(context, parentState, Register.DISCARD);
-            Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
-            parentState.FreeMaybeRegister(rvalueTargetRegister);
+            
+            if (!Child(1).IsIntegralConstant()) parentState.FreeMaybeRegister(rvalueTargetRegister);
         }
         
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
-            r.AddChild(Child(1).Emit(context, scope));
+
+            var fetch_token = Child(1).GetFetchToken(scope);
+            if (Child(1).IsIntegralConstant()) fetch_token = Child(1).GetConstantToken();
+            if (fetch_token == null)
+            {
+                r.AddChild(Child(1).Emit(context, scope));
+                fetch_token = Operand(Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+            }
 
             var opcode = Assembly.Instructions.SET;
             if (opcodes.ContainsKey(@operator + ResultType)) opcode = opcodes[@operator + ResultType];
             else opcode = opcodes[@operator];
 
-            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, rvalueTargetRegister, opcode));
+            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, fetch_token, opcode));
             return r;
         }
     }
