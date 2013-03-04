@@ -7,3 +7,10 @@ TestResults
 *.suo
 *.lnk
 *.user
+*.bin
+*.dasm
+*.bat
+*.img
+*.pdc
+*.dll
+*.exe
