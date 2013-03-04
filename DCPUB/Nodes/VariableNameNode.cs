@@ -154,7 +154,7 @@ namespace DCPUB
             return r;
         }
 
-        public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
+        public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
             var r = new Assembly.ExpressionNode();
             if (variable.isArray) throw new CompileError("Can't assign to arrays.");
@@ -166,15 +166,13 @@ namespace DCPUB
             {
                 if (variable.location == Register.STACK)
                 {
-                    r.AddInstruction(opcode, DereferenceOffset("J", (ushort)(variable.stackOffset)),
-                        Operand(Scope.GetRegisterLabelSecond((int)from)));
+                    r.AddInstruction(opcode, DereferenceOffset("J", (ushort)(variable.stackOffset)), from);
                 }
                 else
-                    r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)variable.location)), 
-                        Operand(Scope.GetRegisterLabelSecond((int)from)));
+                    r.AddInstruction(opcode, Operand(Scope.GetRegisterLabelFirst((int)variable.location)), from);
             }
             else if (variable.type == VariableType.Static)
-                r.AddInstruction(opcode, DereferenceLabel(variable.staticLabel), Operand(Scope.GetRegisterLabelSecond((int)from)));
+                r.AddInstruction(opcode, DereferenceLabel(variable.staticLabel), from);
             return r;
         }
 

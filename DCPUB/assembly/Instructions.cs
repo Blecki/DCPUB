@@ -103,6 +103,9 @@ namespace DCPUB.Assembly
 
             if ((op.semantics & OperandSemantics.Constant) == OperandSemantics.Constant)
             {
+                if ((op.semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference)
+                    return new Tuple<ushort, Box<ushort>>(0x1e, new Box<ushort> { data = op.constant });
+                    
                 if (usage == OperandUsage.A && op.constant == 0xFFFF)
                     return new Tuple<ushort, Box<ushort>>(0x20, null);
                 if (usage == OperandUsage.A && op.constant <= 30)

@@ -53,7 +53,7 @@ namespace DCPUB
             else
             {
                 this.target = target;
-                if (Child(0) is VariableNameNode)
+                if (Child(0) is VariableNameNode && !member.isArray)
                     Child(0).AssignRegisters(context, parentState, Register.A); //Going to copy it to A anyway.
                 else
                     Child(0).AssignRegisters(context, parentState, this.target);
@@ -100,7 +100,7 @@ namespace DCPUB
             return r;
         }
 
-        Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Register from, Assembly.Instructions opcode)
+        Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
             var r = new Assembly.ExpressionNode();
             //assume value is already in 'from'.
@@ -113,10 +113,10 @@ namespace DCPUB
             }
             if (member.offset > 0)
                 r.AddInstruction(opcode, DereferenceOffset(Scope.GetRegisterLabelFirst((int)target), (ushort)member.offset),
-                    Operand(Scope.GetRegisterLabelSecond((int)from)));
+                    from);
             else
                 r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),
-                    Operand(Scope.GetRegisterLabelSecond((int)from)));
+                    from);
             return r;
         }
     }

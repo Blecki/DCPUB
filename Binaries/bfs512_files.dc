@@ -90,6 +90,7 @@ function bfs512_open_write(file:bfs512_FILE, file_system:bfs512_SYSTEM_HEADER, d
 	file.sector = sector;
 	file.offset = 0;
 	file.mode = BFS512_MODE_WRITE;
+
 	return m35fd_blocking_read(file.device, file.sector, file.buffer);
 }
 

@@ -51,6 +51,7 @@ bfs512_format_header(file_system);
 
 //Create root directory.
 bfs512_allocate_sector(file_system, 3);
+
 err = bfs512_create_directory(file_system, disc, 3);
 CERROR("Fail create root");
 
