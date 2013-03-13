@@ -17,5 +17,12 @@ namespace DCPUB.Assembly
             foreach (var line in commentLines)
                 stream.WriteLine("; " + line);
         }
+
+        public override void EmitIR(EmissionStream stream)
+        {
+            var commentLines = comment.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in commentLines)
+                stream.WriteLine("[a /] ; " + line);
+        }
     }
 }

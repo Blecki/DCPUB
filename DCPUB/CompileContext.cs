@@ -21,6 +21,11 @@ namespace DCPUB
         public Action<String> onWarning = null;
         public Variable end_of_program = null;
         public Assembly.Peephole.Peepholes peepholes;
+        public int nextVirtualRegister = 0;
+        public int AllocateRegister()
+        {
+            return nextVirtualRegister++;
+        }
         
         public String GetLabel()
         {
@@ -118,7 +123,6 @@ namespace DCPUB
         public void Compile(Action<string> onError)
         {
             end_of_program = new Variable();
-            end_of_program.location = Register.CONST;
             end_of_program.type = VariableType.ConstantLabel;
             end_of_program.name = "__endofprogram";
             end_of_program.staticLabel = new Assembly.Label("ENDOFPROGRAM");
@@ -127,7 +131,6 @@ namespace DCPUB
             globalScope.variables.Add(new Variable
             {
                 name = "true",
-                location = Register.CONST,
                 type = VariableType.Constant,
                 constantValue = 1
             });
@@ -135,7 +138,6 @@ namespace DCPUB
             globalScope.variables.Add(new Variable
             {
                 name = "false",
-                location = Register.CONST,
                 type = VariableType.Constant,
                 constantValue = 0
             });
@@ -199,8 +201,45 @@ namespace DCPUB
                 }
                 r.AddLabel(end_of_program.staticLabel);
 
-                
+
                 r.CollapseTree(peepholes);
+                return r;
+            }
+            catch (DCPUB.CompileError c)
+            {
+                ReportError(onError, c);
+                return null;
+            }
+
+        }
+
+        public Assembly.Node Compile2(Action<string> onError)
+        {
+            var end_label = new Assembly.Label("ENDOFPROGRAM");
+            globalScope.variables.Add(new Variable { type = VariableType.ConstantLabel, name = "__endofprogram", staticLabel = end_label });
+            globalScope.variables.Add(new Variable { name = "true", type = VariableType.Constant, constantValue = 1 });
+            globalScope.variables.Add(new Variable { name = "false", type = VariableType.Constant, constantValue = 0 });
+
+            try
+            {
+                rootNode.GatherSymbols(this, globalScope);
+                rootNode.ResolveTypes(this, globalScope);
+                //rootNode.FoldConstants(this);
+            
+                var r = new Assembly.Node();
+                
+                r.AddChild(rootNode.CompileFunction2(this));
+                foreach (var dataItem in dataElements)
+                {
+                    if (dataItem.Item2 is Assembly.Label)
+                        r.AddChild(new Assembly.StaticLabelData { label = dataItem.Item1, data = dataItem.Item2 as Assembly.Label });
+                    else
+                        r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<ushort> });
+                }
+                r.AddLabel(end_label);
+
+
+                //r.CollapseTree(peepholes);
                 return r;
             }
             catch (DCPUB.CompileError c)

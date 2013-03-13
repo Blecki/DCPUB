@@ -83,7 +83,52 @@ namespace DCPUB
                         {
                             r.children.RemoveRange(1, r.children.Count - 1);
                         }
-                        else if (thenClauseAssembly.InstructionCount() == 1 && 
+                        else if (thenClauseAssembly.InstructionCount() == 1 &&
+                            (elseClauseAssembly == null || elseClauseAssembly.InstructionCount() == 0))
+                        {
+                            r.AddChild(thenClauseAssembly);
+                        }
+                        else
+                        {
+                            var thenLabel = Assembly.Label.Make("THEN");
+                            var endLabel = Assembly.Label.Make("END");
+
+                            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
+                            if (elseClauseAssembly != null) r.AddChild(elseClauseAssembly);
+                            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
+                            r.AddLabel(thenLabel);
+
+                            r.AddChild(thenClauseAssembly);
+                            r.AddLabel(endLabel);
+                        }
+                    }
+                    break;
+                default:
+                    throw new CompileError("IF !FailFirst Not implemented");
+            }
+            return r;
+
+        }
+
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+            r.AddChild(base.Emit2(context, scope, target));
+            r.children.Insert(0, new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
+            switch (clauseOrder)
+            {
+                case ClauseOrder.ConstantPass:
+                    r.AddChild(EmitBlock2(context, scope, Child(1)));
+                    break;
+                case ClauseOrder.ConstantFail:
+                    if (ChildNodes.Count == 3) r.AddChild(EmitBlock2(context, scope, Child(2)));
+                    break;
+                case ClauseOrder.FailFirst: //Only actual valid order.
+                    {
+                        var thenClauseAssembly = EmitBlock2(context, scope, Child(1));
+                        Assembly.Node elseClauseAssembly = ChildNodes.Count == 3 ? EmitBlock2(context, scope, Child(2)) : null;
+
+                        if (thenClauseAssembly.InstructionCount() == 1 &&
                             (elseClauseAssembly == null || elseClauseAssembly.InstructionCount() == 0))
                         {
                             r.AddChild(thenClauseAssembly);

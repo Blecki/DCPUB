@@ -52,5 +52,20 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.StatementNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+
+            if (ChildNodes.Count > 0)
+            {
+                r.AddChild(Child(0).Emit2(context, scope, Target.Stack));
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+            }
+            r.AddChild(scope.activeFunction.CompileReturn2(context, scope));
+
+            return r;
+        }
+
     }
 }

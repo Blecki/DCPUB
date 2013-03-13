@@ -16,6 +16,12 @@ namespace DCPUB.Assembly
             stream.WriteLine(str);
         }
 
+        public override void EmitIR(EmissionStream stream)
+        {
+            var str = "DAT " + String.Join(" ", data);
+            stream.WriteLine(str);
+        }
+
         public override void SetupLabels(Dictionary<string, Label> labelTable)
         {
             foreach (var op in data)

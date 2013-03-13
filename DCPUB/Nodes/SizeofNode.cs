@@ -35,8 +35,14 @@ namespace DCPUB
 
         public override int GetConstantValue()
         {
+            if (_struct == null) throw new CompileError(this, "Struct not yet found.");
             if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
             return _struct.size;
+        }
+
+        public override Assembly.Operand GetFetchToken()
+        {
+            return Constant((ushort)GetConstantValue());
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
@@ -53,9 +59,18 @@ namespace DCPUB
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.ExpressionNode();
+            var r = new Assembly.TransientNode();
             if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
             r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
+                Constant((ushort)_struct.size));
+            return r;
+        }
+
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+            if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
+            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
                 Constant((ushort)_struct.size));
             return r;
         }

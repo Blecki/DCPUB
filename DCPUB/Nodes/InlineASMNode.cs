@@ -56,14 +56,33 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.StatementNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            //if (preserveTarget)
+                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Target.Raw(targetRegister).GetOperand(TargetUsage.Pop));
+            if (ChildNodes.Count > 0) r.AddChild(Child(0).Emit2(context, scope, Target.Raw(targetRegister)));
+            return r;
+        }
+
         public Assembly.Node Restore(CompileContext context, Scope scope)
         {
-            var r = new Assembly.Node();
+            var r = new Assembly.TransientNode();
             if (preserveTarget)
             {
                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond((int)targetRegister)), 
                     Operand("POP"));
             }
+            return r;
+        }
+
+        public Assembly.Node Restore2(CompileContext context, Scope scope)
+        {
+            var r = new Assembly.TransientNode();
+            //if (preserveTarget)
+                r.AddInstruction(Assembly.Instructions.SET, Target.Raw(targetRegister).GetOperand(TargetUsage.Push),
+                    Operand("POP"));
             return r;
         }
     }
@@ -107,6 +126,21 @@ namespace DCPUB
 
             for (var i = ChildNodes.Count - 1; i >= 0; --i)
                 r.AddChild((Child(i) as RegisterBindingNode).Restore(context, scope));
+
+            return r;
+        }
+
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+
+            for (var i = 0; i < ChildNodes.Count; ++i)
+                r.AddChild(Child(i).Emit2(context, scope, null));
+
+            r.AddChild(parsedNode);
+
+            for (var i = ChildNodes.Count - 1; i >= 0; --i)
+                r.AddChild((Child(i) as RegisterBindingNode).Restore2(context, scope));
 
             return r;
         }

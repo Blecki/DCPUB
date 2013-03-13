@@ -15,11 +15,6 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override string TreeLabel()
-        {
-            return "deref [into:" + target.ToString() + "]";
-        }
-
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             if (IsAssignedTo)
@@ -45,6 +40,17 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+            Target childTarget = target;
+            if (target.target == Targets.Stack) childTarget = Target.Register(context.AllocateRegister());
+            r.AddChild(Child(0).Emit2(context, scope, childTarget));
+            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), 
+                childTarget.GetOperand(TargetUsage.Pop, Assembly.OperandSemantics.Dereference));
+            return r;
+        }
+
         public bool IsAssignedTo { get; set; }
 
         public DereferenceNode()
@@ -54,7 +60,7 @@ namespace DCPUB
 
         Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
-            var r = new Assembly.ExpressionNode();
+            var r = new Assembly.TransientNode();
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
             {
@@ -63,6 +69,20 @@ namespace DCPUB
             }
             r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),
                 from);
+            return r;
+        }
+
+        Assembly.Node AssignableNode.EmitAssignment2(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
+        {
+            var r = new Assembly.TransientNode();
+            var target = Target.Register(context.AllocateRegister());
+            r.AddChild(Child(0).Emit2(context, scope, target));
+            if (target.target == Targets.Stack)
+            {
+                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+                target = Target.Raw(Register.A);
+            }
+            r.AddInstruction(opcode, target.GetOperand(TargetUsage.Push, Assembly.OperandSemantics.Dereference), from);
             return r;
         }
     }

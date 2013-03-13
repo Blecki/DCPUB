@@ -26,3 +26,6 @@ ADD "SP", "0x0000" => ;
 
 //INCREMENT
 SET A, B / ADD C, A => ADD C, B;
+
+//The Zero add set
+SET A, "0x0000" / ADD A, B => SET A, B;

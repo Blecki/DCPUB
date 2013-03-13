@@ -100,9 +100,33 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+            Target objectTarget = target;
+            if (target.target == Targets.Stack)
+                objectTarget = Target.Register(context.AllocateRegister());
+
+            r.AddChild(Child(0).Emit2(context, scope, objectTarget));
+            if (member.isArray)
+            {
+                if (target != objectTarget)
+                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), objectTarget.GetOperand(TargetUsage.Pop));
+                r.AddInstruction(Assembly.Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)member.offset));
+            }
+            else
+            {
+                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
+                    objectTarget.GetOperand(TargetUsage.Pop, Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset,
+                    (ushort)member.offset));
+            }
+            
+            return r;
+        }
+
         Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
-            var r = new Assembly.ExpressionNode();
+            var r = new Assembly.TransientNode();
             //assume value is already in 'from'.
             r.AddChild(Child(0).Emit(context, scope));
             if (target == Register.STACK)
@@ -117,6 +141,18 @@ namespace DCPUB
             else
                 r.AddInstruction(opcode, Dereference(Scope.GetRegisterLabelFirst((int)target)),
                     from);
+            return r;
+        }
+
+        Assembly.Node AssignableNode.EmitAssignment2(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
+        {
+            var r = new Assembly.TransientNode();
+            //assume value is already in 'from'.
+            var target = Target.Register(context.AllocateRegister());
+            r.AddChild(Child(0).Emit2(context, scope, target));
+            r.AddInstruction(opcode, target.GetOperand(TargetUsage.Peek,
+                Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset, (ushort)member.offset),
+                from);
             return r;
         }
     }

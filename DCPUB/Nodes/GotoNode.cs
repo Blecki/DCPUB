@@ -36,5 +36,16 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            Label destination = null;
+            foreach (var _label in scope.activeFunction.function.labels)
+                if (_label.declaredName == label) destination = _label;
+            if (destination == null) throw new CompileError(this, "Unknown label.");
+            var r = new Assembly.StatementNode();
+            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(destination.realName));
+            return r;
+        }
+
     }
 }

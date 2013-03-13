@@ -16,9 +16,17 @@ namespace DCPUB.Assembly
         public override void Emit(EmissionStream stream)
         {
             if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
-                stream.WriteLine(new String(' ', stream.indentDepth * 3) + instruction.ToString() + " " + firstOperand);
+                stream.WriteLine(instruction.ToString() + " " + firstOperand);
             else
-                stream.WriteLine(new String(' ', stream.indentDepth * 3) + instruction.ToString() + " " + firstOperand + ", " + secondOperand);
+                stream.WriteLine(instruction.ToString() + " " + firstOperand + ", " + secondOperand);
+        }
+
+        public override void EmitIR(EmissionStream stream)
+        {
+            if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+                stream.WriteLine("[i /] " + instruction.ToString() + " " + firstOperand);
+            else
+                stream.WriteLine("[i /] " + instruction.ToString() + " " + firstOperand + ", " + secondOperand);
         }
 
         public static Node Make(Instructions instruction, Operand firstOperand, Operand secondOperand = null)
@@ -69,5 +77,23 @@ namespace DCPUB.Assembly
             if (secondOperand != null && (secondOperand.semantics & OperandSemantics.Label) == OperandSemantics.Label)
                 secondOperand.label = labelTable[secondOperand.label.rawLabel];
         }
+
+        public override void MarkRegisters(RegisterBank bank)
+        {
+            firstOperand.MarkRegisters(bank);
+            if (secondOperand != null) secondOperand.MarkRegisters(bank);
+        }
+
+        public override void AdjustVariableOffsets(int delta)
+        {
+            firstOperand.AdjustVariableOffsets(delta);
+            if (secondOperand != null) secondOperand.AdjustVariableOffsets(delta);
+        }
+
+        //public override void AssignRegisters(Dictionary<ushort, OperandRegister> mapping)
+        //{
+        //    firstOperand.AssignRegisters(mapping);
+        //    if (secondOperand != null) secondOperand.AssignRegisters(mapping);
+        //}
     }
 }

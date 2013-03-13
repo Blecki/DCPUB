@@ -65,9 +65,16 @@ namespace DCPUB
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.ExpressionNode();
+            var r = new Assembly.TransientNode();
             r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                 Label(staticLabel));
+            return r;
+        }
+
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Label(staticLabel));
             return r;
         }
 

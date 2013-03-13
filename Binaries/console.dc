@@ -6,9 +6,9 @@
 
 #include vec.dc
 
-constant CONSOLE_SIZE = 384;
-constant CONSOLE_WIDTH = 32;
-constant CONSOLE_HEIGHT = 12;
+#define CONSOLE_SIZE 384
+#define CONSOLE_WIDTH 32
+#define CONSOLE_HEIGHT 12
 
 struct Console
 {

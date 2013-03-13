@@ -66,6 +66,11 @@ namespace DCPUB
             return Constant((ushort)GetConstantValue());
         }
 
+        public override Assembly.Operand GetFetchToken()
+        {
+            return Constant((ushort)Value);
+        }
+
         public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
         {
             this.target = target;
@@ -73,10 +78,20 @@ namespace DCPUB
 
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
-            var r = new Assembly.ExpressionNode();
+            var r = new Assembly.TransientNode();
             r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
                 GetConstantToken());
             return r;
+        }
+
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            return new Assembly.Instruction
+            {
+                instruction = Assembly.Instructions.SET,
+                firstOperand = target.GetOperand(TargetUsage.Push),
+                secondOperand = Constant((ushort)Value)
+            };
         }
 
     }

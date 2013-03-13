@@ -23,5 +23,10 @@ namespace DCPUB
             throw new CompileError(this, "Null statement should have been folded.");
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            return new Assembly.Annotation("Empty statement.");
+        }
+
     }
 }

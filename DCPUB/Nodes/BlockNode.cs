@@ -62,7 +62,7 @@ namespace DCPUB
             r.AddChild(new Assembly.Annotation("Entering blocknode emit"));
             if (bypass)
             {
-                r.AddChild(new Assembly.Annotation("bypassed"));
+                //r.AddChild(new Assembly.Annotation("bypassed"));
 
                 foreach (var child in ChildNodes)
                     r.AddChild((child as CompilableNode).Emit(context, scope));
@@ -82,5 +82,31 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.TransientNode();
+
+            //r.AddChild(new Assembly.Annotation("Entering blocknode emit"));
+            if (bypass)
+            {
+                //r.AddChild(new Assembly.Annotation("bypassed"));
+
+                foreach (var child in ChildNodes)
+                    r.AddChild((child as CompilableNode).Emit2(context, scope, Target.Discard));
+            }
+            else
+            {
+                var localScope = scope.Push(blockScope);
+                localScope.activeBlock = this;
+                foreach (var child in ChildNodes)
+                    r.AddChild((child as CompilableNode).Emit2(context, localScope, Target.Discard));
+                //if (breakLabel != null) r.AddLabel(breakLabel);
+                if (blockScope.variablesOnStack - scope.variablesOnStack > 0)
+                    r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
+            }
+            //r.AddChild(new Assembly.Annotation("Leaving blocknode emit"));
+
+            return r;
+        }
     }
 }

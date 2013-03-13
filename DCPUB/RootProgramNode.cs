@@ -41,5 +41,23 @@ namespace DCPUB
             return r;
         }
 
+        public override Assembly.Node CompileFunction2(CompileContext context)
+        {
+            var r = new Assembly.Node();
+            var localScope = function.localScope.Push();
+
+            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
+            var body = Child(0).Emit2(context, localScope, Target.Discard);
+            body.CollapseTree(context.peepholes);
+            if (!context.options.skip_virtual_register_assignment) AssignVirtualRegisters(body);
+            r.AddChild(body);
+            r.AddLabel(footerLabel);
+            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
+
+            foreach (var nestedFunction in function.localScope.functions)
+                r.AddChild(nestedFunction.Node.CompileFunction2(context));
+            return r;
+        }
+
     }
 }

@@ -11,9 +11,6 @@ namespace DCPUB
         private static Dictionary<String, Assembly.Instructions> opcodes = null;
 
         public Register rvalueTargetRegister = Register.STACK;
-        public Register lvalueTargetRegister = Register.STACK;
-        public Variable assignTo = null;
-        public Boolean dereferenceLvalue = false;
         public String @operator;
         
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -46,11 +43,6 @@ namespace DCPUB
             }
         }
 
-        public override string TreeLabel()
-        {
-            return @operator + " " + "[r:" + rvalueTargetRegister.ToString() + "]";
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             Child(0).GatherSymbols(context, enclosingScope);
@@ -69,7 +61,8 @@ namespace DCPUB
             if (target != Register.DISCARD)
                 throw new CompileError("Assignment should always target discard");
 
-            if (!Child(1).IsIntegralConstant())
+            var fetchToken = Child(1).GetFetchToken();
+            if (fetchToken == null)
             {
                 rvalueTargetRegister = parentState.FindAndUseFreeRegister();
                 Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
@@ -78,27 +71,39 @@ namespace DCPUB
             (Child(0) as AssignableNode).IsAssignedTo = true;
             Child(0).AssignRegisters(context, parentState, Register.DISCARD);
             
-            if (!Child(1).IsIntegralConstant()) parentState.FreeMaybeRegister(rvalueTargetRegister);
+            if (fetchToken == null) parentState.FreeMaybeRegister(rvalueTargetRegister);
         }
-        
+
         public override Assembly.Node Emit(CompileContext context, Scope scope)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
 
-            var fetch_token = Child(1).GetFetchToken(scope);
-            if (Child(1).IsIntegralConstant()) fetch_token = Child(1).GetConstantToken();
+            var fetch_token = Child(1).GetFetchToken();
             if (fetch_token == null)
             {
                 r.AddChild(Child(1).Emit(context, scope));
-                fetch_token = Operand(Scope.GetRegisterLabelSecond((int)rvalueTargetRegister));
+                fetch_token = Operand(Scope.GetRegisterLabelSecond(rvalueTargetRegister));
             }
 
-            var opcode = Assembly.Instructions.SET;
-            if (opcodes.ContainsKey(@operator + ResultType)) opcode = opcodes[@operator + ResultType];
-            else opcode = opcodes[@operator];
+            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, fetch_token, opcodes[@operator]));
+            return r;
+        }
 
-            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, fetch_token, opcode));
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            var r = new Assembly.StatementNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+
+            var fetch_token = Child(1).GetFetchToken();
+            if (fetch_token == null)
+            {
+                var rTarget = Target.Register(context.AllocateRegister());
+                r.AddChild(Child(1).Emit2(context, scope, rTarget));
+                fetch_token = rTarget.GetOperand(TargetUsage.Pop);
+            }
+
+            r.AddChild((Child(0) as AssignableNode).EmitAssignment2(context, scope, fetch_token, opcodes[@operator]));
             return r;
         }
     }

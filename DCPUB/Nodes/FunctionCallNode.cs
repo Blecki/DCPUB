@@ -90,7 +90,7 @@ namespace DCPUB
                 r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
             }
             else
-                r = new Assembly.ExpressionNode();
+                r = new Assembly.TransientNode();
 
             for (int i = ChildNodes.Count - 1; i >= 1; --i)
                 r.AddChild(Child(i).Emit(context, scope));
@@ -101,7 +101,7 @@ namespace DCPUB
                     r.AddInstruction(Assembly.Instructions.JSR, Constant((ushort)Child(0).GetConstantValue()));
                 else
                 {
-                    var fetchToken = Child(0).GetFetchToken(scope);
+                    var fetchToken = Child(0).GetFetchToken();
                     if (fetchToken != null)
                         r.AddInstruction(Assembly.Instructions.JSR, fetchToken);
                     else
@@ -123,5 +123,40 @@ namespace DCPUB
 
             return r;
         }
+
+        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        {
+            Assembly.Node r = target.target == Targets.Discard ? 
+                (Assembly.Node)(new Assembly.StatementNode()) : new Assembly.TransientNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+
+            for (int i = ChildNodes.Count - 1; i >= 1; --i)
+                r.AddChild(Child(i).Emit2(context, scope, Target.Stack));
+
+            if (function == null)
+            {
+                var funcFetchToken = Child(0).GetFetchToken();
+                if (funcFetchToken == null)
+                {
+                    var funcTarget = Target.Register(context.AllocateRegister());
+                    r.AddChild(Child(0).Emit2(context, scope, funcTarget));
+                    funcFetchToken = Virtual(funcTarget.virtualId);
+                }
+
+                r.AddInstruction(Assembly.Instructions.JSR, funcFetchToken);
+            }
+            else
+            {
+                r.AddInstruction(Assembly.Instructions.JSR, Label(function.label));
+            }
+
+            r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
+
+            if (target.target != Targets.Discard)
+                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("A"));
+
+            return r;
+        }
+
     }
 }
