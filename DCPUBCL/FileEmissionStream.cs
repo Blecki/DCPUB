@@ -16,7 +16,7 @@ namespace DCPUCCL
 
         public override void WriteLine(string line)
         {
-            stream.WriteLine(line);
+            stream.WriteLine(new string(' ', indentDepth * 3) + line);
         }
 
     }

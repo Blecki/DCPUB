@@ -30,7 +30,5 @@ namespace DCPUB
             base.ResolveTypes(context, enclosingScope);
             this.ResultType = baseNode.ResultType;
         }
-
-        
     }
 }

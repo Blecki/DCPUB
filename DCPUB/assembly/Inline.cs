@@ -13,5 +13,10 @@ namespace DCPUB.Assembly
         {
             stream.WriteLine(code);
         }
+
+        public override void EmitIR(EmissionStream stream)
+        {
+            stream.WriteLine(code);
+        }
     }
 }

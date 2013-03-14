@@ -16,16 +16,7 @@ namespace DCPUB
             label = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override string TreeLabel()
-        {
-            return "goto " + label;
-        }
-
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
-        {
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             Label destination = null;
             foreach (var _label in scope.activeFunction.function.labels)

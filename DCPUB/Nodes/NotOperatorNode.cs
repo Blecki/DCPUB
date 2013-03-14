@@ -19,7 +19,7 @@ namespace DCPUB
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
-            ResultType = "unsigned";
+            ResultType = "word";
         }
     }
 }

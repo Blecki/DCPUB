@@ -41,11 +41,6 @@ namespace DCPUB
             value = UnescapeString(value);
         }
 
-        public override string TreeLabel()
-        {
-            return "literal " + value;
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
@@ -58,16 +53,10 @@ namespace DCPUB
             context.AddData(staticLabel, data);
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            this.target = target;
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.ExpressionNode();
-            r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                Label(staticLabel));
+            var r = new Assembly.TransientNode();
+            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Label(staticLabel));
             return r;
         }
 

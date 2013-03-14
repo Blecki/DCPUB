@@ -17,12 +17,25 @@ namespace DCPUCCL
             }
 
             var options = new DCPUB.CompileOptions();
+            bool vStyle = false;
+            bool emitIR = false;
 
             int argumentIndex = 0;
             while (argumentIndex < args.Length)
             {
                 var argument = args[argumentIndex];
-                if (argument == "-b" || argument == "--binary")
+
+                if (argument == "-i" || argument == "--ir")
+                {
+                    emitIR = true;
+                    argumentIndex += 1;
+                }
+                else if (argument == "-v" || argument == "--vstyle")
+                {
+                    options.skip_virtual_register_assignment = true;
+                    argumentIndex += 1;
+                }
+                else if (argument == "-b" || argument == "--binary")
                 {
                     options.binary = true;
                     argumentIndex += 1;
@@ -105,8 +118,8 @@ namespace DCPUCCL
                     options.binary ? "bin" : "dasm");
             }
 
-            try
-            {
+            //try
+            //{
                 String file;
                 if (options.@in == "-")
                     file = Console.In.ReadToEnd();
@@ -117,39 +130,55 @@ namespace DCPUCCL
                 context.Initialize(options);
                 if (context.Parse(file, Console.WriteLine))
                 {
-                    context.Compile(Console.WriteLine);
-                    var assembly = context.Emit(Console.WriteLine);
 
-                    if (options.binary)
+                    if (options.skip_virtual_register_assignment) //Ignore binary flag.
                     {
-                        var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
-                        var bin = new List<DCPUB.Assembly.Box<ushort>>();
-                        assembly.EmitBinary(bin);
-                        foreach (var word in bin)
+                        var assembly = context.Compile(Console.WriteLine);
+                        var writer = new System.IO.StreamWriter(options.@out, false);
+                        var stream = new FileEmissionStream(writer);
+                        if (assembly != null)
                         {
-                            if (options.be)
-                                writer.Write((ushort)(
-                                    ((word.data & 0x00FF) << 8) + ((word.data & 0xFF00) >> 8)));
-                            else
-                                writer.Write(word.data);
+                            if (emitIR) assembly.EmitIR(stream);
+                            else assembly.Emit(stream);
                         }
                         writer.Close();
                     }
                     else
                     {
-                        var writer = new System.IO.StreamWriter(options.@out, false);
-                        var stream = new FileEmissionStream(writer);
-                        assembly.Emit(stream);
-                        writer.Close();
+                        var assembly = context.Compile(Console.WriteLine);
+
+                        if (options.binary)
+                        {
+                            var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
+                            var bin = new List<DCPUB.Assembly.Box<ushort>>();
+                            assembly.EmitBinary(bin);
+                            foreach (var word in bin)
+                            {
+                                if (options.be)
+                                    writer.Write((ushort)(
+                                        ((word.data & 0x00FF) << 8) + ((word.data & 0xFF00) >> 8)));
+                                else
+                                    writer.Write(word.data);
+                            }
+                            writer.Close();
+                        }
+                        else
+                        {
+                            var writer = new System.IO.StreamWriter(options.@out, false);
+                            var stream = new FileEmissionStream(writer);
+                            if (emitIR) assembly.EmitIR(stream);
+                            else assembly.Emit(stream);
+                            writer.Close();
+                        }
                     }
                 }
 
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                return;
-            }
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine(e.Message);
+            //    return;
+            //}
 
         }
     }

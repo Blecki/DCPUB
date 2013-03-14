@@ -3,7 +3,7 @@
 #ifndef DCPUB_LIB_BFS512_FILES
 #define DCPUB_LIB_BFS512_FILES
 
-#include bfs512.dc
+#include bfs512_raw.dc
 #include m35fd.dc
 
 #define BFS512_MODE_READ 1

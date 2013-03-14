@@ -49,38 +49,31 @@ namespace DCPUB
             base.ResolveTypes(context, bypass ? enclosingScope : blockScope);
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            foreach (var child in ChildNodes)
-                (child as CompilableNode).AssignRegisters(context, parentState, Register.DISCARD);
-        }
+            var r = new Assembly.TransientNode();
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.StatementNode();
-
-            r.AddChild(new Assembly.Annotation("Entering blocknode emit"));
+            //r.AddChild(new Assembly.Annotation("Entering blocknode emit"));
             if (bypass)
             {
-                r.AddChild(new Assembly.Annotation("bypassed"));
+                //r.AddChild(new Assembly.Annotation("bypassed"));
 
                 foreach (var child in ChildNodes)
-                    r.AddChild((child as CompilableNode).Emit(context, scope));
+                    r.AddChild((child as CompilableNode).Emit(context, scope, Target.Discard));
             }
             else
             {
                 var localScope = scope.Push(blockScope);
                 localScope.activeBlock = this;
                 foreach (var child in ChildNodes)
-                    r.AddChild((child as CompilableNode).Emit(context, localScope));
+                    r.AddChild((child as CompilableNode).Emit(context, localScope, Target.Discard));
                 //if (breakLabel != null) r.AddLabel(breakLabel);
                 if (blockScope.variablesOnStack - scope.variablesOnStack > 0)
                     r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
             }
-            r.AddChild(new Assembly.Annotation("Leaving blocknode emit"));
+            //r.AddChild(new Assembly.Annotation("Leaving blocknode emit"));
 
             return r;
         }
-
     }
 }

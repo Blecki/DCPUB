@@ -6,7 +6,7 @@
 #include hardware.dc
 
 static LEM_HARDWARE_ID[2] = { 0x7349, 0xf615 };
-constant LEM_VRAM_SIZE = 384;
+#define LEM_VRAM_SIZE 384
 
 // Find a Lem device. Returns 0xFFFF if no Lem device is connected.
 function detect_lem()

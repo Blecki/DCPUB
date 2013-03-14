@@ -63,8 +63,9 @@ function m35fd_enumerate(m35fd_drives /*Pointer to at least max_drives words*/, 
 
 function m35fd_poll_state(hardware_id)
 {
-	asm (Y = hardware_id; B; C; A = 0)
+	asm (Y = hardware_id)
 	{
+		SET A, 0
 		HWI Y
 		SET A, B
 	}
@@ -73,8 +74,9 @@ function m35fd_poll_state(hardware_id)
 
 function m35fd_poll_error(hardware_id)
 {
-	asm (Y = hardware_id; B; C; A = 0)
+	asm (Y = hardware_id)
 	{
+		SET A, 0
 		HWI Y
 		SET A, C
 	}
@@ -90,13 +92,12 @@ function m35fd_poll_error(hardware_id)
 // Returns 1 if successfully begins read. If not 1, call m35fd_poll_error for specific error code.
 function m35fd_read(hardware_id, sector, buffer)
 {
-	local result = 1;
-	asm (A = 2; B = hardware_id; C = &result; X = sector; Y = buffer)
+	asm (B = hardware_id; X = sector; Y = buffer)
 	{
+		SET A, 0x0002
 		HWI B
-		SET [C], B
+		SET A, B
 	}
-	return result;
 }
    
 //3  Write sector. Writes sector X from DCPU ram starting at Y.
@@ -107,13 +108,12 @@ function m35fd_read(hardware_id, sector, buffer)
 // Return 1 if successfully begins write. If not 1, call m35fd_poll_error for specific error code.
 function m35fd_write(hardware_id, sector, buffer)
 {
-	local result = 1;
-	asm (A = 3; B = hardware_id; C = &result; X = sector; Y = buffer)
+	asm (B = hardware_id; X = sector; Y = buffer)
 	{
+		SET A, 0x0003
 		HWI B
-		SET [C], B
+		SET A, B
 	}
-	return result;
 }
 
 // Read a sector from disc. Does not return until sector is finished reading.

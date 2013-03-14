@@ -13,5 +13,6 @@ namespace DCPUB
         public bool externals = false;
         public string peephole = null;
         public bool be = false;
+        public bool skip_virtual_register_assignment = false;
     }
 }

@@ -17,11 +17,6 @@ namespace DCPUB
             AddChild("Expression", treeNode.ChildNodes[0]);
         }
 
-        public override string TreeLabel()
-        {
-            return "cast " + typeName;
-        }
-
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             Child(0).ResolveTypes(context, enclosingScope);
@@ -30,16 +25,9 @@ namespace DCPUB
             ResultType = typeName;
         }
 
-        public override CompilableNode FoldConstants(CompileContext context)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            base.FoldConstants(context);
-            Child(0).ResultType = ResultType;
-            return Child(0);
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            throw new CompileError(this, "Cast was not folded.");
+            return Child(0).Emit(context, scope, target);
         }
 
     }

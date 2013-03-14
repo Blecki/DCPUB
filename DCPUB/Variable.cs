@@ -19,10 +19,9 @@ namespace DCPUB
         public String name;
         public Scope scope;
         public int stackOffset;
-        public Register location;
         public Assembly.Label staticLabel;
         public int constantValue;
-        public string typeSpecifier = "unsigned";
+        public string typeSpecifier = "word";
         public bool addressTaken = false;
         public Struct structType = null;
         public VariableType type;
