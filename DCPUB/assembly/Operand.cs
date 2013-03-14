@@ -60,11 +60,11 @@ namespace DCPUB.Assembly
             return s;
         }
 
-        public void MarkRegisters(RegisterBank bank)
+        public void MarkRegisters(bool[] bank)
         {
             if ((semantics & OperandSemantics.Label) == OperandSemantics.Label) return;
             if ((semantics & OperandSemantics.Constant) == OperandSemantics.Constant) return;
-            if (register <= OperandRegister.J) bank.UseRegister((Register)register);
+            if (register <= OperandRegister.J) bank[(int)register] = true;
         }
 
         public void AdjustVariableOffsets(int delta)

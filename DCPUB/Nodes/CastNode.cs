@@ -25,21 +25,9 @@ namespace DCPUB
             ResultType = typeName;
         }
 
-        public override CompilableNode FoldConstants(CompileContext context)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            base.FoldConstants(context);
-            Child(0).ResultType = ResultType;
-            return Child(0);
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            throw new CompileError(this, "Cast was not folded.");
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
-        {
-            return Child(0).Emit2(context, scope, target);
+            return Child(0).Emit(context, scope, target);
         }
 
     }

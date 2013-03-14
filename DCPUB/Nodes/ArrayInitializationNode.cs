@@ -32,16 +32,7 @@ namespace DCPUB
             }
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation("Array Initialization"));
-            for (int i = rawData.Length - 1; i >= 0; --i)
-                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Constant(rawData[i]));
-            return r;
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation("Array Initialization"));

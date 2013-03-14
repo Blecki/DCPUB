@@ -23,7 +23,7 @@ function bfs512_initialize(allocator)
 		local drive = bfs512_drives[i];
 		bfs512_drives[i] = allocate_memory(sizeof(bfs512_SYSTEM_HEADER), allocator);
 		bfs512_load_disc(drive, bfs512_drives[i]);
-		bfs512_drives[i][1] = drive;
+		bfs512_drives[i][1] = drive; //Store drive ID in unused portion of file system header.
 	}
 }
 
@@ -80,7 +80,7 @@ function bfs512_search_path(path)
 		:END_SCAN
 	}
 
-	return entry.sector;
+	return 0xFFFF;
 }
 
 

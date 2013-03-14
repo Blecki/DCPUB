@@ -128,13 +128,7 @@ namespace DCPUB
             }
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            if (variable.type == VariableType.Local)
-                Child(0).AssignRegisters(context, parentState, Register.STACK);
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
@@ -142,22 +136,7 @@ namespace DCPUB
             if (variable.type == VariableType.Local)
             {
                 variable.stackOffset = -(scope.variablesOnStack + size);
-                if (hasInitialValue) r.AddChild(Child(0).Emit(context, scope));
-                else r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)size));
-                scope.variablesOnStack += size;
-            }
-            return r;
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
-        {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
-
-            if (variable.type == VariableType.Local)
-            {
-                variable.stackOffset = -(scope.variablesOnStack + size);
-                if (hasInitialValue) r.AddChild(Child(0).Emit2(context, scope, Target.Stack));
+                if (hasInitialValue) r.AddChild(Child(0).Emit(context, scope, Target.Stack));
                 else r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)size));
                 scope.variablesOnStack += size;
             }

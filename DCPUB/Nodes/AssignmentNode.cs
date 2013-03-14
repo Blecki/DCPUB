@@ -56,41 +56,7 @@ namespace DCPUB
             ResultType = Child(0).ResultType;
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            if (target != Register.DISCARD)
-                throw new CompileError("Assignment should always target discard");
-
-            var fetchToken = Child(1).GetFetchToken();
-            if (fetchToken == null)
-            {
-                rvalueTargetRegister = parentState.FindAndUseFreeRegister();
-                Child(1).AssignRegisters(context, parentState, rvalueTargetRegister);
-            }
-            
-            (Child(0) as AssignableNode).IsAssignedTo = true;
-            Child(0).AssignRegisters(context, parentState, Register.DISCARD);
-            
-            if (fetchToken == null) parentState.FreeMaybeRegister(rvalueTargetRegister);
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
-
-            var fetch_token = Child(1).GetFetchToken();
-            if (fetch_token == null)
-            {
-                r.AddChild(Child(1).Emit(context, scope));
-                fetch_token = Operand(Scope.GetRegisterLabelSecond(rvalueTargetRegister));
-            }
-
-            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, fetch_token, opcodes[@operator]));
-            return r;
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
@@ -99,11 +65,11 @@ namespace DCPUB
             if (fetch_token == null)
             {
                 var rTarget = Target.Register(context.AllocateRegister());
-                r.AddChild(Child(1).Emit2(context, scope, rTarget));
+                r.AddChild(Child(1).Emit(context, scope, rTarget));
                 fetch_token = rTarget.GetOperand(TargetUsage.Pop);
             }
 
-            r.AddChild((Child(0) as AssignableNode).EmitAssignment2(context, scope, fetch_token, opcodes[@operator]));
+            r.AddChild((Child(0) as AssignableNode).EmitAssignment(context, scope, fetch_token, opcodes[@operator]));
             return r;
         }
     }

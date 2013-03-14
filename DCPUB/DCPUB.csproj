@@ -101,7 +101,6 @@
     <Compile Include="Nodes\SizeofNode.cs" />
     <Compile Include="Nodes\MemberAccessNode.cs" />
     <Compile Include="Nodes\StructDeclarationNode.cs" />
-    <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Nodes\AssignmentNode.cs">
       <SubType>Code</SubType>

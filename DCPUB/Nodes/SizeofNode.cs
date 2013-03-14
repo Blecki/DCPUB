@@ -18,31 +18,11 @@ namespace DCPUB
             typeName = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override string TreeLabel()
-        {
-            return "sizeof " + typeName + " [" + _struct.size + "] [into:" + target.ToString() + "]";
-        }
-
-        public override bool IsIntegralConstant()
-        {
-            return true;
-        }
-
-        public override Assembly.Operand GetConstantToken()
-        {
-            return Constant((ushort)_struct.size);
-        }
-
-        public override int GetConstantValue()
+        public override Assembly.Operand GetFetchToken()
         {
             if (_struct == null) throw new CompileError(this, "Struct not yet found.");
             if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
-            return _struct.size;
-        }
-
-        public override Assembly.Operand GetFetchToken()
-        {
-            return Constant((ushort)GetConstantValue());
+            return Constant((ushort)_struct.size);
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
@@ -52,21 +32,7 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            this.target = target;
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.TransientNode();
-            if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
-            r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                Constant((ushort)_struct.size));
-            return r;
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.TransientNode();
             if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");

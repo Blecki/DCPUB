@@ -26,14 +26,7 @@ namespace DCPUB
             enclosingScope.activeFunction.function.labels.Add(label);
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.StatementNode();
-            r.AddLabel(label.realName);
-            return r;
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddLabel(label.realName);

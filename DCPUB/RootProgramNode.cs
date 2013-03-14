@@ -8,11 +8,6 @@ namespace DCPUB
 {
     public class RootProgramNode : FunctionDeclarationNode
     {
-        public override string TreeLabel()
-        {
-            return "Root";
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             (Child(0) as BlockNode).bypass = true;
@@ -32,22 +27,7 @@ namespace DCPUB
             var localScope = function.localScope.Push();
 
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
-            r.AddChild(Child(0).Emit(context, localScope));
-            r.AddLabel(footerLabel);
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
-
-            foreach (var nestedFunction in function.localScope.functions)
-                r.AddChild(nestedFunction.Node.CompileFunction(context));
-            return r;
-        }
-
-        public override Assembly.Node CompileFunction2(CompileContext context)
-        {
-            var r = new Assembly.Node();
-            var localScope = function.localScope.Push();
-
-            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
-            var body = Child(0).Emit2(context, localScope, Target.Discard);
+            var body = Child(0).Emit(context, localScope, Target.Discard);
             body.CollapseTree(context.peepholes);
             if (!context.options.skip_virtual_register_assignment) AssignVirtualRegisters(body);
             r.AddChild(body);
@@ -55,7 +35,7 @@ namespace DCPUB
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
 
             foreach (var nestedFunction in function.localScope.functions)
-                r.AddChild(nestedFunction.Node.CompileFunction2(context));
+                r.AddChild(nestedFunction.Node.CompileFunction(context));
             return r;
         }
 

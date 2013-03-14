@@ -20,26 +20,6 @@ namespace DCPUB
             variableName = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override bool IsIntegralConstant()
-        {
-            return false;
-        }
-
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
-        {
-            
-        }
-
-        public override Operand GetConstantToken()
-        {
-            if (function != null)
-                return Label(function.label);
-            else if (label != null)
-                return Label(label.realName);
-            else
-                return null;
-        }
-
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             variable = enclosingScope.FindVariable(variableName);
@@ -67,11 +47,6 @@ namespace DCPUB
             }
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            this.target = target;
-        }
-
         public override Operand GetFetchToken()
         {
             if (variable != null)
@@ -87,39 +62,7 @@ namespace DCPUB
             return null;
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            Node r = new Assembly.TransientNode();
-
-            if (variable != null)
-            {
-                if (variable.type == VariableType.Static)
-                {
-                    r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst(target)), Label(variable.staticLabel));
-                }
-                else if (variable.type == VariableType.Local)
-                {
-                    r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst(target)), Operand("J"));
-                    r.AddInstruction(Instructions.ADD, Operand(Scope.GetPeekLabel(target)), VariableOffset((ushort)variable.stackOffset));
-                }
-                else if (variable.type == VariableType.External)
-                {
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst(target)), Label(new Assembly.Label("EXTERNALS")));
-                    r.AddInstruction(Assembly.Instructions.ADD, Operand(Scope.GetPeekLabel(target)), Constant((ushort)variable.constantValue));
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetPeekLabel(target)), Dereference(Scope.GetPeekLabel(target)));
-                }
-                else
-                    throw new CompileError(this, "Can't take the address of this variable.");
-            }
-            else if (function != null)
-                r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst(target)), Label(function.label));
-            else if (label != null)
-                r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst(target)), Label(label.realName));
-
-            return r;
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             Node r = new Assembly.TransientNode();
 

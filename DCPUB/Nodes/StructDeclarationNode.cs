@@ -36,26 +36,6 @@ namespace DCPUB
                 member.isArray = false;
             }
         }
-
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
-            if (ChildNodes.Count > 0)
-            {
-                if (!Child(0).IsIntegralConstant()) throw new CompileError(this, "Array sizes must be compile time constants.");
-                member.size = Child(0).GetConstantValue();
-                member.isArray = true;
-                //var _struct = context.globalScope.FindType(member.typeSpecifier);
-                //if (_struct != null) member.size *= _struct.size;
-            }
-            else
-            {
-                member.size = 1;
-                member.isArray = false;
-            }
-            return this;
-        }
-
     }
 
     public class StructDeclarationNode : CompilableNode
@@ -71,11 +51,6 @@ namespace DCPUB
             foreach (var member in treeNode.ChildNodes[2].ChildNodes)
                 AddChild("member", member);
             @struct.Node = this;
-        }
-
-        public override string TreeLabel()
-        {
-            return "struct " + @struct.name;
         }
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
@@ -102,25 +77,7 @@ namespace DCPUB
             @struct.size = offset;
         }
 
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
-            int offset = 0;
-            foreach (var member in @struct.members)
-            {
-                member.offset = offset;
-                offset += member.size;
-            }
-            @struct.size = offset;
-            return null;
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            throw new CompileError("Struct was not removed by fold pass");
-        }
-
-        public override Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             return new Assembly.Annotation("Declaration of struct " + @struct.name);
         }

@@ -14,12 +14,6 @@ namespace DCPUB.Assembly
             children.Add(child);
         }
 
-        /*public void AddInstruction(Instructions instruction, String firstOperand, String secondOperand = null)
-        {
-            AddChild(Instruction.Make(instruction, new Operand { label = firstOperand, semantics = OperandSemantics.Label },
-                new Operand { label = secondOperand, semantics = OperandSemantics.Label }));
-        }*/
-
         public void AddInstruction(Instructions instruction, Operand firstOperand, Operand secondOperand = null)
         {
             AddChild(Instruction.Make(instruction, firstOperand, secondOperand));
@@ -72,7 +66,7 @@ namespace DCPUB.Assembly
             foreach (var child in children) child.AssignRegisters(mapping);
         }
 
-        public virtual void MarkRegisters(RegisterBank bank)
+        public virtual void MarkRegisters(bool[] bank)
         {
             foreach (var child in children) child.MarkRegisters(bank);
         }

@@ -8,19 +8,11 @@ namespace DCPUB
 {
     public class CompilableNode : AstNode
     {
-        public bool WasFolded = false;
         public string ResultType = "word";
-        public Register target = Register.DISCARD;
 
-        public virtual Assembly.Node Emit(CompileContext context, Scope scope) { return null; }
-        public virtual int GetConstantValue() { return 0; }
-        public virtual Assembly.Operand GetConstantToken() { return null; }
-        public virtual bool IsIntegralConstant() { return false; }
-        public virtual string TreeLabel() { return AsString; }
-
-        public virtual Assembly.Node Emit2(CompileContext context, Scope scope, Target target)
+        public virtual Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            return new Assembly.Annotation("Emit2 not implemented on " + this.GetType().Name);
+            return new Assembly.Annotation("Emit not implemented on " + this.GetType().Name);
         }
 
         /// <summary>
@@ -30,14 +22,6 @@ namespace DCPUB
         /// </summary>
         /// <returns>An operand to fetch the value of the node</returns>
         public virtual Assembly.Operand GetFetchToken() { return null; }
-
-        public virtual int ReferencesVariable(Variable v)
-        {
-            var r = 0;
-            foreach (CompilableNode child in ChildNodes)
-                r += child.ReferencesVariable(v);
-            return r;
-        }
 
         public virtual void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
@@ -51,24 +35,6 @@ namespace DCPUB
         {
             foreach (CompilableNode child in ChildNodes)
                 child.GatherSymbols(context, enclosingScope);
-        }
-
-        public virtual CompilableNode FoldConstants(CompileContext context)
-        {
-            var childrenCopy = new AstNodeList();
-            foreach (CompilableNode child in ChildNodes)
-            {
-                var nChild = child.FoldConstants(context);
-                if (nChild != null) childrenCopy.Add(nChild);
-            }
-            ChildNodes.Clear();
-            ChildNodes.AddRange(childrenCopy);
-            return this;
-        }
-
-        public virtual void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            foreach (CompilableNode child in ChildNodes) child.AssignRegisters(context, parentState, target);
         }
 
         public static Assembly.Operand Operand(String r, 

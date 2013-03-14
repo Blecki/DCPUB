@@ -133,7 +133,7 @@ namespace DCPUCCL
 
                     if (options.skip_virtual_register_assignment) //Ignore binary flag.
                     {
-                        var assembly = context.Compile2(Console.WriteLine);
+                        var assembly = context.Compile(Console.WriteLine);
                         var writer = new System.IO.StreamWriter(options.@out, false);
                         var stream = new FileEmissionStream(writer);
                         if (assembly != null)
@@ -145,8 +145,7 @@ namespace DCPUCCL
                     }
                     else
                     {
-                        var assembly = context.Compile2(Console.WriteLine);
-                        //var assembly = context.Emit(Console.WriteLine);
+                        var assembly = context.Compile(Console.WriteLine);
 
                         if (options.binary)
                         {

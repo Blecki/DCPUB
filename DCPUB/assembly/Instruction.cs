@@ -78,7 +78,7 @@ namespace DCPUB.Assembly
                 secondOperand.label = labelTable[secondOperand.label.rawLabel];
         }
 
-        public override void MarkRegisters(RegisterBank bank)
+        public override void MarkRegisters(bool[] bank)
         {
             firstOperand.MarkRegisters(bank);
             if (secondOperand != null) secondOperand.MarkRegisters(bank);
