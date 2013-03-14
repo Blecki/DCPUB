@@ -20,30 +20,22 @@ namespace DCPUB
                 AddChild("array size", treeNode.ChildNodes[2].FirstChild.FirstChild);
         }
 
-        public override string TreeLabel()
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            return "member " + member.name + " " + member.typeSpecifier + " " + member.size;
-        }
-
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
+            base.ResolveTypes(context, enclosingScope);
             if (ChildNodes.Count > 0)
             {
-                if (!Child(0).IsIntegralConstant()) throw new CompileError("Array sizes must be compile time constants.");
-                member.size = Child(0).GetConstantValue();
+                var token = Child(0).GetFetchToken();
+                if (!token.IsIntegralConstant()) throw new CompileError(this, "Array sizes must be compile time constants.");
+                member.size = token.constant;
                 member.isArray = true;
-                //var _struct = context.globalScope.FindType(member.typeSpecifier);
-                //if (_struct != null) member.size *= _struct.size;
             }
             else
             {
                 member.size = 1;
                 member.isArray = false;
             }
-            return this;
         }
-
     }
 
     public class StructDeclarationNode : CompilableNode
@@ -61,13 +53,10 @@ namespace DCPUB
             @struct.Node = this;
         }
 
-        public override string TreeLabel()
-        {
-            return "struct " + @struct.name;
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
+            base.GatherSymbols(context, enclosingScope);
+
             if (enclosingScope.type != ScopeType.Global)
                 throw new CompileError(this, "Structs must be declared at global scope.");
             foreach (var child in ChildNodes)
@@ -75,9 +64,10 @@ namespace DCPUB
             enclosingScope.structs.Add(@struct);
         }
 
-        public override CompilableNode FoldConstants(CompileContext context)
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            base.FoldConstants(context);
+            base.ResolveTypes(context, enclosingScope);
+
             int offset = 0;
             foreach (var member in @struct.members)
             {
@@ -85,12 +75,11 @@ namespace DCPUB
                 offset += member.size;
             }
             @struct.size = offset;
-            return null;
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            throw new CompileError("Struct was not removed by fold pass");
+            return new Assembly.Annotation("Declaration of struct " + @struct.name);
         }
     }
 }

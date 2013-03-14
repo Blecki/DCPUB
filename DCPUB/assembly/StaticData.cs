@@ -16,6 +16,12 @@ namespace DCPUB.Assembly
             stream.WriteLine(str);
         }
 
+        public override void EmitIR(EmissionStream stream)
+        {
+            var str = ":" + label + " DAT " + String.Join(" ", data.Select(u => string.Format("0x{0:X}", u)));
+            stream.WriteLine(str);
+        }
+
         public override void EmitBinary(List<Box<ushort>> binary)
         {
             label.position.data = (ushort)binary.Count;
@@ -30,6 +36,12 @@ namespace DCPUB.Assembly
         public Assembly.Label data;
 
         public override void Emit(EmissionStream stream)
+        {
+            var str = ":" + label + " DAT " + data;
+            stream.WriteLine(str);
+        }
+
+        public override void EmitIR(EmissionStream stream)
         {
             var str = ":" + label + " DAT " + data;
             stream.WriteLine(str);

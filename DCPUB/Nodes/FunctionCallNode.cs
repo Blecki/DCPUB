@@ -22,11 +22,6 @@ namespace DCPUB
                 AddChild("parameter", parameter);
         }
 
-        public override string TreeLabel()
-        {
-            return "call " + functionName + " " + ResultType + " [into:" + target.ToString() + "]";
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             if (Child(0) is VariableNameNode)
@@ -69,59 +64,39 @@ namespace DCPUB
             }
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            this.target = target;
-
-            activeRegisters = parentState.SaveRegisterState();
-
-            if (function == null) Child(0).AssignRegisters(context, parentState, Register.STACK);
-
-            for (int i = 1; i < ChildNodes.Count; ++i)
-                Child(i).AssignRegisters(context, parentState, Register.STACK);
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            Assembly.Node r = null;
-            if (target == Register.DISCARD)
-            {
-                r = new Assembly.StatementNode();
-                r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
-            }
-            else
-                r = new Assembly.ExpressionNode();
+            Assembly.Node r = target.target == Targets.Discard ? 
+                (Assembly.Node)(new Assembly.StatementNode()) : new Assembly.TransientNode();
+            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
 
             for (int i = ChildNodes.Count - 1; i >= 1; --i)
-                r.AddChild(Child(i).Emit(context, scope));
-            
+                r.AddChild(Child(i).Emit(context, scope, Target.Stack));
+
             if (function == null)
             {
-                if (Child(0).IsIntegralConstant())
-                    r.AddInstruction(Assembly.Instructions.JSR, Constant((ushort)Child(0).GetConstantValue()));
-                else
+                var funcFetchToken = Child(0).GetFetchToken();
+                if (funcFetchToken == null)
                 {
-                    var fetchToken = Child(0).GetFetchToken(scope);
-                    if (fetchToken != null)
-                        r.AddInstruction(Assembly.Instructions.JSR, fetchToken);
-                    else
-                    {
-                        r.AddChild(Child(0).Emit(context, scope));
-                        r.AddInstruction(Assembly.Instructions.JSR, Operand("POP"));
-                    }
+                    var funcTarget = Target.Register(context.AllocateRegister());
+                    r.AddChild(Child(0).Emit(context, scope, funcTarget));
+                    funcFetchToken = Virtual(funcTarget.virtualId);
                 }
+
+                r.AddInstruction(Assembly.Instructions.JSR, funcFetchToken);
             }
             else
             {
                 r.AddInstruction(Assembly.Instructions.JSR, Label(function.label));
             }
 
-             r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
+            r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
 
-             if (target != Register.A && target != Register.DISCARD)
-                 r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Operand("A"));
+            if (target.target != Targets.Discard)
+                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("A"));
 
             return r;
         }
+
     }
 }

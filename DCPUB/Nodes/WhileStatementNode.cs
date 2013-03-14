@@ -22,32 +22,15 @@ namespace DCPUB
             (Child(1) as BlockNode).bypass = false;
         }
 
-        public override string TreeLabel()
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            return "while " + base.TreeLabel();
-        }
-
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
-            switch (clauseOrder)
-            {
-                case ClauseOrder.ConstantFail:
-                    return null;
-                default:
-                    return this;
-            }
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.StatementNode();
+            var r = new Assembly.TransientNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
             var topLabel = Assembly.Label.Make("BEGIN_WHILE");
             (Child(1) as BlockNode).continueLabel = topLabel;
-            
+
             r.AddLabel(topLabel);
-            r.AddChild(base.Emit(context, scope));
+            r.AddChild(base.Emit(context, scope, target));
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantPass:
@@ -56,6 +39,12 @@ namespace DCPUB
                         (Child(1) as BlockNode).breakLabel = endLabel;
                         r.AddChild(EmitBlock(context, scope, Child(1)));
                         r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(topLabel));
+                        r.AddLabel(endLabel);
+                    }
+                    break;
+                case ClauseOrder.ConstantFail:
+                    {
+                        var endLabel = Assembly.Label.Make("END_WHILE");
                         r.AddLabel(endLabel);
                     }
                     break;

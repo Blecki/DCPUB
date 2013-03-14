@@ -1,7 +1,7 @@
 // Testing Bleos File System 512
 
 #include m35fd.dc
-#include bfs512.dc
+#include bfs512_raw.dc
 #include bfs512_files.dc
 #include bfs512_directories.dc
 #include default_environment.dc
@@ -36,7 +36,7 @@ local file:bfs512_FILE = malloc(sizeof(bfs512_FILE));
 local directory:bfs512_OPEN_DIRECTORY = malloc(sizeof(bfs512_OPEN_DIRECTORY));
 local entry:bfs512_DIRECTORY_ENTRY = malloc(sizeof(bfs512_DIRECTORY_ENTRY));
 
-if ((file_system == 0) | (file == 0) | (directory == 0) | (entry == 0))
+if ((file_system == 0) | ((file == 0) | ((directory == 0) | (entry == 0))))
 {
 	printf("Error allocating memory.\n");
 	printf("%, %, %, %\n", file_system, file, directory, entry);
@@ -46,6 +46,7 @@ if ((file_system == 0) | (file == 0) | (directory == 0) | (entry == 0))
 local sp = 0;
 asm (A = &sp) { SET [A], SP }
 printf("Memory used: % words\n", entry + sizeof(bfs512_DIRECTORY_ENTRY) + (0xFFFF - sp));
+
 
 bfs512_format_header(file_system);
 
@@ -89,7 +90,7 @@ while (directory.children_left > 0)
 	printf(_buff);
 	printf("\n");
 }
-
+//*/
 printf("Finished tests.\n");
 
 :ERROR

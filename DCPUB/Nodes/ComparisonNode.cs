@@ -16,58 +16,7 @@ namespace DCPUB
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override string TreeLabel()
-        {
-            return AsString;
-        }
-
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
-            if (Child(0).IsIntegralConstant() && Child(1).IsIntegralConstant())
-            {
-                var firstValue = Child(0).GetConstantValue();
-                var secondValue = Child(1).GetConstantValue();
-                if (AsString == "==") return new NumberLiteralNode
-                {
-                    Value = (firstValue == secondValue ? (ushort)1 : (ushort)0),
-                    WasFolded = true
-                };
-                if (AsString == "!=") return new NumberLiteralNode
-                {
-                    Value = (firstValue != secondValue ? (ushort)1 : (ushort)0),
-                    WasFolded = true
-                };
-                if (AsString == ">") return new NumberLiteralNode
-                {
-                    Value = (firstValue > secondValue ? (ushort)1 : (ushort)0),
-                    WasFolded = true
-                };
-                if (AsString == "<") return new NumberLiteralNode
-                {
-                    Value = (firstValue < secondValue ? (ushort)1 : (ushort)0),
-                    WasFolded = true
-                };
-                if (AsString == "->") return new NumberLiteralNode
-                {
-                    Value = (firstValue > secondValue ? (ushort)1 : (ushort)0),
-                    WasFolded = true
-                };
-                if (AsString == "-<") return new NumberLiteralNode
-                {
-                    Value = (firstValue < secondValue ? (ushort)1 : (ushort)0),
-                    WasFolded = true
-                };
-            }
-            return this;
-        }
-
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            throw new CompileError("Branch node should have handled this.");
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             throw new CompileError("Branch node should have handled this.");
         }

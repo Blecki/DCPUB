@@ -91,7 +91,7 @@ namespace DCPUB
             comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule =
-                (ToTerm("local") | "static" | "constant" | "external") + identifier + (ToTerm(":") + identifier).Q()
+                (ToTerm("local") | "static" | "external") + identifier + (ToTerm(":") + identifier).Q()
                 + (ToTerm("[") + expression + "]").Q()
                 + (ToTerm("=") + (expression | arrayInitialization)).Q();
             dereference.Rule = ToTerm("*") + expression;

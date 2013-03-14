@@ -18,32 +18,21 @@ namespace DCPUB
                 AddChild("child", item);
         }
 
-        public override string TreeLabel()
+        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            return "array initialization";
-        }
-
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
             rawData = new ushort[ChildNodes.Count];
 
             for (int i = 0; i < ChildNodes.Count; ++i)
             {
                 var _c = Child(i);
                 if (_c == null) throw new CompileError("Failed sanity check: Array items not nodes?");
-                if (!_c.IsIntegralConstant()) throw new CompileError("Array elements must be compile time constants.");
-                rawData[i] = (ushort)_c.GetConstantValue();
+                var itemFetchToken = _c.GetFetchToken();
+                if (!itemFetchToken.IsIntegralConstant()) throw new CompileError("Array elements must be compile time constants.");
+                rawData[i] = itemFetchToken.constant;
             }
-            return this;
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation("Array Initialization"));

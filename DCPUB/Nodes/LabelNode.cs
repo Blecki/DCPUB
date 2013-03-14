@@ -16,11 +16,6 @@ namespace DCPUB
             label.declaredName = treeNode.FirstChild.FindTokenAndGetText();
         }
 
-        public override string TreeLabel()
-        {
-            return "Label " + label.declaredName;
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             label.realName = Assembly.Label.Make("_" + label.declaredName);
@@ -31,7 +26,7 @@ namespace DCPUB
             enclosingScope.activeFunction.function.labels.Add(label);
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddLabel(label.realName);

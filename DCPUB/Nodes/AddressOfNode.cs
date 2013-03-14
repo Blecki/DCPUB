@@ -20,53 +20,12 @@ namespace DCPUB
             variableName = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override string TreeLabel()
-        {
-            return "addof " + variableName + " [into:" + target.ToString() + "]";
-        }
-
-        public override bool IsIntegralConstant()
-        {
-            return false;
-        }
-
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
-        {
-            
-        }
-
-        public override Operand GetConstantToken()
-        {
-            if (function != null)
-                return Label(function.label);
-            else if (label != null)
-                return Label(label.realName);
-            else
-                return null;
-        }
-
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            var scope = enclosingScope;
-            while (variable == null && scope != null)
+            variable = enclosingScope.FindVariable(variableName);
+            if (variable == null) 
             {
-                foreach (var v in scope.variables)
-                    if (v.name == variableName)
-                        variable = v;
-                if (variable == null) scope = scope.parent;
-            }
-
-            if (variable == null)
-            {
-                scope = enclosingScope;
-                while (function == null && scope != null)
-                {
-                    foreach (var v in scope.functions)
-                        if (v.name == variableName)
-                            function = v;
-                    if (function == null) scope = scope.parent;
-                }
-
+                function = enclosingScope.FindFunction(variableName);
                 if (function == null)
                 {
                     foreach (var l in enclosingScope.activeFunction.function.labels)
@@ -88,59 +47,49 @@ namespace DCPUB
             }
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        public override Operand GetFetchToken()
         {
-            this.target = target;
+            if (variable != null)
+            {
+                if (variable.type == VariableType.Static)
+                    return Label(variable.staticLabel);
+                else return null;
+            }
+            else if (function != null)
+                return Label(function.label);
+            else if (label != null)
+                return Label(label.realName);
+            return null;
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            Node r = new Assembly.ExpressionNode();
+            Node r = new Assembly.TransientNode();
 
             if (variable != null)
             {
                 if (variable.type == VariableType.Static)
                 {
-                    r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(variable.staticLabel));
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(variable.staticLabel));
                 }
                 else if (variable.type == VariableType.Local)
                 {
-                    if (variable.location == Register.STACK)
-                    {
-                        r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                            Operand("J"));
-                        if (target != Register.STACK)
-                            r.AddInstruction(Instructions.ADD, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                                Constant((ushort)variable.stackOffset));
-                        else
-                            r.AddInstruction(Instructions.ADD, Operand("PEEK"), Constant((ushort)variable.stackOffset));
-                    }
-                    else
-                        throw new CompileError("Variable should be on stack");
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("J"));
+                    r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek), VariableOffset((ushort)variable.stackOffset));
                 }
                 else if (variable.type == VariableType.External)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET,
-                        Operand(Scope.GetRegisterLabelFirst((int)target)),
-                        Label(new Assembly.Label("EXTERNALS")));
-                    r.AddInstruction(Assembly.Instructions.ADD,
-                        (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
-                        Constant((ushort)variable.constantValue));
-                    r.AddInstruction(Assembly.Instructions.SET,
-                        (target == Register.STACK ? Operand("PEEK") : Operand(Scope.GetRegisterLabelFirst((int)target))),
-                        (target == Register.STACK ? Dereference("PEEK") : Dereference(Scope.GetRegisterLabelSecond((int)target))));
+                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Label(new Assembly.Label("EXTERNALS")));
+                    r.AddInstruction(Assembly.Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)variable.constantValue));
+                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), target.GetOperand(TargetUsage.Peek, OperandSemantics.Dereference));
                 }
                 else
                     throw new CompileError(this, "Can't take the address of this variable.");
             }
             else if (function != null)
-            {
-                r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(function.label));
-            }
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(function.label));
             else if (label != null)
-            {
-                r.AddInstruction(Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)), Label(label.realName));
-            }
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(label.realName));
 
             return r;
         }

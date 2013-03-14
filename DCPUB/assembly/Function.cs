@@ -18,5 +18,15 @@ namespace DCPUB.Assembly
             stream.WriteLine(";END FUNCTION");
             stream.WriteLine("");
         }
+
+        public override void EmitIR(EmissionStream stream)
+        {
+            stream.WriteLine("[function node]");
+            stream.WriteLine(";DCPUB FUNCTION " + functionName + " " + entranceLabel + " " + parameterCount);
+            base.EmitIR(stream);
+            stream.WriteLine(";END FUNCTION");
+            stream.WriteLine("[/function node]");
+            stream.WriteLine("");
+        }
     }
 }

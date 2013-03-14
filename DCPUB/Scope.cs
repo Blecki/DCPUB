@@ -108,6 +108,14 @@ namespace DCPUB
             return null;
         }
 
+        internal Function FindFunction(string name)
+        {
+            foreach (var function in functions)
+                if (function.name == name) return function;
+            if (parent != null) return parent.FindFunction(name);
+            return null;
+        }
+
         internal int FindFreeRegister()
         {
             for (int i = 3; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
@@ -116,7 +124,11 @@ namespace DCPUB
         }
 
         internal static string GetRegisterLabelFirst(int r) { if (r == (int)Register.STACK) return "PUSH"; else return ((Register)r).ToString(); }
+        internal static string GetRegisterLabelFirst(Register r) { return GetRegisterLabelFirst((int)r); }
         internal static string GetRegisterLabelSecond(int r) { if (r == (int)Register.STACK) return "POP"; else return ((Register)r).ToString(); }
+        internal static string GetRegisterLabelSecond(Register r) { return GetRegisterLabelSecond((int)r); }
+        internal static string GetPeekLabel(int r) { if (r == (int)Register.STACK) return "PEEK"; else return ((Register)r).ToString(); }
+        internal static string GetPeekLabel(Register r) { return GetPeekLabel((int)r); }
         internal void FreeRegister(int r) { registers[r] = RegisterState.Free; }
         public void UseRegister(int r) { registers[r] = RegisterState.Used; }
         internal static bool IsRegister(Register r) { return (int)(r) <= 7; }

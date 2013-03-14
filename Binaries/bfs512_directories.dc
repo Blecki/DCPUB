@@ -4,7 +4,7 @@
 #define DCPUB_LIB_BFS512_DIRECTORIES
 
 #include m35fd.dc
-#include bfs512.dc
+#include bfs512_raw.dc
 #include bfs512_files.dc
 #include vec.dc
 

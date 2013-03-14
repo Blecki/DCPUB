@@ -13,14 +13,10 @@ namespace DCPUB
             base.Init(context, treeNode);
             AsString = "NULL STATEMENT";
         }
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            return null;
-        }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            throw new CompileError(this, "Null statement should have been folded.");
+            return new Assembly.Annotation("Empty statement.");
         }
 
     }

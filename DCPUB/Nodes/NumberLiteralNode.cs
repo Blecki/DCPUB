@@ -46,37 +46,19 @@ namespace DCPUB
             }
         }
 
-        public override string TreeLabel()
+        public override Assembly.Operand GetFetchToken()
         {
-            return "literal " + ResultType + " (" + string.Format("0x{0:X}", (ushort)Value) + ")" + (WasFolded ? " folded" : "") + " [into:" + target.ToString() + "]";
+            return Constant((ushort)Value);
         }
 
-        public override bool IsIntegralConstant()
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            return true;
-        }
-
-        public override int GetConstantValue()
-        {
-            return Value;
-        }
-
-        public override Assembly.Operand GetConstantToken()
-        {
-            return Constant((ushort)GetConstantValue());
-        }
-
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            this.target = target;
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            var r = new Assembly.ExpressionNode();
-            r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelFirst((int)target)),
-                GetConstantToken());
-            return r;
+            return new Assembly.Instruction
+            {
+                instruction = Assembly.Instructions.SET,
+                firstOperand = target.GetOperand(TargetUsage.Push),
+                secondOperand = Constant((ushort)Value)
+            };
         }
 
     }

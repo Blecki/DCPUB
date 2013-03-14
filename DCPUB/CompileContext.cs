@@ -19,8 +19,13 @@ namespace DCPUB
         public string source = null;
         public CompileOptions options = new CompileOptions();
         public Action<String> onWarning = null;
-        public Variable end_of_program = null;
         public Assembly.Peephole.Peepholes peepholes;
+        public int nextVirtualRegister = 0;
+
+        public int AllocateRegister()
+        {
+            return nextVirtualRegister++;
+        }
         
         public String GetLabel()
         {
@@ -49,11 +54,6 @@ namespace DCPUB
             var data = new List<ushort>();
             data.Add(word);
             dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
-        }
-
-        public static String TypeWarning(string A, string B)
-        {
-            return "Conversion of " + A + " to " + B + ". Possible loss of data.";
         }
 
         public void AddWarning(Irony.Parsing.SourceSpan location, String message)
@@ -115,61 +115,25 @@ namespace DCPUB
             return true;
         }
 
-        public void Compile(Action<string> onError)
+        public Assembly.Node Compile(Action<string> onError)
         {
-            end_of_program = new Variable();
-            end_of_program.location = Register.CONST;
-            end_of_program.type = VariableType.ConstantLabel;
-            end_of_program.name = "__endofprogram";
-            end_of_program.staticLabel = new Assembly.Label("ENDOFPROGRAM");
-            globalScope.variables.Add(end_of_program);
-
-            globalScope.variables.Add(new Variable
-            {
-                name = "true",
-                location = Register.CONST,
-                type = VariableType.Constant,
-                constantValue = 1
-            });
-
-            globalScope.variables.Add(new Variable
-            {
-                name = "false",
-                location = Register.CONST,
-                type = VariableType.Constant,
-                constantValue = 0
-            });
+            var end_label = new Assembly.Label("ENDOFPROGRAM");
+            globalScope.variables.Add(new Variable { type = VariableType.ConstantLabel, name = "__endofprogram", staticLabel = end_label });
+            globalScope.variables.Add(new Variable { name = "true", type = VariableType.Constant, constantValue = 1 });
+            globalScope.variables.Add(new Variable { name = "false", type = VariableType.Constant, constantValue = 0 });
 
             try
             {
                 rootNode.GatherSymbols(this, globalScope);
                 rootNode.ResolveTypes(this, globalScope);
-                rootNode.FoldConstants(this);
-                rootNode.AssignRegisters(this, new RegisterBank(), Register.DISCARD);
-            }
-            catch (CompileError e)
-            {
-                ReportError(onError, e);
-            }
-        }
-
-        public Assembly.Node Emit(Action<string> onError)
-        {
-            try
-            {
+                //rootNode.FoldConstants(this);
+            
                 var r = new Assembly.Node();
 
                 if (options.externals)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET,
-                        new Assembly.Operand
-                        {
-                            register = Assembly.OperandRegister.PC
-                        }, new Assembly.Operand
-                        {
-                            semantics = Assembly.OperandSemantics.Label,
-                            label = new Assembly.Label("STARTOFPROGRAM")
-                        });
+                    var startOfProgram = new Assembly.Label("STARTOFPROGRAM");
+                    r.AddInstruction(Assembly.Instructions.SET, CompilableNode.Operand("PC"), CompilableNode.Label(startOfProgram));
                     r.AddChild(new Assembly.Annotation("External data block. Your assembler or program loader should fill these in."));
                     r.AddLabel(new Assembly.Label("EXTERNALS"));
                     foreach (var variable in globalScope.variables)
@@ -186,9 +150,9 @@ namespace DCPUB
                         }
                     }
 
-                    r.AddLabel(new Assembly.Label("STARTOFPROGRAM"));
+                    r.AddLabel(startOfProgram);
                 }
-
+                
                 r.AddChild(rootNode.CompileFunction(this));
                 foreach (var dataItem in dataElements)
                 {
@@ -197,10 +161,10 @@ namespace DCPUB
                     else
                         r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<ushort> });
                 }
-                r.AddLabel(end_of_program.staticLabel);
+                r.AddLabel(end_label);
 
-                
-                r.CollapseTree(peepholes);
+
+                //r.CollapseTree(peepholes);
                 return r;
             }
             catch (DCPUB.CompileError c)

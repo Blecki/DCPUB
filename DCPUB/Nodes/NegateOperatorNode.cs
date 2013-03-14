@@ -14,7 +14,6 @@ namespace DCPUB
             AddChild("first", treeNode.ChildNodes[1]);
             ChildNodes.Add(new NumberLiteralNode { Value = 0x8000 });
             AsString = "^";
-            
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)

@@ -10,7 +10,6 @@ namespace DCPUB
     {
         public Function function = null;
         public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
-        public RegisterBank usedRegisters = new RegisterBank();
         protected Assembly.Label footerLabel = null;
         private Irony.Parsing.SourceSpan headerSpan;
         private int registersPreserved = 0;
@@ -42,11 +41,6 @@ namespace DCPUB
             ResultType = function.returnType;
         }
 
-        public override string TreeLabel()
-        {
-            return "Function " + function.name + " " + function.parameterCount;
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             (Child(0) as BlockNode).bypass = true;
@@ -66,9 +60,8 @@ namespace DCPUB
                 variable.typeSpecifier = parameters[i].Item2;
                 if (variable.typeSpecifier == null) variable.typeSpecifier = "word";
                 function.localScope.variables.Add(variable);
-
+                variable.type = VariableType.Local;
                 
-                    variable.location = Register.STACK;
                     variable.stackOffset = i + 2; //Need an extra space for the return pointer and stored frame pointer
                     //function.localScope.variablesOnStack += 1;
                 
@@ -83,30 +76,31 @@ namespace DCPUB
                 (child as CompilableNode).ResolveTypes(context, function.localScope);
         }
 
-        public override CompilableNode FoldConstants(CompileContext context)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            base.FoldConstants(context);
-            return null;
+            return new Assembly.Annotation("Declaration of function " + function.name);
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
+        public void AssignVirtualRegisters(Assembly.Node root)
         {
-            var localBank = new RegisterBank();
-            localBank.functionBank = usedRegisters;
-            
-            base.AssignRegisters(context, localBank, Register.DISCARD);
-
-            foreach (var nestedFunction in function.localScope.functions)
-                nestedFunction.Node.AssignRegisters(context, parentState, Register.DISCARD);
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
-        {
-            throw new CompileError("Function was not removed by fold pass");
+            root.AssignRegisters(null);
         }
 
         public virtual Assembly.Node CompileFunction(CompileContext context)
         {
+            context.nextVirtualRegister = 0;
+            var body = new Assembly.Node();
+            foreach (var child in ChildNodes)
+                body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
+            body.CollapseTree(context.peepholes);
+
+            if (!context.options.skip_virtual_register_assignment) AssignVirtualRegisters(body);
+
+            var registers = new bool[] { true, false, false, false, false, false, false, true };
+            body.MarkRegisters(registers);
+            var used = registers.Count((rs) => rs == true) - 2; //Why -2? Don't preserve A or J.
+            body.AdjustVariableOffsets(-used);
+
             var r = new Assembly.Function
             {
                 functionName = function.name,
@@ -121,30 +115,21 @@ namespace DCPUB
             r.AddChild(new Assembly.Annotation("Save frame pointer in J"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand("J"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
-            
+
             //Save registers
-            //ABC saved by caller
             for (int i = 1; i < 7; ++i)
-                if (usedRegisters.registers[i] == RegisterState.Used)
-                {
+                if (registers[i])
                     r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond(i)));
-                    registersPreserved += 1;
-                    function.localScope.variablesOnStack += 1;
-                }
-
-            var localScope = function.localScope;
-
-            foreach (var child in ChildNodes)
-                r.AddChild((child as CompilableNode).Emit(context, localScope));
             
-            r.AddLabel(footerLabel);            
+            r.AddChild(body);
 
+            r.AddLabel(footerLabel);
             r.AddInstruction(Assembly.Instructions.SET, Operand("SP"), Operand("J"));
-            r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)registersPreserved));
+            r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)used));
 
             //Restore registers
             for (int i = 6; i >= 1; --i)
-                if (usedRegisters.registers[i] == RegisterState.Used)
+                if (registers[i])
                     r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond(i)), Operand("POP"));
 
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
@@ -158,7 +143,7 @@ namespace DCPUB
 
         internal virtual Assembly.Node CompileReturn(CompileContext context, Scope localScope)
         {
-            var r = new Assembly.ExpressionNode();
+            var r = new Assembly.TransientNode();
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
             return r;
         }

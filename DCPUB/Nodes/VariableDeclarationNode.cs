@@ -45,12 +45,6 @@ namespace DCPUB
             if (variable.typeSpecifier == null) variable.typeSpecifier = "word";
         }
 
-        public override string TreeLabel()
-        {
-            return declLabel + " " + variable.name + (variable.typeSpecifier != null ? ":" + variable.typeSpecifier : "") 
-                + " [loc:" + variable.location.ToString() + "]";
-        }
-
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
@@ -65,13 +59,7 @@ namespace DCPUB
             else if (declLabel == "static")
             {
                 variable.type = VariableType.Static;
-                variable.location = Register.STATIC;
                 variable.staticLabel = Assembly.Label.Make("_STATIC_" + variable.name);
-            }
-            else if (declLabel == "constant")
-            {
-                variable.type = VariableType.Constant;
-                variable.location = Register.CONST;
             }
             else if (declLabel == "external")
             {
@@ -86,36 +74,29 @@ namespace DCPUB
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
+
             if (!Scope.IsBuiltIn(variable.typeSpecifier))
             {
                 variable.structType = enclosingScope.FindType(variable.typeSpecifier);
                 if (variable.structType == null)
                     throw new CompileError(this, "Could not find type " + variable.typeSpecifier);
             }
-        }
 
-        public override CompilableNode FoldConstants(CompileContext context)
-        {
-            base.FoldConstants(context);
             if (isArray)
             {
-                if (declLabel == "constant")
-                    throw new CompileError("Can't have constant array.");
-                if (declLabel == "external")
-                    throw new CompileError("Can't have external array.");
-            
-                if (!Child(1).IsIntegralConstant()) throw new CompileError("Array sizes must be a compile time constant.");
-                size = Child(1).GetConstantValue();
+                if (declLabel == "external") throw new CompileError("Can't have external array.");
 
-                if (hasInitialValue && !(Child(0) is ArrayInitializationNode))
-                    throw new CompileError("Can't initialize an array this way.");
+                var sizeToken = Child(1).GetFetchToken();
+                if (!sizeToken.IsIntegralConstant()) throw new CompileError(this, "Array sizes must be a compile time constant.");
+                size = sizeToken.constant;
+
+                if (hasInitialValue && !(Child(0) is ArrayInitializationNode)) throw new CompileError("Can't initialize an array this way.");
                 if (hasInitialValue && (Child(0) as ArrayInitializationNode).rawData.Length != size)
                     throw new CompileError("Array initialization size mismatch");
 
                 if (declLabel == "static")
                 {
-                    if (hasInitialValue)
-                        context.AddData(variable.staticLabel, new List<ushort>((Child(0) as ArrayInitializationNode).rawData));
+                    if (hasInitialValue) context.AddData(variable.staticLabel, new List<ushort>((Child(0) as ArrayInitializationNode).rawData));
                     else
                     {
                         var data = new ushort[size];
@@ -128,24 +109,16 @@ namespace DCPUB
             {
                 if (hasInitialValue)
                 {
-                    if (!Child(0).IsIntegralConstant())
-                    {
-                        var constantToken = Child(0).GetConstantToken();
-                        if (constantToken == null)
-                            throw new CompileError(this, "Statics must be initialized to a constant value.");
-                        context.AddData(variable.staticLabel, constantToken.label);
-                    }
+                    var valueToken = Child(0).GetFetchToken();
+                    if (valueToken.IsIntegralConstant())
+                        context.AddData(variable.staticLabel, valueToken.constant);
+                    else if ((valueToken.semantics & Assembly.OperandSemantics.Label) == Assembly.OperandSemantics.Label)
+                        context.AddData(variable.staticLabel, valueToken.label);
                     else
-                        context.AddData(variable.staticLabel, (ushort)Child(0).GetConstantValue());
+                        throw new CompileError(this, "Static variables must be initialized with a static value.");
                 }
                 else
                     context.AddData(variable.staticLabel, 0);
-            }
-            else if (declLabel == "constant")
-            {
-                if (!hasInitialValue) throw new CompileError("Constants must have a value.");
-                if (!Child(0).IsIntegralConstant()) throw new CompileError("Constants must be initialized to a constant value.");
-                variable.constantValue = Child(0).GetConstantValue();
             }
             else if (declLabel == "external")
             {
@@ -153,19 +126,9 @@ namespace DCPUB
                 context.externalCount += 1;
                 if (hasInitialValue) throw new CompileError("Can't initialize externals.");
             }
-            return this;
         }
 
-        public override void AssignRegisters(CompileContext context, RegisterBank parentState, Register target)
-        {
-            if (variable.type == VariableType.Local)
-            {
-                variable.location = Register.STACK;
-                Child(0).AssignRegisters(context, parentState, variable.location);
-            }
-        }
-
-        public override Assembly.Node Emit(CompileContext context, Scope scope)
+        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
@@ -173,7 +136,7 @@ namespace DCPUB
             if (variable.type == VariableType.Local)
             {
                 variable.stackOffset = -(scope.variablesOnStack + size);
-                if (hasInitialValue) r.AddChild(Child(0).Emit(context, scope));
+                if (hasInitialValue) r.AddChild(Child(0).Emit(context, scope, Target.Stack));
                 else r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)size));
                 scope.variablesOnStack += size;
             }

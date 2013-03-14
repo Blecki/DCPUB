@@ -101,7 +101,6 @@
     <Compile Include="Nodes\SizeofNode.cs" />
     <Compile Include="Nodes\MemberAccessNode.cs" />
     <Compile Include="Nodes\StructDeclarationNode.cs" />
-    <Compile Include="RegisterBank.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Nodes\AssignmentNode.cs">
       <SubType>Code</SubType>
@@ -121,6 +120,7 @@
     <Compile Include="Nodes\ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
+    <Compile Include="Target.cs" />
     <Compile Include="Upsert.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Nodes\WhileStatementNode.cs" />
