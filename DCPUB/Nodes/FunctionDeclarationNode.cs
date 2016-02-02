@@ -12,7 +12,6 @@ namespace DCPUB
         public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
         protected Assembly.Label footerLabel = null;
         private Irony.Parsing.SourceSpan headerSpan;
-        private int registersPreserved = 0;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -94,7 +93,7 @@ namespace DCPUB
                 body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
             body.CollapseTree(context.peepholes);
 
-            if (!context.options.skip_virtual_register_assignment) AssignVirtualRegisters(body);
+            AssignVirtualRegisters(body);
 
             var registers = new bool[] { true, false, false, false, false, false, false, true };
             body.MarkRegisters(registers);

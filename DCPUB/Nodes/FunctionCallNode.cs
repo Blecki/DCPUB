@@ -11,7 +11,6 @@ namespace DCPUB
         Function function;
         String functionName;
         Scope enclosingScope;
-        RegisterState[] activeRegisters = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {

@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C# Express 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "010.Irony.2010", "Irony\010.Irony.2010.csproj", "{D81F5C91-D7DB-46E5-BC99-49488FB6814C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "030.Irony.GrammarExplorer.2010", "Irony.GrammarExplorer\030.Irony.GrammarExplorer.2010.csproj", "{AE1C04A8-B03D-4144-98E9-BF66C50265E7}"
@@ -8,8 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCPUB", "DCPUB\DCPUB.csproj", "{B78D4E89-82C5-4405-ABDF-DCE40D5EC086}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "b", "DCPUBCL\b.csproj", "{FB985366-D895-41E8-9B24-D944DE16E88F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pre", "DCPUBPreprocessor\pre.csproj", "{A13FCB40-F0F4-4770-8904-BDC3E01577FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,16 +61,6 @@ Global
 		{FB985366-D895-41E8-9B24-D944DE16E88F}.Release|Mixed Platforms.Build.0 = Release|x86
 		{FB985366-D895-41E8-9B24-D944DE16E88F}.Release|x86.ActiveCfg = Release|x86
 		{FB985366-D895-41E8-9B24-D944DE16E88F}.Release|x86.Build.0 = Release|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Debug|x86.ActiveCfg = Debug|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Debug|x86.Build.0 = Debug|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|Any CPU.ActiveCfg = Release|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|Mixed Platforms.Build.0 = Release|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|x86.ActiveCfg = Release|x86
-		{A13FCB40-F0F4-4770-8904-BDC3E01577FB}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

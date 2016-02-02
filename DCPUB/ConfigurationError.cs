@@ -5,9 +5,8 @@ using System.Text;
 
 namespace DCPUB
 {
-    public class CompileError : Exception
+    public class ConfigurationError : Exception
     {
-        public CompileError(String msg) : base(msg) { }
-
+        public ConfigurationError(String msg) : base(msg) { }
     }
 }

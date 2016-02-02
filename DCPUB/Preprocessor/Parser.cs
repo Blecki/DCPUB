@@ -53,7 +53,11 @@ namespace DCPUB.Preprocessor
                 else if (state.lastWasNewline && state.MatchNext("#endif"))
                 {
                     var endifLine = ParseLine(state);
-                    if (endifLine.Trim() != "#endif") throw new CompileError("Endif should be bare.");
+                    if (endifLine.Trim() != "#endif")
+                    {
+                        state.Error("#endif should be alone on line.");
+                        return;
+                    }
                     depth -= 1;
                     if (depth < 0) return;
                     else continue;
@@ -65,10 +69,15 @@ namespace DCPUB.Preprocessor
         public static String ParseDirectiveName(ParseState state)
         {
             SkipWhitespace(state);
-            if (state.AtEnd() || !IsIdentifier(state.Next())) throw new CompileError("Expected an identifier after a preprocessor directive.");
+            if (state.AtEnd() || !IsIdentifier(state.Next()))
+            {
+                state.Error("Expected an identifier after a preprocessor directive.");
+                return "";
+            }
             var ident = ParseIdentifier(state);
             SkipWhitespace(state);
-            if (!state.AtEnd()) throw new CompileError("Did not expect this directive to have a body.");
+            if (!state.AtEnd())
+                state.Error("Did not expect this directive to have a body.");
             return ident;
         }
 
@@ -86,7 +95,11 @@ namespace DCPUB.Preprocessor
             {
                 var dState = new ParseState(rest);
                 SkipWhitespace(dState);
-                if (dState.AtEnd() || !IsIdentifier(dState.Next())) throw new CompileError("Define what?");
+                if (dState.AtEnd() || !IsIdentifier(dState.Next()))
+                {
+                    state.Error("Define what?");
+                    return "";
+                }
                 var ident = ParseIdentifier(dState);
                 var arguments = new List<String>();
                 if (!dState.AtEnd() && dState.Next() == '(')
@@ -96,7 +109,12 @@ namespace DCPUB.Preprocessor
                     while (!dState.AtEnd() && dState.Next() != ')')
                     {
                         var argname = ParseIdentifier(dState);
-                        if (String.IsNullOrEmpty(argname)) throw new CompileError("Empty argument name in macro.");
+                        if (String.IsNullOrEmpty(argname))
+                        {
+                            state.Error("Empty argument name in macro.");
+                            argname = "_";
+                        }
+
                         arguments.Add(argname);
                         SkipWhitespace(dState);
                         if (!dState.AtEnd() && dState.Next() == ',')
@@ -105,9 +123,9 @@ namespace DCPUB.Preprocessor
                             SkipWhitespace(dState);
                         }
                         else if (!dState.AtEnd() && dState.Next() == ')') break;
-                        else throw new CompileError("Error parsing macro argument names.");
+                        else state.Error("Error parsing macro argument names.");
                     }
-                    if (dState.AtEnd() || dState.Next() != ')') throw new CompileError("Error parsing macro argument names.");
+                    if (dState.AtEnd() || dState.Next() != ')') state.Error("Error parsing macro argument names.");
                     dState.Advance(); //skip )
                 }
                 SkipWhitespace(dState);
@@ -140,7 +158,10 @@ namespace DCPUB.Preprocessor
                 return Preprocess(state.readIncludeFile(fileName), state);
             }
             else
-                throw new CompileError("Unknown preprocessor directive.");
+            {
+                state.Error("Unknown preprocessor directive.");
+                return "";
+            }
         }
 
         public static String Expand(string name, ParseState state)
@@ -151,25 +172,32 @@ namespace DCPUB.Preprocessor
                 if (macro.arguments.Count == 0)
                     return state.macros[name].body;
                 SkipWhitespace(state);
-                if (state.AtEnd() || state.Next() != '(') throw new CompileError("Expected arguments to macro.");
-                //Peel off arguments, separated by ,
-                state.Advance(); //skip '('
-                List<String> arguments = new List<String>();
-                while (!state.AtEnd())
+                if (state.AtEnd() || state.Next() != '(')
                 {
-                    var argument = ParseBlock((c) => c == ',' || c == ')', state);
-                    bool foundEnd = false;
-                    if (argument.Length != 0 && argument[argument.Length - 1] == ')') foundEnd = true;
-                    if (argument.Length != 0)
-                        argument = argument.Substring(0, argument.Length - 1);
-                    arguments.Add(argument);
-                    if (foundEnd) break;
+                    state.Error("Expected arguments to macro.");
+                    return "";
                 }
-                if (arguments.Count != macro.arguments.Count) throw new CompileError("Wrong number of arguments to macro.");
-                var expansionState = new ParseState(macro.body);
-                for (int i = 0; i < arguments.Count; ++i)
-                    expansionState.macros.Add(macro.arguments[i], new Macro { body = arguments[i], arguments = new List<string>() });
-                return ParseBlock(null, expansionState);
+                else
+                {
+                    //Peel off arguments, separated by ,
+                    state.Advance(); //skip '('
+                    List<String> arguments = new List<String>();
+                    while (!state.AtEnd())
+                    {
+                        var argument = ParseBlock((c) => c == ',' || c == ')', state);
+                        bool foundEnd = false;
+                        if (argument.Length != 0 && argument[argument.Length - 1] == ')') foundEnd = true;
+                        if (argument.Length != 0)
+                            argument = argument.Substring(0, argument.Length - 1);
+                        arguments.Add(argument);
+                        if (foundEnd) break;
+                    }
+                    if (arguments.Count != macro.arguments.Count) state.Error("Wrong number of arguments to macro.");
+                    var expansionState = new ParseState(macro.body);
+                    for (int i = 0; i < macro.arguments.Count; ++i)
+                        expansionState.macros.Add(macro.arguments[i], new Macro { body = arguments[i], arguments = new List<string>() });
+                    return ParseBlock(null, expansionState);
+                }
             }
             else
                 return name;
@@ -242,14 +270,16 @@ namespace DCPUB.Preprocessor
             {
                 state.macros = parentState.macros;
                 state.readIncludeFile = parentState.readIncludeFile;
+                state.ReportErrors = parentState.ReportErrors;
             }
             return ParseBlock(null, state);
         }
 
-        public static String Preprocess(String file, Func<String,String> fileSource)
+        public static String Preprocess(String file, Func<String,String> fileSource, Action<String> ReportErrors)
         {
             var state = new ParseState(CollapseLineEscapes(file));
             state.readIncludeFile = fileSource;
+            state.ReportErrors = ReportErrors;
             return ParseBlock(null, state);
         }
     }

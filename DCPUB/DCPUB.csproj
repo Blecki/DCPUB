@@ -86,6 +86,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AssignableNode.cs" />
+    <Compile Include="ConfigurationError.cs" />
     <Compile Include="CompileOptions.cs" />
     <Compile Include="Nodes\AddressOfNode.cs" />
     <Compile Include="Nodes\ArrayInitializationNode.cs" />
@@ -101,6 +102,8 @@
     <Compile Include="Nodes\SizeofNode.cs" />
     <Compile Include="Nodes\MemberAccessNode.cs" />
     <Compile Include="Nodes\StructDeclarationNode.cs" />
+    <Compile Include="Preprocessor\Parser.cs" />
+    <Compile Include="Preprocessor\ParseState.cs" />
     <Compile Include="RootProgramNode.cs" />
     <Compile Include="Nodes\AssignmentNode.cs">
       <SubType>Code</SubType>

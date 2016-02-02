@@ -5,6 +5,9 @@ using System.Text;
 
 namespace DCPUB.Preprocessor
 {
+    public class PreprocessorAbort : Exception
+    { }
+
     public class Macro
     {
         public List<String> arguments;
@@ -21,6 +24,12 @@ namespace DCPUB.Preprocessor
         public bool lastWasNewline = false;
         public Dictionary<String, Macro> macros = new Dictionary<string, Macro>();
         public Func<String, String> readIncludeFile;
+        public Action<String> ReportErrors;
+
+        public void Error(String Message)
+        {
+            ReportErrors(String.Format("{0} {1}: {2}", filename, currentLine, Message));
+        }
 
         public ParseState(String source)
         {
@@ -33,7 +42,10 @@ namespace DCPUB.Preprocessor
         public char Next()
         {
             if (start >= source.Length)
-                throw new CompileError("Preprocessor parser error.");
+            {
+                Error("Unexpected end of file.");
+                throw new PreprocessorAbort();
+            }
             return source[start]; 
         }
 
@@ -42,7 +54,11 @@ namespace DCPUB.Preprocessor
             if (Next() == '\n' || Next() == '\r') lastWasNewline = true;
             else lastWasNewline = false;
             start += 1;
-            if (start > end) throw new CompileError("Unexpected end of file");
+            if (start > end)
+            {
+                Error("Unexpected end of file");
+                throw new PreprocessorAbort();
+            }
             if (!AtEnd() && Next() == '\n') 
             
                 currentLine += 1;

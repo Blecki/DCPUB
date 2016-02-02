@@ -60,7 +60,7 @@ namespace DCPUB
         {
             if (onWarning != null)
             {
-                onWarning("Warning: " + message + "\n" + source.Substring(location.Location.Position, location.Length));
+                onWarning("%WARNING : " + message + "\n" + source.Substring(location.Location.Position, location.Length));
             }
         }
             
@@ -102,7 +102,7 @@ namespace DCPUB
             {
                 foreach (var msg in program.ParserMessages)
                 {
-                    onError(msg.Level + ": " + msg.Message + " [line:" + msg.Location.Line + " column:" + msg.Location.Column + "]\r\n");
+                    onError("%PARSER " + msg.Level + ": " + msg.Message + " [line:" + msg.Location.Line + " column:" + msg.Location.Column + "]\r\n");
                     onError(extractLine(code, msg.Location.Line) + "\r\n");
                     onError(new String(' ', msg.Location.Column) + "^\r\n");
                 }
@@ -181,7 +181,7 @@ namespace DCPUB
             var codeLine = "";
             if (c.span.HasValue)
             {
-                errorString = "Error on line " + c.span.Value.Location.Line + ": " + c.Message;
+                errorString = "%ERROR " + c.span.Value.Location.Line + ": " + c.Message;
                 codeLine = extractLine(source, c.span.Value.Location.Line);
                 errorString += "\r\n" + codeLine + "\r\n" + new String(' ', c.span.Value.Location.Column) + "^";
             }

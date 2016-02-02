@@ -7,9 +7,9 @@ namespace DCPUCCL
 {
     public class FileEmissionStream : DCPUB.Assembly.EmissionStream
     {
-        public System.IO.StreamWriter stream = null;
+        public System.IO.TextWriter stream = null;
 
-        public FileEmissionStream(System.IO.StreamWriter stream)
+        public FileEmissionStream(System.IO.TextWriter stream)
         {
             this.stream = stream;
         }

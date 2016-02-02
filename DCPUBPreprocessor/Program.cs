@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using DCPUB;
 
-namespace DCPUBPreprocessor
+namespace DCPUB.Preprocessor
 {
     class Program
     {
