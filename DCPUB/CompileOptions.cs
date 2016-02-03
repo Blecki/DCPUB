@@ -14,5 +14,6 @@ namespace DCPUB
         public string peephole = null;
         public bool be = false;
         public bool preprocess = true;
+        public bool emit_ir = false;
     }
 }

@@ -48,6 +48,7 @@ namespace DCPUB.Assembly.Peephole
                 if (matchWith.register != op.register) return false;
                 if (matchWith.constant != op.constant) return false;
                 if (matchWith.label != op.label) return false;
+                if (matchWith.virtual_register != op.virtual_register) return false;
                 return true;
             }
             else

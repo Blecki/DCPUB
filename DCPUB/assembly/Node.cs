@@ -102,7 +102,7 @@ namespace DCPUB.Assembly
             stream.WriteLine("[/statement node]");
         }
 
-        public static void MarkVirtualRegisterFromOperand(Dictionary<ushort, VirtualRegisterRecord> mapping, int i, Operand operand)
+        public static void MarkVirtualRegisterUsage(Dictionary<ushort, VirtualRegisterRecord> mapping, int i, Operand operand)
         {
             if (operand.register == OperandRegister.VIRTUAL)
             {
@@ -112,7 +112,7 @@ namespace DCPUB.Assembly
             }
         }
 
-        public static void AssignVirtualRegisterToOperand(Dictionary<ushort, VirtualRegisterRecord> mapping,
+        public static void AssignPhysicalRegisterToOperand(Dictionary<ushort, VirtualRegisterRecord> mapping,
             bool[] usedRegisters, int i, Operand operand)
         {
             if (operand.register == OperandRegister.VIRTUAL)
@@ -137,14 +137,15 @@ namespace DCPUB.Assembly
         public override void AssignRegisters(Dictionary<ushort, VirtualRegisterRecord> mapping)
         {
             mapping = new Dictionary<ushort, VirtualRegisterRecord>();
-            //Condense registers first. Combine multiple registers who's lifetimes don't overlap into one.
+                       
+            // Find the first and last mentions of each register.
             for (int i = 0; i < children.Count; ++i)
             {
                 if (children[i] is Instruction)
                 {
                     var instruction = children[i] as Instruction;
-                    MarkVirtualRegisterFromOperand(mapping, i * 2, instruction.firstOperand);
-                    if (instruction.secondOperand != null) MarkVirtualRegisterFromOperand(mapping, (i * 2) + 1, instruction.secondOperand);
+                    MarkVirtualRegisterUsage(mapping, i * 2, instruction.firstOperand);
+                    if (instruction.secondOperand != null) MarkVirtualRegisterUsage(mapping, (i * 2) + 1, instruction.secondOperand);
                 }
             }
 
@@ -153,9 +154,16 @@ namespace DCPUB.Assembly
             {
                 if (children[i] is Instruction)
                 {
+
                     var instruction = children[i] as Instruction;
-                    AssignVirtualRegisterToOperand(mapping, usedRegisters, i * 2, instruction.firstOperand);
-                    if (instruction.secondOperand != null) AssignVirtualRegisterToOperand(mapping, usedRegisters, (i * 2) + 1, instruction.secondOperand);
+
+                    // Assigning registers in reverse allows the from register to un-mark it's real register.
+                    // Then the destination register can recycle it in the same instruction.
+                    // TODO: Make this change after some validation that it won't break things.
+                    AssignPhysicalRegisterToOperand(mapping, usedRegisters, i * 2, instruction.firstOperand);
+
+                    if (instruction.secondOperand != null) AssignPhysicalRegisterToOperand(mapping, usedRegisters, (i * 2) + 1, instruction.secondOperand);
+
                 }
             }
 

@@ -186,7 +186,7 @@ namespace DCPUB
                 errorString += "\r\n" + codeLine + "\r\n" + new String(' ', c.span.Value.Location.Column) + "^";
             }
             else
-                errorString = c.Message;
+                errorString = "%ERROR: " + c.Message;
             onError(errorString);
             return;
         }

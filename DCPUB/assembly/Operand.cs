@@ -49,11 +49,11 @@ namespace DCPUB.Assembly
             if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference) s += "[";
             if ((semantics & OperandSemantics.Label) == OperandSemantics.Label) s += label;
             else if ((semantics & OperandSemantics.Constant) == OperandSemantics.Constant)
-                s += string.Format("0x{0:X}", constant);
+                s += string.Format("0x{0:X4}", constant);
             else
             {
                 if ((semantics & OperandSemantics.Offset) == OperandSemantics.Offset)
-                    s += string.Format("0x{0:X}", constant) + "+";
+                    s += string.Format("0x{0:X4}", constant) + "+";
                 s += register == OperandRegister.VIRTUAL ? string.Format("VR{0}", virtual_register) : register.ToString();
             }
             if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference) s += "]";

@@ -93,7 +93,7 @@ namespace DCPUB
                 body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
             body.CollapseTree(context.peepholes);
 
-            AssignVirtualRegisters(body);
+            if (!context.options.emit_ir) AssignVirtualRegisters(body);
 
             var registers = new bool[] { true, false, false, false, false, false, false, true };
             body.MarkRegisters(registers);

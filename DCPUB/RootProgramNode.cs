@@ -29,7 +29,7 @@ namespace DCPUB
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
             var body = Child(0).Emit(context, localScope, Target.Discard);
             body.CollapseTree(context.peepholes);
-            AssignVirtualRegisters(body);
+            if (!context.options.emit_ir) AssignVirtualRegisters(body);
             r.AddChild(body);
             r.AddLabel(footerLabel);
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));

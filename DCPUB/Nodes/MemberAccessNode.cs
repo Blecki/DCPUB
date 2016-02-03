@@ -52,9 +52,16 @@ namespace DCPUB
             }
             else
             {
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
-                    objectTarget.GetOperand(TargetUsage.Pop, Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset,
-                    (ushort)member.offset));
+                if (member.offset == 0)
+                    r.AddInstruction(Assembly.Instructions.SET,
+                        target.GetOperand(TargetUsage.Push),
+                        objectTarget.GetOperand(TargetUsage.Pop, Assembly.OperandSemantics.Dereference));
+                else
+                    r.AddInstruction(Assembly.Instructions.SET,
+                        target.GetOperand(TargetUsage.Push),
+                        objectTarget.GetOperand(TargetUsage.Pop, 
+                            Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset,
+                            (ushort)member.offset));
             }
             
             return r;

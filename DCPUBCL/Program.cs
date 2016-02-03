@@ -50,6 +50,11 @@ namespace DCPUCCL
                         options.peephole = args[argumentIndex + 1];
                         argumentIndex += 2;
                     }
+                    else if (argument == "-ir")
+                    {
+                        options.emit_ir = true;
+                        argumentIndex += 1;
+                    }
                     else if (argument == "-e" || argument == "--externals")
                     {
                         options.externals = true;
@@ -111,6 +116,8 @@ namespace DCPUCCL
                     throw new ConfigurationError("Binary output and piped output are incompatible.");
                 if (!options.binary && options.be)
                     throw new ConfigurationError("I do not know how you expect me to write DASM in big endian.");
+                if (options.binary && options.emit_ir)
+                    throw new ConfigurationError("Binary output and IR output are incompatible.");
 
                 String file;
                 if (options.@in == "-")
@@ -142,6 +149,7 @@ namespace DCPUCCL
                 if (context.Parse(file, Console.WriteLine))
                 {
                     var assembly = context.Compile(Console.WriteLine);
+                    if (assembly == null) return;
 
                     if (options.binary)
                     {
@@ -164,7 +172,10 @@ namespace DCPUCCL
                         var stream = new FileEmissionStream(writer);
                         if (options.@out == "-")
                             stream.WriteLine("@- BEGIN PROGRAM -@");
-                        assembly.Emit(stream);
+                        if (options.emit_ir)
+                            assembly.EmitIR(stream);
+                        else
+                            assembly.Emit(stream);
                         if (options.@out == "-")
                             stream.WriteLine("@- END PROGRAM -@");
 

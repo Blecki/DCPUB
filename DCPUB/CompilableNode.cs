@@ -94,6 +94,10 @@ namespace DCPUB
             Assembly.OperandSemantics semantics = Assembly.OperandSemantics.None,
             ushort offset = 0)
         {
+            if ((semantics & Assembly.OperandSemantics.Offset) == Assembly.OperandSemantics.Offset &&
+                offset == 0)
+                semantics &= ~Assembly.OperandSemantics.Offset;
+
             return new Assembly.Operand
             {
                 register = Assembly.OperandRegister.VIRTUAL,
