@@ -106,7 +106,7 @@ namespace DCPUB
             addressOf.Rule = ToTerm("&") + identifier;
             memberAccess.Rule = expression + "." + identifier;
             @sizeof.Rule = ToTerm("sizeof") + identifier;
-            offsetof.Rule = ToTerm("offset") + "of" + identifier + "in" + identifier;
+            offsetof.Rule = ToTerm("offsetof") + identifier + "in" + identifier;
             indexOperator.Rule = expression + "[" + expression + "]";
             label.Rule = ToTerm(":") + identifier;
             @goto.Rule = ToTerm("goto") + identifier + ";";
