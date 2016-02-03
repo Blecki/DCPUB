@@ -69,6 +69,7 @@ namespace DCPUB
             var addressOf = new NonTerminal("Address Of", typeof(AddressOfNode));
             var memberAccess = new NonTerminal("Member Access", typeof(MemberAccessNode));
             var @sizeof = new NonTerminal("sizeof", typeof(SizeofNode));
+            var offsetof = new NonTerminal("offsetof", typeof(OffsetOfNode));
             var indexOperator = new NonTerminal("index", typeof(IndexOperatorNode));
             var dataList = new NonTerminal("Array Data");
             var label = new NonTerminal("Label", typeof(LabelNode));
@@ -80,7 +81,7 @@ namespace DCPUB
             numberLiteral.Rule = integerLiteral | characterLiteral;
             expression.Rule = cast | numberLiteral | parenExpression | identifier
                 | dereference | functionCall | addressOf | memberAccess | @sizeof | indexOperator
-                | unaryNot | unaryNegate | binaryOperation | stringLiteral;
+                | unaryNot | unaryNegate | binaryOperation | stringLiteral | offsetof;
 
             assignment.Rule = (identifier | dereference | memberAccess | indexOperator) 
                 + (ToTerm("=") | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<<=" | ">>=" | "&=" | "|=" | "-*=" | "-/=" | "-%=" )
@@ -104,7 +105,8 @@ namespace DCPUB
             statementList.Rule = MakeStarRule(statementList, statement);
             addressOf.Rule = ToTerm("&") + identifier;
             memberAccess.Rule = expression + "." + identifier;
-            @sizeof.Rule = ToTerm("sizeof") + "(" + identifier + ")";
+            @sizeof.Rule = ToTerm("sizeof") + identifier;
+            offsetof.Rule = ToTerm("offset") + "of" + identifier + "in" + identifier;
             indexOperator.Rule = expression + "[" + expression + "]";
             label.Rule = ToTerm(":") + identifier;
             @goto.Rule = ToTerm("goto") + identifier + ";";

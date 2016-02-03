@@ -28,7 +28,7 @@ namespace DCPUB
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             _struct = enclosingScope.FindType(typeName);
-            if (_struct == null) throw new CompileError("Could not find type " + typeName);
+            if (_struct == null) throw new CompileError(this, "Could not find type " + typeName);
             ResultType = "word";
         }
 

@@ -93,6 +93,7 @@
     <Compile Include="Nodes\CastNode.cs" />
     <Compile Include="Nodes\BreakNode.cs" />
     <Compile Include="Nodes\NullStatementNode.cs" />
+    <Compile Include="Nodes\OffsetOfNode.cs" />
     <Compile Include="Nodes\StringLiteralNode.cs" />
     <Compile Include="Nodes\GotoNode.cs" />
     <Compile Include="Nodes\LabelNode.cs" />
