@@ -28,7 +28,7 @@ namespace DCPUB
                 if (_c == null) throw new CompileError("Failed sanity check: Array items not nodes?");
                 var itemFetchToken = _c.GetFetchToken();
                 if (itemFetchToken == null || !itemFetchToken.IsIntegralConstant())
-                    throw new CompileError("Array elements must be compile time constants.");
+                    throw new CompileError(_c, "Array elements must be compile time constants.");
                 rawData[i] = itemFetchToken.constant;
             }
         }
