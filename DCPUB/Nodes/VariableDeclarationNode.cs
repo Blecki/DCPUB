@@ -64,9 +64,15 @@ namespace DCPUB
             else if (declLabel == "external")
             {
                 if (context.options.externals == false)
-                    throw new CompileError(this, "Compile with -externals to support externals.");
+                {
+                    context.ReportError(this, "Compile with -externals to support externals.");
+                    variable.type = VariableType.Local;
+                }
                 if (enclosingScope.type != ScopeType.Global)
-                    throw new CompileError(this, "Externals can only be declared at global scope.");
+                {
+                    context.ReportError(this, "Externals can only be declared at global scope.");
+                    variable.type = VariableType.Local;
+                }
                 variable.type = VariableType.External;
             }
         }
@@ -79,20 +85,24 @@ namespace DCPUB
             {
                 variable.structType = enclosingScope.FindType(variable.typeSpecifier);
                 if (variable.structType == null)
-                    throw new CompileError(this, "Could not find type " + variable.typeSpecifier);
+                {
+                    context.ReportError(this, "Could not find type " + variable.typeSpecifier);
+                    variable.typeSpecifier = "word";
+                }
             }
 
             if (isArray)
             {
-                if (declLabel == "external") throw new CompileError("Can't have external array.");
+                if (declLabel == "external") context.ReportError(this, "Can't have external array.");
 
                 var sizeToken = Child(1).GetFetchToken();
-                if (!sizeToken.IsIntegralConstant()) throw new CompileError(this, "Array sizes must be a compile time constant.");
+                if (!sizeToken.IsIntegralConstant()) context.ReportError(this, "Array sizes must be a compile time constant.");
                 size = sizeToken.constant;
 
-                if (hasInitialValue && !(Child(0) is ArrayInitializationNode)) throw new CompileError("Can't initialize an array this way.");
-                if (hasInitialValue && (Child(0) as ArrayInitializationNode).rawData.Length != size)
-                    throw new CompileError("Array initialization size mismatch");
+                if (hasInitialValue && !(Child(0) is ArrayInitializationNode))
+                    context.ReportError(this, "Can't initialize an array this way.");
+                else if (hasInitialValue && (Child(0) as ArrayInitializationNode).rawData.Length != size)
+                    context.ReportError(this, "Array initialization size mismatch");
 
                 if (declLabel == "static")
                 {
@@ -110,12 +120,17 @@ namespace DCPUB
                 if (hasInitialValue)
                 {
                     var valueToken = Child(0).GetFetchToken();
-                    if (valueToken.IsIntegralConstant())
-                        context.AddData(variable.staticLabel, valueToken.constant);
-                    else if ((valueToken.semantics & Assembly.OperandSemantics.Label) == Assembly.OperandSemantics.Label)
-                        context.AddData(variable.staticLabel, valueToken.label);
+                    if (valueToken == null)
+                        context.ReportError(this, "Static variables must be initialized with a static value.");
                     else
-                        throw new CompileError(this, "Static variables must be initialized with a static value.");
+                    {
+                        if (valueToken.IsIntegralConstant())
+                            context.AddData(variable.staticLabel, valueToken.constant);
+                        else if ((valueToken.semantics & Assembly.OperandSemantics.Label) == Assembly.OperandSemantics.Label)
+                            context.AddData(variable.staticLabel, valueToken.label);
+                        else
+                            context.ReportError(this, "Static variables must be initialized with a static value.");
+                    }
                 }
                 else
                     context.AddData(variable.staticLabel, 0);
@@ -124,7 +139,7 @@ namespace DCPUB
             {
                 variable.constantValue = context.externalCount;
                 context.externalCount += 1;
-                if (hasInitialValue) throw new CompileError("Can't initialize externals.");
+                if (hasInitialValue) context.ReportError(this, "Can't initialize externals.");
             }
         }
 

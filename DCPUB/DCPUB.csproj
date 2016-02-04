@@ -86,6 +86,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AssignableNode.cs" />
+    <Compile Include="InternalError.cs" />
     <Compile Include="ConfigurationError.cs" />
     <Compile Include="CompileOptions.cs" />
     <Compile Include="Nodes\AddressOfNode.cs" />

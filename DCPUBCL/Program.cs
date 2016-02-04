@@ -149,6 +149,7 @@ namespace DCPUCCL
                 if (context.Parse(file, Console.WriteLine))
                 {
                     var assembly = context.Compile(Console.WriteLine);
+                    Console.WriteLine("{0} errors", context.ErrorCount);
                     if (assembly == null) return;
 
                     if (options.binary)

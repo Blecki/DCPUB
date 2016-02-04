@@ -124,7 +124,7 @@ namespace DCPUB.Assembly
                     int reg = -1;
                     for (int r = 0; r < 6; ++r)
                         if (usedRegisters[r] == false) reg = r;
-                    if (reg == -1) throw new CompileError("Register spill.");
+                    if (reg == -1) throw new InternalError("Register spill.");
                     mapping[operand.virtual_register].assignedRegister = (OperandRegister)(reg + 1);
                     usedRegisters[reg] = true;
                 }

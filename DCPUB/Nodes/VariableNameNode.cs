@@ -23,9 +23,9 @@ namespace DCPUB
             variableName = treeNode.FindTokenAndGetText();
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public bool TryGatherSymbols(CompileContext Context, Scope EnclosingScope)
         {
-            var scope = enclosingScope;
+            var scope = EnclosingScope;
             bool ignoreLocals = false;
             while (variable == null && scope != null)
             {
@@ -42,8 +42,13 @@ namespace DCPUB
                 }
             }
 
-            if (variable == null)
-                throw new CompileError(this, "Could not find variable " + variableName);
+            return variable != null;
+        }
+
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            if (!TryGatherSymbols(context, enclosingScope))
+                context.ReportError(this, "Could not find variable " + variableName);
 
         }
 

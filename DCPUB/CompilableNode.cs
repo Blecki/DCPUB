@@ -42,8 +42,8 @@ namespace DCPUB
             ushort offset = 0)
         {
             Assembly.OperandRegister opReg;
-            if (!Enum.TryParse(r, out opReg)) 
-                throw new CompileError("Unmappable operand register: " + r);
+            if (!Enum.TryParse(r, out opReg))
+                throw new InternalError("Unmappable operand register: " + r);
             return new Assembly.Operand { register = opReg, semantics = semantics, constant = offset };
         }
 

@@ -25,14 +25,8 @@ namespace DCPUB
         {
             if (Child(0) is VariableNameNode)
             {
-                try
-                {
-                    Child(0).GatherSymbols(context, enclosingScope);
-                }
-                catch (CompileError)
-                {
+                if (!(Child(0) as VariableNameNode).TryGatherSymbols(context, enclosingScope))
                     functionName = (Child(0) as VariableNameNode).variableName;
-                }
             }
             else
                 Child(0).GatherSymbols(context, enclosingScope);
@@ -56,8 +50,10 @@ namespace DCPUB
                     if (function == null) func_scope = func_scope.parent;
                 }
 
-                if (function == null) throw new CompileError("Could not find function " + functionName);
-                if (function.parameterCount != ChildNodes.Count - 1) throw new CompileError("Incorrect number of arguments to function");
+                if (function == null)
+                    context.ReportError(this, "Could not find function " + functionName);
+                else if (function.parameterCount != ChildNodes.Count - 1)
+                    context.ReportError(this, "Incorrect number of arguments to function");
 
                 ResultType = function.returnType;
             }

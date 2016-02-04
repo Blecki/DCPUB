@@ -25,11 +25,13 @@ namespace DCPUB
             for (int i = 0; i < ChildNodes.Count; ++i)
             {
                 var _c = Child(i);
-                if (_c == null) throw new CompileError("Failed sanity check: Array items not nodes?");
+                if (_c == null) throw new InternalError("Failed sanity check: Array items not nodes?");
+                _c.ResolveTypes(context, enclosingScope);
                 var itemFetchToken = _c.GetFetchToken();
-                if (itemFetchToken == null || !itemFetchToken.IsIntegralConstant())
-                    throw new CompileError(_c, "Array elements must be compile time constants.");
-                rawData[i] = itemFetchToken.constant;
+                if (itemFetchToken == null)
+                    context.ReportError(_c, "Array elements must be compile time constants.");
+                else if (itemFetchToken.IsIntegralConstant() || itemFetchToken.semantics == Assembly.OperandSemantics.Label) continue;
+                context.ReportError(_c, "Array elements must be compile time constants.");
             }
         }
 
@@ -37,8 +39,8 @@ namespace DCPUB
         {
             var r = new Assembly.StatementNode();
             r.AddChild(new Assembly.Annotation("Array Initialization"));
-            for (int i = rawData.Length - 1; i >= 0; --i)
-                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Constant(rawData[i]));
+            for (int i = 0; i < ChildNodes.Count; ++i)
+                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Child(i).GetFetchToken());
             return r;
         }
     }

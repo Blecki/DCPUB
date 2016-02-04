@@ -18,9 +18,10 @@ namespace DCPUB
         private int nextLabelID = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
-        public Action<String> onWarning = null;
         public Assembly.Peephole.Peepholes peepholes;
         public int nextVirtualRegister = 0;
+        public Action<String> OnError = null;
+        public int ErrorCount = 0;
 
         public int AllocateRegister()
         {
@@ -58,10 +59,7 @@ namespace DCPUB
 
         public void AddWarning(Irony.Parsing.SourceSpan location, String message)
         {
-            if (onWarning != null)
-            {
-                onWarning("%WARNING : " + message + "\n" + source.Substring(location.Location.Position, location.Length));
-            }
+            OnError("%WARNING : " + message + "\n" + source.Substring(location.Location.Position, location.Length));
         }
             
         private static String extractLine(String s, int c)
@@ -115,8 +113,10 @@ namespace DCPUB
             return true;
         }
 
-        public Assembly.Node Compile(Action<string> onError)
+        public Assembly.Node Compile(Action<string> OnError)
         {
+            this.OnError = OnError;
+
             var end_label = new Assembly.Label("ENDOFPROGRAM");
             globalScope.variables.Add(new Variable { type = VariableType.ConstantLabel, name = "__endofprogram", staticLabel = end_label });
             globalScope.variables.Add(new Variable { name = "true", type = VariableType.Constant, constantValue = 1 });
@@ -162,33 +162,43 @@ namespace DCPUB
                         r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<ushort> });
                 }
                 r.AddLabel(end_label);
-
-
-                //r.CollapseTree(peepholes);
+                
+                if (ErrorCount != 0) return null;
                 return r;
             }
             catch (DCPUB.CompileError c)
             {
-                ReportError(onError, c);
+                ReportError(c.span, c.Message);
+                return null;
+            }
+            catch (DCPUB.InternalError e)
+            {
+                ReportError((Irony.Parsing.SourceSpan?)null, e.Message);
                 return null;
             }
 
         }
 
-        private void ReportError(Action<string> onError, CompileError c)
+        public void ReportError(Irony.Parsing.SourceSpan? Span, String Message)
         {
+            ErrorCount += 1;
             var errorString = "";
             var codeLine = "";
-            if (c.span.HasValue)
+            if (Span.HasValue)
             {
-                errorString = "%ERROR " + c.span.Value.Location.Line + ": " + c.Message;
-                codeLine = extractLine(source, c.span.Value.Location.Line);
-                errorString += "\r\n" + codeLine + "\r\n" + new String(' ', c.span.Value.Location.Column) + "^";
+                errorString = "%ERROR " + Span.Value.Location.Line + ": " + Message;
+                codeLine = extractLine(source, Span.Value.Location.Line);
+                errorString += "\r\n" + codeLine + "\r\n" + new String(' ', Span.Value.Location.Column) + "^";
             }
             else
-                errorString = "%ERROR: " + c.Message;
-            onError(errorString);
+                errorString = "%ERROR: " + Message;
+            OnError(errorString);
             return;
+        }
+
+        public void ReportError(CompilableNode Node, String Message)
+        {
+            ReportError(Node.Span, Message);
         }
 
     }
