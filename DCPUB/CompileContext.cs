@@ -57,9 +57,14 @@ namespace DCPUB
             dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
         }
 
+        public void AddWarning(CompilableNode Node, String Message)
+        {
+            AddWarning(Node.Span, Message);
+        }
+
         public void AddWarning(Irony.Parsing.SourceSpan location, String message)
         {
-            OnError("%WARNING : " + message + "\n" + source.Substring(location.Location.Position, location.Length));
+            SendLineMessage(location, "WARNING", message);
         }
             
         private static String extractLine(String s, int c)
@@ -182,23 +187,27 @@ namespace DCPUB
         public void ReportError(Irony.Parsing.SourceSpan? Span, String Message)
         {
             ErrorCount += 1;
+            SendLineMessage(Span, "ERROR", Message);
+        }
+
+        public void ReportError(CompilableNode Node, String Message)
+        {
+            ReportError(Node.Span, Message);
+        }
+
+        public void SendLineMessage(Irony.Parsing.SourceSpan? Span, String Label, String Message)
+        {
             var errorString = "";
             var codeLine = "";
             if (Span.HasValue)
             {
-                errorString = "%ERROR " + Span.Value.Location.Line + ": " + Message;
+                errorString = "%" + Label + " " + Span.Value.Location.Line + ": " + Message;
                 codeLine = extractLine(source, Span.Value.Location.Line);
                 errorString += "\r\n" + codeLine + "\r\n" + new String(' ', Span.Value.Location.Column) + "^";
             }
             else
                 errorString = "%ERROR: " + Message;
             OnError(errorString);
-            return;
-        }
-
-        public void ReportError(CompilableNode Node, String Message)
-        {
-            ReportError(Node.Span, Message);
         }
 
     }

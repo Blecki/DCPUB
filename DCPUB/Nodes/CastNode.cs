@@ -21,7 +21,7 @@ namespace DCPUB
         {
             Child(0).ResolveTypes(context, enclosingScope);
             var _struct = enclosingScope.FindType(typeName);
-            if (_struct == null) throw new CompileError(this, "Unknown type.");
+            if (_struct == null) context.ReportError(this, "Cast to unknown type - " + typeName);
             ResultType = typeName;
         }
 

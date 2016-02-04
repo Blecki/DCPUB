@@ -52,10 +52,18 @@ namespace DCPUB
                 }
 
                 if (function == null)
+                {
                     context.ReportError(this, "Could not find function " + functionName);
+                    ResultType = "word";
+                    return;
+                }
                 else if (function.parameterCount != ChildNodes.Count - 1)
+                {
                     context.ReportError(this, "Incorrect number of arguments to function");
-
+                    ResultType = "word";
+                    return;
+                }
+                
                 enclosingScope.activeFunction.function.Calls.Add(function);
                 ResultType = function.returnType;
             }

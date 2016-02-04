@@ -60,6 +60,13 @@ namespace DCPUB
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.TransientNode();
+
+            if (variable == null)
+            {
+                context.ReportError(this, "Variable name was not resolved.");
+                return r;
+            }
+
             if (variable.type == VariableType.Constant)
             {
                 r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());
@@ -116,6 +123,7 @@ namespace DCPUB
         public Assembly.Node EmitAssignment2(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
             var r = new Assembly.TransientNode();
+
             if (variable.isArray) throw new CompileError("Can't assign to arrays.");
             if (variable.type == VariableType.Constant || variable.type == VariableType.External
                 || variable.type == VariableType.ConstantLabel)
@@ -130,6 +138,8 @@ namespace DCPUB
 
         public override Assembly.Operand GetFetchToken()
         {
+            if (variable == null) return null;
+
             if (variable.type == VariableType.Static)
             {
                 if (variable.isArray) return Label(variable.staticLabel);
@@ -152,7 +162,7 @@ namespace DCPUB
                 //throw new CompileError(this, "Attempt to get fetch token from external variable.");
             }
             else
-                throw new CompileError(this, "Unreachable code reached.");
+                throw new InternalError("Unreachable code reached.");
 
         }
     }
