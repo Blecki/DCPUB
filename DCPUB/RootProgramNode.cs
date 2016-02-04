@@ -23,6 +23,9 @@ namespace DCPUB
 
         public override Assembly.Node CompileFunction(CompileContext context)
         {
+            // Only emit functions that can actually be called.
+            function.MarkReachableFunctions();
+
             var r = new Assembly.Node();
             var localScope = function.localScope.Push();
 

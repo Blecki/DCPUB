@@ -27,14 +27,20 @@ namespace DCPUB
 
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            var activeBlock = FindParentBlock(scope);
-            if (activeBlock == null) throw new CompileError(this, "Break not valid here.");
-            if (activeBlock.breakLabel == null) throw new CompileError(this, "Break not valid here.");
             var r = new Assembly.TransientNode();
-            if (activeBlock.blockScope.parent.variablesOnStack < scope.variablesOnStack)
-                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant(
-                    (ushort)(scope.variablesOnStack - activeBlock.blockScope.parent.variablesOnStack)));
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(activeBlock.breakLabel));
+
+            var activeBlock = FindParentBlock(scope);
+
+            if (activeBlock == null) context.ReportError(this, "Break not valid here.");
+            else if (activeBlock.breakLabel == null) context.ReportError(this, "Break not valid here.");
+            else
+            {
+                if (activeBlock.blockScope.parent.variablesOnStack < scope.variablesOnStack)
+                    r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant(
+                        (ushort)(scope.variablesOnStack - activeBlock.blockScope.parent.variablesOnStack)));
+                r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(activeBlock.breakLabel));
+            }
+
             return r;
         }
 

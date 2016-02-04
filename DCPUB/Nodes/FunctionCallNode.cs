@@ -39,6 +39,7 @@ namespace DCPUB
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
+
             if (functionName != null)
             {
                 var func_scope = enclosingScope;
@@ -55,6 +56,7 @@ namespace DCPUB
                 else if (function.parameterCount != ChildNodes.Count - 1)
                     context.ReportError(this, "Incorrect number of arguments to function");
 
+                enclosingScope.activeFunction.function.Calls.Add(function);
                 ResultType = function.returnType;
             }
         }

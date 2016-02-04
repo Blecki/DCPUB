@@ -87,10 +87,13 @@ namespace DCPUB
 
         public virtual Assembly.Node CompileFunction(CompileContext context)
         {
+            if (!function.reached) return new Assembly.Annotation("Function " + function.name + " stripped.");
+
             context.nextVirtualRegister = 0;
             var body = new Assembly.Node();
             foreach (var child in ChildNodes)
                 body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
+
             body.CollapseTree(context.peepholes);
 
             if (!context.options.emit_ir) AssignVirtualRegisters(body);

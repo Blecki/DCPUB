@@ -21,6 +21,16 @@ namespace DCPUB
         public int parameterCount = 0;
         public String returnType = "void";
         public List<Label> labels = new List<Label>();
+
+        public bool reached = false;
+        public List<Function> Calls = new List<Function>();
+
+        public void MarkReachableFunctions()
+        {
+            if (reached) return;
+            reached = true;
+            foreach (var child in Calls) child.MarkReachableFunctions();
+        }
     }
 
     public class Member
@@ -167,5 +177,15 @@ namespace DCPUB
             if (parent != null) return parent.FindType(s);
             return null;
         }
+
+        //public void StripUnusedFunction()
+        //{
+        //    // Does not actually remove functions: Just marks them as stripped so they don't emit code.
+        //    foreach (var function in functions)
+        //    {
+        //        if (function.CalledBy.Count == 0)
+        //            function.stripped = true;
+        //    }
+        //}
     }
 }

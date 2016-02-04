@@ -23,6 +23,7 @@ namespace DCPUB
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             variable = enclosingScope.FindVariable(variableName);
+
             if (variable == null) 
             {
                 function = enclosingScope.FindFunction(variableName);
@@ -34,8 +35,10 @@ namespace DCPUB
                             label = l;
                     }
                     if (label == null)
-                        throw new CompileError(this, "Could not find symbol " + variableName);
+                        context.ReportError(this, "Could not find symbol " + variableName);
                 }
+                else
+                    enclosingScope.activeFunction.function.Calls.Add(function);
             } 
 
             ResultType = "word";
@@ -43,7 +46,7 @@ namespace DCPUB
             if (variable != null)
             {
                 variable.addressTaken = true;
-                if (variable.isArray) throw new CompileError(this, "Can't take address of array.");
+                if (variable.isArray) context.ReportError(this, "Can't take address of array.");
             }
         }
 
@@ -84,7 +87,7 @@ namespace DCPUB
                     r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), target.GetOperand(TargetUsage.Peek, OperandSemantics.Dereference));
                 }
                 else
-                    throw new CompileError(this, "Can't take the address of this variable.");
+                    context.ReportError(this, "Can't take the address of this variable.");
             }
             else if (function != null)
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(function.label));
