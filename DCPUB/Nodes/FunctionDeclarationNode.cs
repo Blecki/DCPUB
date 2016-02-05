@@ -86,7 +86,8 @@ namespace DCPUB
 
         public virtual Assembly.Node CompileFunction(CompileContext context)
         {
-            if (!function.reached) return new Assembly.Annotation("Function " + function.name + " stripped.");
+            if (context.options.strip && !function.reached)
+                return new Assembly.Annotation("Function " + function.name + " stripped.");
 
             context.nextVirtualRegister = 0;
             var body = new Assembly.Node();

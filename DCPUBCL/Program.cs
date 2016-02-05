@@ -55,6 +55,11 @@ namespace DCPUCCL
                         options.emit_ir = true;
                         argumentIndex += 1;
                     }
+                    else if (argument == "-strip")
+                    {
+                        options.strip = true;
+                        argumentIndex += 1;
+                    }
                     else if (argument == "-e" || argument == "--externals")
                     {
                         options.externals = true;

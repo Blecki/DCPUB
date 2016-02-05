@@ -15,5 +15,6 @@ namespace DCPUB
         public bool be = false;
         public bool preprocess = true;
         public bool emit_ir = false;
+        public bool strip = false;
     }
 }
