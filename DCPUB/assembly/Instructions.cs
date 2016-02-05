@@ -56,6 +56,22 @@ namespace DCPUB.Assembly
 
     }
 
+    public enum OperandsModified
+    {
+        A,
+        B,
+        Both
+    }
+
+    public static class InstructionExtension
+    {
+        public static OperandsModified GetOperandsModified(this Instructions Ins)
+        {
+            if (Ins <= Instructions.SHL) return OperandsModified.A;
+            return OperandsModified.Both;
+        }
+    }
+
     /*
      * --- Values: (5/6 bits) ---------------------------------------------------------
  C | VALUE     | DESCRIPTION

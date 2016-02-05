@@ -11,7 +11,7 @@ namespace DCPUB
         public String typeName;
         public String memberName;
         public Struct _struct = null;
-        public bool IsAssignedTo { get; set; }
+        public Assembly.Operand CachedFetchToken;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -22,16 +22,31 @@ namespace DCPUB
 
         public override Assembly.Operand GetFetchToken()
         {
-            if (_struct == null) throw new CompileError(this, "Struct not found : " + typeName);
-            var memberIndex = _struct.members.FindIndex(m => m.name == memberName);
-            if (memberIndex < 0) throw new CompileError(this, "Member not found : " + memberName);
-            return Constant((ushort)memberIndex);
+            if (CachedFetchToken == null) throw new InternalError("In offsetof, fetch token was not cached");
+            return CachedFetchToken;
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
             _struct = enclosingScope.FindType(typeName);
-            if (_struct == null) throw new CompileError(this, "Could not find type " + typeName);
+
+            if (_struct == null)
+            {
+                context.ReportError(this, "Could not find type " + typeName);
+                CachedFetchToken = Constant(0);
+            }
+            else
+            {
+                var memberIndex = _struct.members.FindIndex(m => m.name == memberName);
+                if (memberIndex < 0)
+                {
+                    context.ReportError(this, "Member not found : " + memberName);
+                    CachedFetchToken = Constant(0);
+                }
+                else
+                    CachedFetchToken = Constant((ushort)memberIndex);
+            }
+
             ResultType = "word";
         }
 

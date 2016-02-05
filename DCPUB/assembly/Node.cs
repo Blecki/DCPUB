@@ -40,12 +40,9 @@ namespace DCPUB.Assembly
             stream.WriteLine("[/generic node]");
         }
 
-        public virtual List<Node> CollapseTree(Peephole.Peepholes peepholes) 
+        public virtual void PeepholeTree(Peephole.Peepholes peepholes) 
         {
-            var result = new List<Node>();
-            foreach (var child in children) result.AddRange(child.CollapseTree(peepholes));
-            children = result;
-            return new List<Node>(new Node[]{this}); 
+            foreach (var child in children) child.PeepholeTree(peepholes);
         }
 
         public virtual int InstructionCount()
@@ -66,121 +63,34 @@ namespace DCPUB.Assembly
             foreach (var child in children) child.AssignRegisters(mapping);
         }
 
-        public virtual void MarkRegisters(bool[] bank)
+        
+        public virtual void MarkUsedRealRegisters(bool[] bank)
         {
-            foreach (var child in children) child.MarkRegisters(bank);
+            foreach (var child in children) child.MarkUsedRealRegisters(bank);
         }
 
-        public virtual void AdjustVariableOffsets(int delta)
+        /// <summary>
+        /// Apply a delta to all variable offsets in the code tree.
+        /// </summary>
+        /// <param name="delta"></param>
+        public virtual void CorrectVariableOffsets(int delta)
         {
-            foreach (var child in children) child.AdjustVariableOffsets(delta);
-        }
-    }
-
-    public class VirtualRegisterRecord
-    {
-        public int first_instruction = 0;
-        public int last_instruction = 0;
-        public OperandRegister assignedRegister = OperandRegister.A;
-    }
-
-    public class StatementNode : Node 
-    {
-        public override List<Node> CollapseTree(Peephole.Peepholes peepholes)
-        {
-            var r = base.CollapseTree(peepholes);
-            if (peepholes != null) peepholes.ProcessAssembly(children);
-            return r;
+            foreach (var child in children) child.CorrectVariableOffsets(delta);
         }
 
-        public override void EmitIR(EmissionStream stream)
+        internal void CollapseTransientNodes()
         {
-            stream.WriteLine("[statement node]");
-            stream.indentDepth += 1;
-            foreach (var child in children) child.EmitIR(stream);
-            stream.indentDepth -= 1;
-            stream.WriteLine("[/statement node]");
-        }
-
-        public static void MarkVirtualRegisterUsage(Dictionary<ushort, VirtualRegisterRecord> mapping, int i, Operand operand)
-        {
-            if (operand.register == OperandRegister.VIRTUAL)
+            foreach (var child in children) child.CollapseTransientNodes();
+            children = children.SelectMany(n =>
             {
-                if (!mapping.ContainsKey(operand.virtual_register))
-                    mapping.Add(operand.virtual_register, new VirtualRegisterRecord { first_instruction = i });
-                mapping[operand.virtual_register].last_instruction = i;
-            }
-        }
-
-        public static void AssignPhysicalRegisterToOperand(Dictionary<ushort, VirtualRegisterRecord> mapping,
-            bool[] usedRegisters, int i, Operand operand)
-        {
-            if (operand.register == OperandRegister.VIRTUAL)
-            {
-                if (!mapping.ContainsKey(operand.virtual_register)) throw new CompileError("Virtual register not marked.");
-                if (mapping[operand.virtual_register].assignedRegister == OperandRegister.A)
-                {
-                    //Assign a register to this virtual register.
-                    int reg = -1;
-                    for (int r = 0; r < 6; ++r)
-                        if (usedRegisters[r] == false) reg = r;
-                    if (reg == -1) throw new InternalError("Register spill.");
-                    mapping[operand.virtual_register].assignedRegister = (OperandRegister)(reg + 1);
-                    usedRegisters[reg] = true;
-                }
-                operand.register = mapping[operand.virtual_register].assignedRegister;
-                if (mapping[operand.virtual_register].last_instruction == i)
-                    usedRegisters[(int)(mapping[operand.virtual_register].assignedRegister) - 1] = false;
-            }
-        }
-
-        public override void AssignRegisters(Dictionary<ushort, VirtualRegisterRecord> mapping)
-        {
-            mapping = new Dictionary<ushort, VirtualRegisterRecord>();
-                       
-            // Find the first and last mentions of each register.
-            for (int i = 0; i < children.Count; ++i)
-            {
-                if (children[i] is Instruction)
-                {
-                    var instruction = children[i] as Instruction;
-                    MarkVirtualRegisterUsage(mapping, i * 2, instruction.firstOperand);
-                    if (instruction.secondOperand != null) MarkVirtualRegisterUsage(mapping, (i * 2) + 1, instruction.secondOperand);
-                }
-            }
-
-            bool[] usedRegisters = new bool[6] { false, false, false, false, false, false };
-            for (int i = 0; i < children.Count; ++i)
-            {
-                if (children[i] is Instruction)
-                {
-
-                    var instruction = children[i] as Instruction;
-
-                    // Assigning registers in reverse allows the from register to un-mark it's real register.
-                    // Then the destination register can recycle it in the same instruction.
-                    // TODO: Make this change after some validation that it won't break things.
-                    AssignPhysicalRegisterToOperand(mapping, usedRegisters, i * 2, instruction.firstOperand);
-
-                    if (instruction.secondOperand != null) AssignPhysicalRegisterToOperand(mapping, usedRegisters, (i * 2) + 1, instruction.secondOperand);
-
-                }
-            }
-
-
-            //var newMap = new Dictionary<ushort, VirtualRegisterRecord>();
-            //foreach (var child in children) child.AssignRegisters(newMap);
+                if (n is TransientNode) return (n as TransientNode).children;
+                else return (new Node[] { n }).ToList();
+            }).ToList();
         }
     }
 
     public class TransientNode : Node 
     {
-        public override List<Node> CollapseTree(Peephole.Peepholes peepholes)
-        {
-            base.CollapseTree(peepholes);
-            return children;
-        }
-
         public override void EmitIR(EmissionStream stream)
         {
             stream.WriteLine("[transient node]");

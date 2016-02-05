@@ -8,7 +8,7 @@ namespace DCPUB
 {
     public class ArrayInitializationNode : CompilableNode
     {
-        internal ushort[] rawData;
+        internal List<Assembly.Operand> RawData;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -20,7 +20,7 @@ namespace DCPUB
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            rawData = new ushort[ChildNodes.Count];
+            RawData = new List<Assembly.Operand>();
 
             for (int i = 0; i < ChildNodes.Count; ++i)
             {
@@ -29,9 +29,17 @@ namespace DCPUB
                 _c.ResolveTypes(context, enclosingScope);
                 var itemFetchToken = _c.GetFetchToken();
                 if (itemFetchToken == null)
+                {
+                    RawData.Add(Constant(0));
                     context.ReportError(_c, "Array elements must be compile time constants.");
-                else if (itemFetchToken.IsIntegralConstant() || itemFetchToken.semantics == Assembly.OperandSemantics.Label) continue;
-                context.ReportError(_c, "Array elements must be compile time constants.");
+                }
+                else if (itemFetchToken.IsIntegralConstant() || itemFetchToken.semantics == Assembly.OperandSemantics.Label)
+                    RawData.Add(itemFetchToken);
+                else
+                {
+                    RawData.Add(Constant(0));
+                    context.ReportError(_c, "Array elements must be compile time constants.");
+                }
             }
         }
 

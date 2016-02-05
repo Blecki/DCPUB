@@ -31,8 +31,12 @@ namespace DCPUB
 
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
             var body = Child(0).Emit(context, localScope, Target.Discard);
-            body.CollapseTree(context.peepholes);
-            if (!context.options.emit_ir) AssignVirtualRegisters(body);
+
+            body.CollapseTransientNodes();
+            body.PeepholeTree(context.peepholes);
+
+            if (!context.options.emit_ir) body.AssignRegisters(null);
+
             r.AddChild(body);
             r.AddLabel(footerLabel);
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));

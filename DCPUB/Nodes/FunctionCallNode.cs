@@ -95,7 +95,8 @@ namespace DCPUB
                 r.AddInstruction(Assembly.Instructions.JSR, Label(function.label));
             }
 
-            r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
+            if (ChildNodes.Count > 1)
+                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
 
             if (target.target != Targets.Discard)
                 r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("A"));

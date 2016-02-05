@@ -13,7 +13,7 @@ namespace DCPUB
         public RootProgramNode rootNode = null;
         public Scope globalScope = new Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUB.Grammar());
-        private List<Tuple<Assembly.Label, Object>> dataElements = new List<Tuple<Assembly.Label, Object>>();
+        private List<Tuple<Assembly.Label, List<Assembly.Operand>>> dataElements = new List<Tuple<Assembly.Label, List<Assembly.Operand>>>();
         public int externalCount = 0;
         private int nextLabelID = 0;
         public string source = null;
@@ -38,23 +38,19 @@ namespace DCPUB
             return source.Substring(span.Location.Position, span.Length + 1);
         }
 
-        public void AddData(Assembly.Label label, List<ushort> data)
+        public void AddData(Assembly.Label label, List<Assembly.Operand> FetchTokens)
         {
-            //var strings = new List<string>();
-            //foreach (var item in data) strings.Add(Hex.hex(item));
-            dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
+            dataElements.Add(Tuple.Create(label, FetchTokens));
         }
 
         public void AddData(Assembly.Label label, Assembly.Label data)
         {
-            dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
+            AddData(label, new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Label(data) }));
         }
 
         public void AddData(Assembly.Label label, ushort word)
         {
-            var data = new List<ushort>();
-            data.Add(word);
-            dataElements.Add(new Tuple<Assembly.Label, Object>(label, data));
+            AddData(label, new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Constant(word) }));
         }
 
         public void AddWarning(CompilableNode Node, String Message)
@@ -143,14 +139,14 @@ namespace DCPUB
                     r.AddLabel(new Assembly.Label("EXTERNALS"));
                     foreach (var variable in globalScope.variables)
                     {
-                        var blankList = new List<ushort>();
-                        blankList.Add(0);
                         if (variable.type == VariableType.External)
                         {
-                            r.AddChild(new Assembly.StaticData
+                            var blankList = new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Constant(0) });
+
+                            r.AddChild(new Assembly.MixedStaticData
                             {
                                 label = new Assembly.Label("__external_" + variable.name),
-                                data = blankList
+                                Data = blankList
                             });
                         }
                     }
@@ -160,12 +156,7 @@ namespace DCPUB
                 
                 r.AddChild(rootNode.CompileFunction(this));
                 foreach (var dataItem in dataElements)
-                {
-                    if (dataItem.Item2 is Assembly.Label)
-                        r.AddChild(new Assembly.StaticLabelData { label = dataItem.Item1, data = dataItem.Item2 as Assembly.Label });
-                    else
-                        r.AddChild(new Assembly.StaticData { label = dataItem.Item1, data = dataItem.Item2 as List<ushort> });
-                }
+                    r.AddChild(new Assembly.MixedStaticData { label = dataItem.Item1, Data = dataItem.Item2 });
                 r.AddLabel(end_label);
                 
                 if (ErrorCount != 0) return null;
@@ -178,7 +169,8 @@ namespace DCPUB
             }
             catch (DCPUB.InternalError e)
             {
-                ReportError((Irony.Parsing.SourceSpan?)null, e.Message);
+                ErrorCount += 1;
+                SendLineMessage((Irony.Parsing.SourceSpan?)null, "INTERNAL ERROR", e.Message);
                 return null;
             }
 

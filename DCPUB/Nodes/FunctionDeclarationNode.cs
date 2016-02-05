@@ -43,14 +43,16 @@ namespace DCPUB
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             (Child(0) as BlockNode).bypass = true;
-            
-            function.label = Assembly.Label.Make(function.name);
+
+            function.LabelName = enclosingScope.activeFunction.function.LabelName + "_" + function.name;
+            function.label = Assembly.Label.Make(function.LabelName);
             footerLabel = Assembly.Label.Make(function.name + "_footer");
 
             if (enclosingScope.type != ScopeType.Global)
                 context.AddWarning(this, "Experimental feature: Function declared within function.");
 
             enclosingScope.functions.Add(function);
+            enclosingScope.activeFunction.function.SubordinateFunctions.Add(function);
             function.localScope.parent = enclosingScope;
 
             for (int i = parameters.Count - 1; i >= 0; --i)
@@ -82,11 +84,6 @@ namespace DCPUB
             return new Assembly.Annotation("Declaration of function " + function.name);
         }
 
-        public void AssignVirtualRegisters(Assembly.Node root)
-        {
-            root.AssignRegisters(null);
-        }
-
         public virtual Assembly.Node CompileFunction(CompileContext context)
         {
             if (!function.reached) return new Assembly.Annotation("Function " + function.name + " stripped.");
@@ -96,14 +93,21 @@ namespace DCPUB
             foreach (var child in ChildNodes)
                 body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
 
-            body.CollapseTree(context.peepholes);
+            body.CollapseTransientNodes();
 
-            if (!context.options.emit_ir) AssignVirtualRegisters(body);
+            body.PeepholeTree(context.peepholes);
 
             var registers = new bool[] { true, false, false, false, false, false, false, true };
-            body.MarkRegisters(registers);
-            var used = registers.Count((rs) => rs == true) - 2; //Why -2? Don't preserve A or J.
-            body.AdjustVariableOffsets(-used);
+            var used = 0;
+
+            // If we are emitting intermediate representation, we don't want to replace virtual registers.
+            if (!context.options.emit_ir)
+            {
+                body.AssignRegisters(null);
+                body.MarkUsedRealRegisters(registers);
+                used = registers.Count((rs) => rs == true) - 2; //Why -2? Don't preserve A or J.
+                body.CorrectVariableOffsets(-used);
+            }
 
             var r = new Assembly.Function
             {
@@ -120,16 +124,17 @@ namespace DCPUB
             r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand("J"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
 
-            //Save registers
-            for (int i = 1; i < 7; ++i)
-                if (registers[i])
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond(i)));
+                //Save registers
+                for (int i = 1; i < 7; ++i)
+                    if (registers[i])
+                        r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond(i)));
             
             r.AddChild(body);
 
             r.AddLabel(footerLabel);
             r.AddInstruction(Assembly.Instructions.SET, Operand("SP"), Operand("J"));
-            r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)used));
+            if (used != 0)
+                r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)used));
 
             //Restore registers
             for (int i = 6; i >= 1; --i)
@@ -139,7 +144,7 @@ namespace DCPUB
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));
 
-            foreach (var nestedFunction in function.localScope.functions)
+            foreach (var nestedFunction in function.SubordinateFunctions)
                 r.AddChild(nestedFunction.Node.CompileFunction(context));
 
             return r;

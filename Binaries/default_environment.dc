@@ -13,7 +13,7 @@ initialize_memory_page(allocatable_memory, 0x8000);	//program makes for a smalle
 local lem_device = detect_lem();
 local video_memory = allocate_memory(LEM_VRAM_SIZE, allocatable_memory);
 initialize_lem(lem_device, video_memory);
-static console:Console[sizeof(Console)];
+static console:Console[sizeof Console];
 console_initialize(console, video_memory);
 local keyboard = find_keyboard();
 

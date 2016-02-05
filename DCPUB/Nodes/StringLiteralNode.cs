@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DCPUB.Assembly;
 using Irony.Interpreter.Ast;
 
 namespace DCPUB
@@ -46,11 +47,16 @@ namespace DCPUB
             base.GatherSymbols(context, enclosingScope);
             staticLabel = Assembly.Label.Make("_STRING");
 
-            var data = new List<ushort>();
-            data.Add((ushort)value.Length);
+            var data = new List<Assembly.Operand>();
+            data.Add(Constant((ushort)value.Length));
             foreach (var c in value)
-                data.Add((ushort)c);
+                data.Add(Constant((ushort)c));
             context.AddData(staticLabel, data);
+        }
+
+        public override Operand GetFetchToken()
+        {
+            return Label(staticLabel);
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)

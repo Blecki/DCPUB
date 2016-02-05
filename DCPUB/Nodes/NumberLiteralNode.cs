@@ -9,6 +9,7 @@ namespace DCPUB
     public class NumberLiteralNode : CompilableNode
     {
         public int Value = 0;
+        private string Error;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -24,8 +25,8 @@ namespace DCPUB
             }
             else if (AsString.StartsWith("0b"))
             {
-                if (AsString.Length > 18) throw new CompileError(this, "Binary literals cannot be longer than 16 bits");
-                Value = Convert.ToUInt16(AsString.Substring(2), 2);
+                if (AsString.Length > 18) Error = "Binary literals cannot be longer than 16 bits.";
+                Value = Convert.ToUInt16(AsString.Substring(2, Math.Min(AsString.Length - 2, 16)), 2);
                 ResultType = "word";
             }
             else if (AsString.StartsWith("'"))
@@ -44,6 +45,12 @@ namespace DCPUB
                 Value = Convert.ToInt16(AsString);
                 ResultType = "word";
             }
+        }
+
+        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        {
+            if (!String.IsNullOrEmpty(Error)) context.ReportError(this, Error);
+            base.GatherSymbols(context, enclosingScope);
         }
 
         public override Assembly.Operand GetFetchToken()

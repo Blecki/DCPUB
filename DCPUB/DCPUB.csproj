@@ -53,6 +53,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="assembly\Label.cs" />
+    <Compile Include="assembly\StatementNode.cs" />
     <Compile Include="assembly\Operand.cs" />
     <Compile Include="assembly\AssemblyGrammar.cs" />
     <Compile Include="assembly\OperandGrammar.cs" />

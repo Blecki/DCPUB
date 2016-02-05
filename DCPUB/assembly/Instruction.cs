@@ -78,13 +78,15 @@ namespace DCPUB.Assembly
                 secondOperand.label = labelTable[secondOperand.label.rawLabel];
         }
 
-        public override void MarkRegisters(bool[] bank)
+        public override void MarkUsedRealRegisters(bool[] bank)
         {
+            base.MarkUsedRealRegisters(bank);
+
             firstOperand.MarkRegisters(bank);
             if (secondOperand != null) secondOperand.MarkRegisters(bank);
         }
 
-        public override void AdjustVariableOffsets(int delta)
+        public override void CorrectVariableOffsets(int delta)
         {
             firstOperand.AdjustVariableOffsets(delta);
             if (secondOperand != null) secondOperand.AdjustVariableOffsets(delta);

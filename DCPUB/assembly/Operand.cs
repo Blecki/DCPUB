@@ -60,6 +60,10 @@ namespace DCPUB.Assembly
             return s;
         }
 
+        /// <summary>
+        /// Mark the correct flag in the register bank for any register this operand uses.
+        /// </summary>
+        /// <param name="bank"></param>
         public void MarkRegisters(bool[] bank)
         {
             if ((semantics & OperandSemantics.Label) == OperandSemantics.Label) return;
@@ -67,6 +71,10 @@ namespace DCPUB.Assembly
             if (register <= OperandRegister.J) bank[(int)register] = true;
         }
 
+        /// <summary>
+        /// Add delta to the variable offset, but only if this operand actually is a variable access.
+        /// </summary>
+        /// <param name="delta"></param>
         public void AdjustVariableOffsets(int delta)
         {
             if ((semantics & OperandSemantics.VariableOffset) == OperandSemantics.VariableOffset)
@@ -95,29 +103,5 @@ namespace DCPUB.Assembly
             return (semantics & OperandSemantics.Constant) == OperandSemantics.Constant;
         }
 
-        public void AssignRegisters(Dictionary<ushort, OperandRegister> mapping)
-        {
-            if (register == OperandRegister.VIRTUAL)
-            {
-                if (mapping.ContainsKey(virtual_register)) register = mapping[virtual_register];
-                else
-                {
-                    //Find a register not referenced in mapping.
-                    var reg = OperandRegister.A;
-                    for (int i = 1; i < (int)OperandRegister.J; ++i)
-                        if (!mapping.ContainsValue((OperandRegister)i)) reg = (OperandRegister)i;
-
-                    if (reg != OperandRegister.A)
-                    {
-                        mapping.Add(virtual_register, reg);
-                        register = reg;
-                    }
-                    else
-                    {
-                        //throw new CompileError("Ran out of registers. Expression too complicated.");
-                    }
-                }
-            }
-        }
     }
 }

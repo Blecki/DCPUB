@@ -10,7 +10,7 @@ namespace DCPUB
     {
         public String typeName;
         public Struct _struct = null;
-        public bool IsAssignedTo { get; set; }
+        public Assembly.Operand CachedFetchToken;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -20,22 +20,32 @@ namespace DCPUB
 
         public override Assembly.Operand GetFetchToken()
         {
-            if (_struct == null) throw new CompileError(this, "Struct not yet found.");
-            if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
-            return Constant((ushort)_struct.size);
+            if (CachedFetchToken == null) throw new InternalError("In sizeof, fetch token was not cached");
+            return CachedFetchToken;
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
-        {
+        {              
             _struct = enclosingScope.FindType(typeName);
-            if (_struct == null) throw new CompileError(this, "Could not find type " + typeName);
-            ResultType = "word";
+            if (_struct == null)
+            {
+                CachedFetchToken = Constant(0);
+                context.ReportError(this, "Could not find type " + typeName);
+            }
+            else if (_struct.size == 0)
+            {
+                throw new InternalError("Struct size must be determined before types are resolved.");
+            }
+            else
+                CachedFetchToken = Constant((ushort)_struct.size);
+
+             ResultType = "word";
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.TransientNode();
-            if (_struct.size == 0) throw new CompileError(this, "Struct size not yet determined");
+            if (_struct.size == 0) throw new InternalError("Struct size not yet determined");
             r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
                 Constant((ushort)_struct.size));
             return r;

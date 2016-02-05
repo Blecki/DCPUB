@@ -21,9 +21,10 @@ namespace DCPUB
             Label destination = null;
             foreach (var _label in scope.activeFunction.function.labels)
                 if (_label.declaredName == label) destination = _label;
-            if (destination == null) throw new CompileError(this, "Unknown label.");
+            if (destination == null) context.ReportError(this, "Unknown label - " + label);
             var r = new Assembly.StatementNode();
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(destination.realName));
+            if (destination != null)
+                r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(destination.realName));
             return r;
         }
 

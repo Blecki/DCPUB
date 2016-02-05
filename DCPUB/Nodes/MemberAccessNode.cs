@@ -29,16 +29,35 @@ namespace DCPUB
         {
             Child(0).ResolveTypes(context, enclosingScope);
             _struct = enclosingScope.FindType(Child(0).ResultType);
-            if (_struct == null) throw new CompileError(this, "Result of expression is not a struct");
-            foreach (var _member in _struct.members)
-                if (_member.name == memberName) member = _member;
-            if (member == null) throw new CompileError(this, "Member " + memberName + " not found on " + _struct.name);
-            ResultType = member.typeSpecifier;
+            if (_struct == null)
+            {
+                context.ReportError(this, "Result of expression is not a struct");
+                ResultType = "word";
+            }
+            else
+            {
+                foreach (var _member in _struct.members)
+                    if (_member.name == memberName) member = _member;
+                if (member == null)
+                {
+                    context.ReportError(this, "Member " + memberName + " not found on " + _struct.name);
+                    ResultType = "word";
+                }
+                else
+                    ResultType = member.typeSpecifier;
+            }
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.TransientNode();
+
+            if (member == null)
+            {
+                context.ReportError(this, "Member was not resolved.");
+                return r;
+            }
+
             Target objectTarget = target;
             if (target.target == Targets.Stack)
                 objectTarget = Target.Register(context.AllocateRegister());
@@ -70,7 +89,13 @@ namespace DCPUB
         Assembly.Node AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
             var r = new Assembly.TransientNode();
-            //assume value is already in 'from'.
+
+            if (member == null)
+            {
+                context.ReportError(this, "Member was not resolved");
+                return r;
+            }
+
             var target = Target.Register(context.AllocateRegister());
             r.AddChild(Child(0).Emit(context, scope, target));
             r.AddInstruction(opcode, target.GetOperand(TargetUsage.Peek,

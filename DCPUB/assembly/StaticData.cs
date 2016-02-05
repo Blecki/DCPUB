@@ -5,52 +5,38 @@ using System.Text;
 
 namespace DCPUB.Assembly
 {
-    public class StaticData : Node
+    public class MixedStaticData : Node
     {
         public Assembly.Label label;
-        public List<ushort> data;
+        public List<Operand> Data;
 
         public override void Emit(EmissionStream stream)
         {
-            var str = ":" + label + " DAT " + String.Join(" ", data.Select(u => string.Format("0x{0:X}", u)));
+            var str = ":" + label + " DAT ";
+            foreach (var item in Data)
+            {
+                if (item.IsIntegralConstant()) str += string.Format("0x{0:X4}", item.constant);
+                else if (item.semantics == OperandSemantics.Label) str += item.label;
+                else throw new InternalError("Incorrect operand in mixed static data");
+                str += " ";
+            }
             stream.WriteLine(str);
         }
 
         public override void EmitIR(EmissionStream stream)
         {
-            var str = ":" + label + " DAT " + String.Join(" ", data.Select(u => string.Format("0x{0:X}", u)));
-            stream.WriteLine(str);
+            Emit(stream);
         }
 
         public override void EmitBinary(List<Box<ushort>> binary)
         {
             label.position.data = (ushort)binary.Count;
-            foreach (var u in data)
-                binary.Add(new Box<ushort> { data = u });
-        }
-    }
-
-    public class StaticLabelData : Node
-    {
-        public Assembly.Label label;
-        public Assembly.Label data;
-
-        public override void Emit(EmissionStream stream)
-        {
-            var str = ":" + label + " DAT " + data;
-            stream.WriteLine(str);
-        }
-
-        public override void EmitIR(EmissionStream stream)
-        {
-            var str = ":" + label + " DAT " + data;
-            stream.WriteLine(str);
-        }
-
-        public override void EmitBinary(List<Box<ushort>> binary)
-        {
-            label.position.data = (ushort)binary.Count;
-            binary.Add(data.position);
+            foreach (var item in Data)
+            {
+                if (item.IsIntegralConstant()) binary.Add(new Box<ushort> { data = item.constant });
+                else if (item.semantics == OperandSemantics.Label) binary.Add(item.label.position);
+                else throw new InternalError("Incorrect operand in mixed static data");
+            }
         }
     }
 }

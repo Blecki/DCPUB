@@ -96,22 +96,28 @@ namespace DCPUB
                 if (declLabel == "external") context.ReportError(this, "Can't have external array.");
 
                 var sizeToken = Child(1).GetFetchToken();
-                if (!sizeToken.IsIntegralConstant()) context.ReportError(this, "Array sizes must be a compile time constant.");
-                size = sizeToken.constant;
+                if (!sizeToken.IsIntegralConstant())
+                {
+                    context.ReportError(this, "Array sizes must be a compile time constant.");
+                    size = 1;
+                }
+                else
+                    size = sizeToken.constant;
 
                 if (hasInitialValue && !(Child(0) is ArrayInitializationNode))
                     context.ReportError(this, "Can't initialize an array this way.");
-                else if (hasInitialValue && (Child(0) as ArrayInitializationNode).rawData.Length != size)
+                else if (hasInitialValue && (Child(0) as ArrayInitializationNode).RawData.Count != size)
                     context.ReportError(this, "Array initialization size mismatch");
 
                 if (declLabel == "static")
                 {
-                    if (hasInitialValue) context.AddData(variable.staticLabel, new List<ushort>((Child(0) as ArrayInitializationNode).rawData));
+                    if (hasInitialValue)
+                        context.AddData(variable.staticLabel, (Child(0) as ArrayInitializationNode).RawData);
                     else
                     {
-                        var data = new ushort[size];
-                        for (int i = 0; i < size; ++i) data[i] = 0;
-                        context.AddData(variable.staticLabel, new List<ushort>(data));
+                            var data = new List<Assembly.Operand>();
+                            for (int i = 0; i < size; ++i) data.Add(Constant(0));
+                        context.AddData(variable.staticLabel, data);
                     }
                 }
             }
