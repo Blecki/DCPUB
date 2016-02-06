@@ -10,7 +10,7 @@ namespace DCPUB
     {
         public string ResultType = "word";
 
-        public virtual Assembly.Node Emit(CompileContext context, Scope scope, Target target)
+        public virtual Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
             return new Assembly.Annotation("Emit not implemented on " + this.GetType().Name);
         }

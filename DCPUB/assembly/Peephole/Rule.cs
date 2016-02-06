@@ -15,7 +15,7 @@ namespace DCPUB.Assembly.Peephole
             AddChild("replacement", treeNode.ChildNodes[1]);
         }
 
-        public bool TryAt(List<Node> assembly, int at)
+        public bool TryAt(List<IRNode> assembly, int at)
         {
             var values = new Dictionary<string, Operand>();
             if ((ChildNodes[0] as Matcher).Match(assembly, at, values))
@@ -37,7 +37,7 @@ namespace DCPUB.Assembly.Peephole
                 AddChild("rule", child);
         }
 
-        public void ProcessAssembly(List<Node> assembly)
+        public void ProcessAssembly(List<IRNode> assembly)
         {
             int rulesMatched = 0;
             do

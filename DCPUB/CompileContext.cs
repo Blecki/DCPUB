@@ -114,7 +114,7 @@ namespace DCPUB
             return true;
         }
 
-        public Assembly.Node Compile(Action<string> OnError)
+        public Assembly.IRNode Compile(Action<string> OnError)
         {
             this.OnError = OnError;
 
@@ -129,7 +129,7 @@ namespace DCPUB
                 rootNode.ResolveTypes(this, globalScope);
                 //rootNode.FoldConstants(this);
             
-                var r = new Assembly.Node();
+                var r = new Assembly.IRNode();
 
                 if (options.externals)
                 {
@@ -143,7 +143,7 @@ namespace DCPUB
                         {
                             var blankList = new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Constant(0) });
 
-                            r.AddChild(new Assembly.MixedStaticData
+                            r.AddChild(new Assembly.StaticData
                             {
                                 label = new Assembly.Label("__external_" + variable.name),
                                 Data = blankList
@@ -156,7 +156,7 @@ namespace DCPUB
                 
                 r.AddChild(rootNode.CompileFunction(this));
                 foreach (var dataItem in dataElements)
-                    r.AddChild(new Assembly.MixedStaticData { label = dataItem.Item1, Data = dataItem.Item2 });
+                    r.AddChild(new Assembly.StaticData { label = dataItem.Item1, Data = dataItem.Item2 });
                 r.AddLabel(end_label);
                 
                 if (ErrorCount != 0) return null;

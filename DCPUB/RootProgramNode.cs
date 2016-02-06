@@ -21,12 +21,12 @@ namespace DCPUB
             Child(0).GatherSymbols(context, function.localScope);
         }
 
-        public override Assembly.Node CompileFunction(CompileContext context)
+        public override Assembly.IRNode CompileFunction(CompileContext context)
         {
             // Only emit functions that can actually be called.
             function.MarkReachableFunctions();
 
-            var r = new Assembly.Node();
+            var r = new Assembly.IRNode();
             var localScope = function.localScope.Push();
 
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));

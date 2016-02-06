@@ -19,7 +19,7 @@ namespace DCPUB.Assembly.Peephole
             else root = _root.Root.AstNode as RuleSet; 
         }
 
-        public void ProcessAssembly(List<Node> assembly)
+        public void ProcessAssembly(List<IRNode> assembly)
         {
             root.ProcessAssembly(assembly);
         }

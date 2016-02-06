@@ -36,7 +36,7 @@ namespace DCPUB
             }
         }
 
-        public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
+        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
             var conditionFetchToken = Child(0).GetFetchToken();
             if (conditionFetchToken != null &&
@@ -96,7 +96,7 @@ namespace DCPUB
             return r;
         }
 
-        public static Assembly.Node EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
+        public static Assembly.IRNode EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
         {
             if (block is BlockNode)
                 return block.Emit(context, scope, Target.Discard);

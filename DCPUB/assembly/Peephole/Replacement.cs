@@ -82,7 +82,7 @@ namespace DCPUB.Assembly.Peephole
             AddChild("secondOperand", treeNode.ChildNodes[2]);
         }
 
-        public Node Generate(Dictionary<string, Operand> values)
+        public IRNode Generate(Dictionary<string, Operand> values)
         {
             return Instruction.Make(instruction, (ChildNodes[0] as ReplacementOperand).Generate(values),
                 (ChildNodes[1] as ReplacementOperand).Generate(values));
@@ -98,9 +98,9 @@ namespace DCPUB.Assembly.Peephole
                 AddChild("Instruction", child);
         }
 
-        public List<Node> Generate(Dictionary<string, Operand> values)
+        public List<IRNode> Generate(Dictionary<string, Operand> values)
         {
-            var r = new List<Node>();
+            var r = new List<IRNode>();
             foreach (var child in ChildNodes)
                 r.Add((child as ReplacementInstruction).Generate(values));
             return r;

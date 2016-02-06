@@ -42,113 +42,112 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="assembly\Annotation.cs">
+    <Compile Include="Assembly\IRNodes\Annotation.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\InstructionAstNode.cs" />
-    <Compile Include="assembly\EmissionStream.cs">
+    <Compile Include="Assembly\IRNodes\InlineStaticDataNode.cs" />
+    <Compile Include="Assembly\InstructionListAstNode.cs" />
+    <Compile Include="Assembly\InstructionAstNode.cs" />
+    <Compile Include="Assembly\EmissionStream.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\Function.cs">
+    <Compile Include="Assembly\IRNodes\Function.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\Label.cs" />
-    <Compile Include="assembly\StatementNode.cs" />
-    <Compile Include="assembly\Operand.cs" />
-    <Compile Include="assembly\AssemblyGrammar.cs" />
-    <Compile Include="assembly\OperandGrammar.cs" />
-    <Compile Include="assembly\Peephole\InstructionMatcher.cs" />
-    <Compile Include="assembly\Peephole\Grammar.cs" />
-    <Compile Include="assembly\Inline.cs">
+    <Compile Include="Assembly\Label.cs" />
+    <Compile Include="Assembly\IRNodes\StatementNode.cs" />
+    <Compile Include="Assembly\Operand.cs" />
+    <Compile Include="Assembly\AssemblyGrammar.cs" />
+    <Compile Include="Assembly\OperandGrammar.cs" />
+    <Compile Include="Assembly\Peephole\InstructionMatcher.cs" />
+    <Compile Include="Assembly\Peephole\Grammar.cs" />
+    <Compile Include="Assembly\IRNodes\Instruction.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\Instruction.cs">
+    <Compile Include="Assembly\Instructions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\Instructions.cs">
+    <Compile Include="Assembly\IRNodes\LabelNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\LabelNode.cs">
+    <Compile Include="Assembly\IRNodes\Node.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\Node.cs">
+    <Compile Include="Assembly\Peephole\Matcher.cs" />
+    <Compile Include="Assembly\Peephole\Replacement.cs" />
+    <Compile Include="Assembly\Peephole\Rule.cs" />
+    <Compile Include="Assembly\Peephole\WholeInstructionMatcher.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="assembly\Peephole\Matcher.cs" />
-    <Compile Include="assembly\Peephole\Replacement.cs" />
-    <Compile Include="assembly\Peephole\Rule.cs" />
-    <Compile Include="assembly\Peephole\WholeInstructionMatcher.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="assembly\Peephole\OperandMatcher.cs" />
-    <Compile Include="assembly\Peephole\Peepholes.cs" />
-    <Compile Include="assembly\OperandAstNode.cs" />
-    <Compile Include="assembly\StaticData.cs">
+    <Compile Include="Assembly\Peephole\OperandMatcher.cs" />
+    <Compile Include="Assembly\Peephole\Peepholes.cs" />
+    <Compile Include="Assembly\OperandAstNode.cs" />
+    <Compile Include="Assembly\IRNodes\StaticData.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AssignableNode.cs" />
     <Compile Include="InternalError.cs" />
     <Compile Include="ConfigurationError.cs" />
     <Compile Include="CompileOptions.cs" />
-    <Compile Include="Nodes\AddressOfNode.cs" />
-    <Compile Include="Nodes\ArrayInitializationNode.cs" />
-    <Compile Include="Nodes\CastNode.cs" />
-    <Compile Include="Nodes\BreakNode.cs" />
-    <Compile Include="Nodes\NullStatementNode.cs" />
-    <Compile Include="Nodes\OffsetOfNode.cs" />
-    <Compile Include="Nodes\StringLiteralNode.cs" />
-    <Compile Include="Nodes\GotoNode.cs" />
-    <Compile Include="Nodes\LabelNode.cs" />
-    <Compile Include="Nodes\NegateOperatorNode.cs" />
-    <Compile Include="Nodes\NotOperatorNode.cs" />
-    <Compile Include="Nodes\IndexOperatorNode.cs" />
-    <Compile Include="Nodes\SizeofNode.cs" />
-    <Compile Include="Nodes\MemberAccessNode.cs" />
-    <Compile Include="Nodes\StructDeclarationNode.cs" />
+    <Compile Include="Ast\AddressOfNode.cs" />
+    <Compile Include="Ast\ArrayInitializationNode.cs" />
+    <Compile Include="Ast\CastNode.cs" />
+    <Compile Include="Ast\BreakNode.cs" />
+    <Compile Include="Ast\NullStatementNode.cs" />
+    <Compile Include="Ast\OffsetOfNode.cs" />
+    <Compile Include="Ast\StringLiteralNode.cs" />
+    <Compile Include="Ast\GotoNode.cs" />
+    <Compile Include="Ast\LabelNode.cs" />
+    <Compile Include="Ast\NegateOperatorNode.cs" />
+    <Compile Include="Ast\NotOperatorNode.cs" />
+    <Compile Include="Ast\IndexOperatorNode.cs" />
+    <Compile Include="Ast\SizeofNode.cs" />
+    <Compile Include="Ast\MemberAccessNode.cs" />
+    <Compile Include="Ast\StructDeclarationNode.cs" />
     <Compile Include="Preprocessor\Parser.cs" />
     <Compile Include="Preprocessor\ParseState.cs" />
     <Compile Include="RootProgramNode.cs" />
-    <Compile Include="Nodes\AssignmentNode.cs">
+    <Compile Include="Ast\AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nodes\BinaryOperationNode.cs">
+    <Compile Include="Ast\BinaryOperationNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nodes\BlockNode.cs">
+    <Compile Include="Ast\BlockNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CompilableNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nodes\ComparisonNode.cs" />
+    <Compile Include="Ast\ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="Upsert.cs" />
     <Compile Include="Variable.cs" />
-    <Compile Include="Nodes\WhileStatementNode.cs" />
-    <Compile Include="Nodes\FunctionCallNode.cs" />
-    <Compile Include="Nodes\FunctionDeclarationNode.cs" />
-    <Compile Include="Nodes\DereferenceNode.cs" />
-    <Compile Include="Nodes\IfStatementNode.cs">
+    <Compile Include="Ast\WhileStatementNode.cs" />
+    <Compile Include="Ast\FunctionCallNode.cs" />
+    <Compile Include="Ast\FunctionDeclarationNode.cs" />
+    <Compile Include="Ast\DereferenceNode.cs" />
+    <Compile Include="Ast\IfStatementNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nodes\InlineASMNode.cs" />
+    <Compile Include="Ast\InlineASMNode.cs" />
     <Compile Include="Grammar.cs" />
-    <Compile Include="Nodes\NumberLiteralNode.cs">
+    <Compile Include="Ast\NumberLiteralNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Nodes\ReturnStatementNode.cs">
+    <Compile Include="Ast\ReturnStatementNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Scope.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nodes\VariableDeclarationNode.cs">
+    <Compile Include="Ast\VariableDeclarationNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nodes\VariableNameNode.cs">
+    <Compile Include="Ast\VariableNameNode.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -161,6 +160,7 @@
   <ItemGroup>
     <Content Include="TextFile1.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

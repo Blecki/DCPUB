@@ -15,7 +15,7 @@ namespace DCPUB.Assembly.Peephole
                 AddChild("matcher", child);
         }
 
-        public bool Match(List<Node> assembly, int startIndex, Dictionary<string, Operand> values)
+        public bool Match(List<IRNode> assembly, int startIndex, Dictionary<string, Operand> values)
         {
             for (var i = 0; i < ChildNodes.Count; ++i)
             {
