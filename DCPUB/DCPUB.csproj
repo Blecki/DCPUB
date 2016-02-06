@@ -120,9 +120,6 @@
     <Compile Include="CompilableNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CompileError.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Nodes\ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />

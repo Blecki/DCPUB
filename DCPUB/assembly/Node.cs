@@ -87,6 +87,11 @@ namespace DCPUB.Assembly
                 else return (new Node[] { n }).ToList();
             }).ToList();
         }
+
+        internal virtual void ErrorCheck(CompileContext Context, CompilableNode Ast)
+        {
+            foreach (var child in children) child.ErrorCheck(Context, Ast);
+        }
     }
 
     public class TransientNode : Node 

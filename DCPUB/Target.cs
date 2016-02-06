@@ -44,7 +44,7 @@ namespace DCPUB
                 }
             }
             else if (target == Targets.Discard)
-                throw new CompileError("Unable to get operand from target with semantic 'discard'.");
+                throw new InternalError("Unable to get operand from target with semantic 'discard'.");
             else if (target == Targets.Raw)
                 return new Assembly.Operand
                 {
@@ -54,7 +54,7 @@ namespace DCPUB
                 };
             else
                 return CompilableNode.Virtual(virtualId, semantics, offset);
-            throw new CompileError("Unknown error while getting operand from target.");
+            throw new InternalError("Unknown error while getting operand from target.");
         }
     }
 }

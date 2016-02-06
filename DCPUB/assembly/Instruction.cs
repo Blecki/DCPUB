@@ -11,6 +11,19 @@ namespace DCPUB.Assembly
         public Operand firstOperand;
         public Operand secondOperand;
 
+        internal override void ErrorCheck(CompileContext Context, CompilableNode Ast)
+        {
+            if (firstOperand == null)
+                Context.ReportError(Ast, "No operands for instruction");
+            else if (instruction.GetOperandCount() == 1 && secondOperand != null)
+                Context.ReportError(Ast, "Instruction takes one argument - " + instruction.ToString());
+            else if (instruction.GetOperandCount() == 2 && secondOperand == null)
+                Context.ReportError(Ast, "Instruction takes two arguments - " + instruction.ToString());
+            
+            if (firstOperand != null) firstOperand.ErrorCheck(Context, Ast);
+            if (secondOperand != null) secondOperand.ErrorCheck(Context, Ast);
+        }
+
         public Operand operand(int n) { if (n == 0) return firstOperand; else return secondOperand; }
 
         public override void Emit(EmissionStream stream)

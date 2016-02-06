@@ -67,14 +67,10 @@ namespace DCPUB.Assembly
                 iNode.instruction = (Instructions)Enum.Parse(typeof(Instructions), treeNode.FirstChild.FindTokenAndGetText());
                 iNode.firstOperand = OperandAstNode.ParseOperand(treeNode.ChildNodes[1].FirstChild);
 
-                if (iNode.instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+                if (iNode.instruction <= Instructions.SINGLE_OPERAND_INSTRUCTIONS)
                 {
-                    if (treeNode.ChildNodes[2].ChildNodes.Count > 0) throw new CompileError("Instruction only takes one argument");
-                }
-                else
-                {
-                    if (treeNode.ChildNodes[2].ChildNodes.Count == 0) throw new CompileError("Instruction takes two arguments");
-                    iNode.secondOperand = OperandAstNode.ParseOperand(treeNode.ChildNodes[2].FirstChild.FirstChild);
+                    if (treeNode.ChildNodes.Count >= 3)
+                        iNode.secondOperand = OperandAstNode.ParseOperand(treeNode.ChildNodes[2].FirstChild.FirstChild);
                 }
 
                 return iNode;
@@ -126,7 +122,7 @@ namespace DCPUB.Assembly
 
             }
             else
-                throw new CompileError("Not supported");
+                throw new InternalError("Error parsing inline ASM");
         }
 
     }
@@ -148,6 +144,6 @@ namespace DCPUB.Assembly
                 if (child is LabelNode) labelTable.Add((child as LabelNode).label.rawLabel, (child as LabelNode).label);
             foreach (var child in resultNode.children)
                 child.SetupLabels(labelTable);
-        }
+        }        
     }
 }

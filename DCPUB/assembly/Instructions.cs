@@ -70,7 +70,15 @@ namespace DCPUB.Assembly
             if (Ins <= Instructions.SHL) return OperandsModified.A;
             return OperandsModified.Both;
         }
+
+        public static int GetOperandCount(this Instructions Ins)
+        {
+            if (Ins >= Instructions.SINGLE_OPERAND_INSTRUCTIONS) return 1;
+            return 2;
+        }
     }
+
+   
 
     /*
      * --- Values: (5/6 bits) ---------------------------------------------------------
@@ -149,7 +157,7 @@ namespace DCPUB.Assembly
             if (op.register == OperandRegister.PEEK)
             {
                 if (op.semantics == OperandSemantics.Dereference)
-                    throw new CompileError("Can't dereference peek.");
+                    throw new InternalError("Generated impossible code: Can't dereference peek.");
                 return new Tuple<ushort, Box<ushort>>(0x19, null);
             }
 

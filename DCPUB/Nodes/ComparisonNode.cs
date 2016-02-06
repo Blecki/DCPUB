@@ -18,7 +18,7 @@ namespace DCPUB
 
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
-            throw new CompileError("Branch node should have handled this.");
+            throw new InternalError("Branch node should have handled this.");
         }
 
     }

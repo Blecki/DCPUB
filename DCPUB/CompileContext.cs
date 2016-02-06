@@ -162,11 +162,6 @@ namespace DCPUB
                 if (ErrorCount != 0) return null;
                 return r;
             }
-            catch (DCPUB.CompileError c)
-            {
-                ReportError(c.span, c.Message);
-                return null;
-            }
             catch (DCPUB.InternalError e)
             {
                 ErrorCount += 1;

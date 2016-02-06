@@ -60,6 +60,13 @@ namespace DCPUB.Assembly
             return s;
         }
 
+        public void ErrorCheck(CompileContext Context, CompilableNode Ast)
+        {
+            if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference &&
+                register == OperandRegister.PEEK)
+                Context.ReportError(Ast, "Can't dereference peek.");
+        }
+
         /// <summary>
         /// Mark the correct flag in the register bank for any register this operand uses.
         /// </summary>

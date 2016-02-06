@@ -74,7 +74,7 @@ namespace DCPUB
                     }
                     break;
                 default:
-                    throw new CompileError("IF !FailFirst Not implemented");
+                    throw new InternalError("IF !FailFirst Not implemented");
             }
             return r;
 

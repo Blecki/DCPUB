@@ -62,8 +62,8 @@ namespace DCPUB
     public class InlineASMNode : CompilableNode
     {
         public string rawAssembly = "";
-        public Assembly.Node parsedNode;
         public static Irony.Parsing.Parser asmParser = new Irony.Parsing.Parser(new Assembly.AssemblyGrammar());
+        private Irony.Parsing.ParseTree ParsedAssembly = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -73,14 +73,23 @@ namespace DCPUB
                     AddChild("bound register", child);
             rawAssembly = treeNode.ChildNodes[2].FindTokenAndGetText();
 
-            var parsed = asmParser.Parse(rawAssembly);
-            if (parsed.HasErrors()) throw new CompileError("Error parsing inline ASM: " + parsed.ParserMessages[0].Message);
-            parsedNode = (parsed.Root.AstNode as Assembly.InstructionListAstNode).resultNode;
+            ParsedAssembly = asmParser.Parse(rawAssembly);
         }
 
         public override Assembly.Node Emit(CompileContext context, Scope scope, Target target)
         {
             var r = new Assembly.TransientNode();
+
+            if (ParsedAssembly.HasErrors())
+            {
+                foreach (var error in ParsedAssembly.ParserMessages)
+                    context.ReportError(new Irony.Parsing.SourceSpan(error.Location, 20), error.Message);
+                return r;
+            }
+
+            var parsedNode = (ParsedAssembly.Root.AstNode as Assembly.InstructionListAstNode).resultNode;
+
+            parsedNode.ErrorCheck(context, this);
 
             for (var i = 0; i < ChildNodes.Count; ++i)
                 r.AddChild(Child(i).Emit(context, scope, null));

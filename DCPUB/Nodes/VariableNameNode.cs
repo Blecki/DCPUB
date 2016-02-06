@@ -108,29 +108,20 @@ namespace DCPUB
         public Assembly.Node EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
         {
             var r = new Assembly.TransientNode();
-            if (variable.isArray) throw new CompileError("Can't assign to arrays.");
+            if (variable.isArray)
+            {
+                context.ReportError(this, "Can't assign to arrays.");
+                return r;
+            }
             if (variable.type == VariableType.Constant || variable.type == VariableType.External 
                 || variable.type == VariableType.ConstantLabel)
-                throw new CompileError(this, "Can't assign to constant values");
+            {
+                context.ReportError(this, "Can't assign to constant values.");
+                return r;
+            }
 
             if (variable.type == VariableType.Local)
                     r.AddInstruction(opcode, DereferenceVariableOffset((ushort)variable.stackOffset), from);
-            else if (variable.type == VariableType.Static)
-                r.AddInstruction(opcode, DereferenceLabel(variable.staticLabel), from);
-            return r;
-        }
-
-        public Assembly.Node EmitAssignment2(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
-        {
-            var r = new Assembly.TransientNode();
-
-            if (variable.isArray) throw new CompileError("Can't assign to arrays.");
-            if (variable.type == VariableType.Constant || variable.type == VariableType.External
-                || variable.type == VariableType.ConstantLabel)
-                throw new CompileError(this, "Can't assign to constant values");
-
-            if (variable.type == VariableType.Local)
-                r.AddInstruction(opcode, DereferenceVariableOffset((ushort)variable.stackOffset), from);
             else if (variable.type == VariableType.Static)
                 r.AddInstruction(opcode, DereferenceLabel(variable.staticLabel), from);
             return r;
@@ -159,7 +150,6 @@ namespace DCPUB
             else if (variable.type == VariableType.External)
             {
                 return null;
-                //throw new CompileError(this, "Attempt to get fetch token from external variable.");
             }
             else
                 throw new InternalError("Unreachable code reached.");

@@ -26,8 +26,13 @@ namespace DCPUB
             if (ChildNodes.Count > 0)
             {
                 var token = Child(0).GetFetchToken();
-                if (!token.IsIntegralConstant()) throw new CompileError(this, "Array sizes must be compile time constants.");
-                member.size = token.constant;
+                if (!token.IsIntegralConstant())
+                {
+                    context.ReportError(this, "Array sizes must be integral constants.");
+                    member.size = 1;
+                }
+                else
+                    member.size = token.constant;
                 member.isArray = true;
             }
             else
@@ -58,7 +63,7 @@ namespace DCPUB
             base.GatherSymbols(context, enclosingScope);
 
             if (enclosingScope.type != ScopeType.Global)
-                throw new CompileError(this, "Structs must be declared at global scope.");
+                context.AddWarning(this, "Experimental feature - structs declared inside functions.");
             foreach (var child in ChildNodes)
                 @struct.members.Add((child as MemberNode).member);
             enclosingScope.structs.Add(@struct);
