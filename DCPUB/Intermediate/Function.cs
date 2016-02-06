@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     public class Function : IRNode
     {
         public String functionName;
-        public Assembly.Label entranceLabel;
+        public Intermediate.Label entranceLabel;
         public int parameterCount;
 
         public override void Emit(EmissionStream stream)

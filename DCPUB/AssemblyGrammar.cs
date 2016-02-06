@@ -5,7 +5,7 @@ using System.Text;
 using Irony.Parsing;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB.Assembly
+namespace DCPUB
 {
     [Language("DCPUB ASM", "0.1", "DASM Grammar")]
     public class AssemblyGrammar : Irony.Parsing.Grammar
@@ -40,7 +40,7 @@ namespace DCPUB.Assembly
 
             var line = new NonTerminal("line");
             line.Rule = dat | instruction | label | Empty;
-            var instructionList = new NonTerminal("inslist", typeof(InstructionListAstNode));
+            var instructionList = new NonTerminal("inslist", typeof(Ast.Assembly.InstructionListAstNode));
             instructionList.Rule = MakeStarRule(instructionList, NewLine | ToTerm(";"), line);
 
             this.Root = instructionList;

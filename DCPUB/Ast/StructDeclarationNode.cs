@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -82,9 +83,9 @@ namespace DCPUB
             @struct.size = offset;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            return new Assembly.Annotation("Declaration of struct " + @struct.name);
+            return new Annotation("Declaration of struct " + @struct.name);
         }
     }
 }

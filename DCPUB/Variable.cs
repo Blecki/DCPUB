@@ -19,7 +19,7 @@ namespace DCPUB
         public String name;
         public Scope scope;
         public int stackOffset;
-        public Assembly.Label staticLabel;
+        public Intermediate.Label staticLabel;
         public int constantValue;
         public string typeSpecifier = "word";
         public bool addressTaken = false;

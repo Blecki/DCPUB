@@ -155,7 +155,7 @@ namespace DCPUB.Preprocessor
             else if (directive == "#include")
             {
                 var fileName = rest.Trim();
-                return Preprocess(state.readIncludeFile(fileName), state);
+                return Preprocess(fileName, state.readIncludeFile(fileName), state);
             }
             else
             {
@@ -263,7 +263,7 @@ namespace DCPUB.Preprocessor
             return result.ToString();
         }
 
-        public static String Preprocess(String file, ParseState parentState)
+        public static String Preprocess(String FileName, String file, ParseState parentState)
         {
             var state = new ParseState(CollapseLineEscapes(file));
             if (parentState != null)
@@ -272,12 +272,14 @@ namespace DCPUB.Preprocessor
                 state.readIncludeFile = parentState.readIncludeFile;
                 state.ReportErrors = parentState.ReportErrors;
             }
+            state.filename = FileName;
             return ParseBlock(null, state);
         }
 
-        public static String Preprocess(String file, Func<String,String> fileSource, Action<String> ReportErrors)
+        public static String Preprocess(String FileName, String file, Func<String,String> fileSource, Action<String> ReportErrors)
         {
             var state = new ParseState(CollapseLineEscapes(file));
+            state.filename = FileName;
             state.readIncludeFile = fileSource;
             state.ReportErrors = ReportErrors;
             return ParseBlock(null, state);

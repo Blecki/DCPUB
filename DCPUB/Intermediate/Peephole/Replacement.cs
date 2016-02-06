@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB.Assembly.Peephole
+namespace DCPUB.Intermediate.Peephole
 {
     public class ReplacementOperand : AstNode
     {
@@ -26,7 +26,7 @@ namespace DCPUB.Assembly.Peephole
             if (opParse.HasErrors()) parsedOperand = Operand.fromString(rawValue);
             else
             {
-                parsedOperand = OperandAstNode.ParseOperand(opParse.Root.FirstChild);
+                parsedOperand = Ast.Assembly.OperandAstNode.ParseOperand(opParse.Root.FirstChild);
             }
         }
 

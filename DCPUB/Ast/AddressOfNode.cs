@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 using DCPUB.Assembly;
 
 namespace DCPUB
@@ -65,9 +66,9 @@ namespace DCPUB
             return null;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            IRNode r = new Assembly.TransientNode();
+            IRNode r = new TransientNode();
 
             if (variable != null)
             {
@@ -82,9 +83,9 @@ namespace DCPUB
                 }
                 else if (variable.type == VariableType.External)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Label(new Assembly.Label("EXTERNALS")));
-                    r.AddInstruction(Assembly.Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)variable.constantValue));
-                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), target.GetOperand(TargetUsage.Peek, OperandSemantics.Dereference));
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(new Intermediate.Label("EXTERNALS")));
+                    r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)variable.constantValue));
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), target.GetOperand(TargetUsage.Peek, OperandSemantics.Dereference));
                 }
                 else
                     context.ReportError(this, "Can't take the address of this variable.");

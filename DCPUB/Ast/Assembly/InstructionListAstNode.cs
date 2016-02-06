@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Ast.Assembly
 {
     public class InstructionListAstNode : AstNode
     {
-        public IRNode resultNode = new IRNode();
+        public Intermediate.IRNode resultNode = new Intermediate.IRNode();
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -18,9 +18,10 @@ namespace DCPUB.Assembly
                 resultNode.AddChild(InstructionAstNode.ParseInstruction(child));
             }
 
-            var labelTable = new Dictionary<String, Label>();
+            var labelTable = new Dictionary<String, Intermediate.Label>();
             foreach (var child in resultNode.children)
-                if (child is LabelNode) labelTable.Add((child as LabelNode).label.rawLabel, (child as LabelNode).label);
+                if (child is Intermediate.LabelNode)
+                    labelTable.Add((child as Intermediate.LabelNode).label.rawLabel, (child as Intermediate.LabelNode).label);
             foreach (var child in resultNode.children)
                 child.SetupLabels(labelTable);
         }        

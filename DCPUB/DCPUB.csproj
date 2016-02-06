@@ -42,50 +42,52 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assembly\IRNodes\Annotation.cs">
+    <Compile Include="Assembly\DCPU.cs" />
+    <Compile Include="Intermediate\Annotation.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\IRNodes\InlineStaticDataNode.cs" />
-    <Compile Include="Assembly\InstructionListAstNode.cs" />
-    <Compile Include="Assembly\InstructionAstNode.cs" />
-    <Compile Include="Assembly\EmissionStream.cs">
+    <Compile Include="Intermediate\InlineStaticDataNode.cs" />
+    <Compile Include="Ast\Assembly\InstructionListAstNode.cs" />
+    <Compile Include="Ast\Assembly\InstructionAstNode.cs" />
+    <Compile Include="EmissionStream.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\IRNodes\Function.cs">
+    <Compile Include="Intermediate\Function.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Label.cs" />
-    <Compile Include="Assembly\IRNodes\StatementNode.cs" />
-    <Compile Include="Assembly\Operand.cs" />
-    <Compile Include="Assembly\AssemblyGrammar.cs" />
-    <Compile Include="Assembly\OperandGrammar.cs" />
-    <Compile Include="Assembly\Peephole\InstructionMatcher.cs" />
-    <Compile Include="Assembly\Peephole\Grammar.cs" />
-    <Compile Include="Assembly\IRNodes\Instruction.cs">
+    <Compile Include="Intermediate\Label.cs" />
+    <Compile Include="Intermediate\StatementNode.cs" />
+    <Compile Include="Intermediate\Operand.cs" />
+    <Compile Include="AssemblyGrammar.cs" />
+    <Compile Include="OperandGrammar.cs" />
+    <Compile Include="Intermediate\Peephole\InstructionMatcher.cs" />
+    <Compile Include="Intermediate\Peephole\Grammar.cs" />
+    <Compile Include="Intermediate\Instruction.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Instructions.cs">
+    <Compile Include="Intermediate\Instructions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\IRNodes\LabelNode.cs">
+    <Compile Include="Intermediate\LabelNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\IRNodes\Node.cs">
+    <Compile Include="Intermediate\Node.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Peephole\Matcher.cs" />
-    <Compile Include="Assembly\Peephole\Replacement.cs" />
-    <Compile Include="Assembly\Peephole\Rule.cs" />
-    <Compile Include="Assembly\Peephole\WholeInstructionMatcher.cs">
+    <Compile Include="Intermediate\Peephole\Matcher.cs" />
+    <Compile Include="Intermediate\Peephole\Replacement.cs" />
+    <Compile Include="Intermediate\Peephole\Rule.cs" />
+    <Compile Include="Intermediate\Peephole\WholeInstructionMatcher.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Assembly\Peephole\OperandMatcher.cs" />
-    <Compile Include="Assembly\Peephole\Peepholes.cs" />
-    <Compile Include="Assembly\OperandAstNode.cs" />
-    <Compile Include="Assembly\IRNodes\StaticData.cs">
+    <Compile Include="Intermediate\Peephole\OperandMatcher.cs" />
+    <Compile Include="Intermediate\Peephole\Peepholes.cs" />
+    <Compile Include="Ast\Assembly\OperandAstNode.cs" />
+    <Compile Include="Intermediate\StaticData.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AssignableNode.cs" />
+    <Compile Include="IntermediateFactories.cs" />
     <Compile Include="InternalError.cs" />
     <Compile Include="ConfigurationError.cs" />
     <Compile Include="CompileOptions.cs" />
@@ -122,6 +124,10 @@
     <Compile Include="Ast\ComparisonNode.cs" />
     <Compile Include="BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
+    <Compile Include="Function.cs" />
+    <Compile Include="Member.cs" />
+    <Compile Include="Label.cs" />
+    <Compile Include="Struct.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="Upsert.cs" />
     <Compile Include="Variable.cs" />

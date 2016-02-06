@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -18,7 +19,7 @@ namespace DCPUB
 
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
-            label.realName = Assembly.Label.Make("_" + label.declaredName);
+            label.realName = Intermediate.Label.Make("_" + label.declaredName);
         }
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
@@ -26,9 +27,9 @@ namespace DCPUB
             enclosingScope.activeFunction.function.labels.Add(label);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.StatementNode();
+            var r = new StatementNode();
             r.AddLabel(label.realName);
             return r;
         }

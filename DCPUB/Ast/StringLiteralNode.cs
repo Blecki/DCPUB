@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DCPUB.Assembly;
+using DCPUB.Intermediate;
 using Irony.Interpreter.Ast;
 
 namespace DCPUB
@@ -10,7 +11,7 @@ namespace DCPUB
     public class StringLiteralNode : CompilableNode
     {
         public string value;
-        public Assembly.Label staticLabel;
+        public Intermediate.Label staticLabel;
 
         public static String UnescapeString(String s)
         {
@@ -45,9 +46,9 @@ namespace DCPUB
         public override void GatherSymbols(CompileContext context, Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
-            staticLabel = Assembly.Label.Make("_STRING");
+            staticLabel = Intermediate.Label.Make("_STRING");
 
-            var data = new List<Assembly.Operand>();
+            var data = new List<Intermediate.Operand>();
             data.Add(Constant((ushort)value.Length));
             foreach (var c in value)
                 data.Add(Constant((ushort)c));
@@ -59,10 +60,10 @@ namespace DCPUB
             return Label(staticLabel);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
-            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Label(staticLabel));
+            var r = new Intermediate.TransientNode();
+            r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(staticLabel));
             return r;
         }
 

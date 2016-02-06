@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DCPUB.Assembly.Peephole
+namespace DCPUB.Intermediate.Peephole
 {
     public class Peepholes
     {

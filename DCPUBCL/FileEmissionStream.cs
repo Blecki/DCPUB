@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DCPUCCL
 {
-    public class FileEmissionStream : DCPUB.Assembly.EmissionStream
+    public class FileEmissionStream : DCPUB.EmissionStream
     {
         public System.IO.TextWriter stream = null;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -35,11 +36,11 @@ namespace DCPUB
             if (ChildNodes.Count == 3) ChildNodes[2] = BlockNode.Wrap(Child(2));
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
             r.AddChild(base.Emit(context, scope, target));
-            r.children.Insert(0, new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
+            r.children.Insert(0, new Annotation(context.GetSourceSpan(headerSpan)));
             switch (clauseOrder)
             {
                 case ClauseOrder.ConstantPass:
@@ -51,7 +52,7 @@ namespace DCPUB
                 case ClauseOrder.FailFirst: //Only actual valid order.
                     {
                         var thenClauseAssembly = EmitBlock(context, scope, Child(1));
-                        Assembly.IRNode elseClauseAssembly = ChildNodes.Count == 3 ? EmitBlock(context, scope, Child(2)) : null;
+                        Intermediate.IRNode elseClauseAssembly = ChildNodes.Count == 3 ? EmitBlock(context, scope, Child(2)) : null;
 
                         if (thenClauseAssembly.InstructionCount() == 1 &&
                             (elseClauseAssembly == null || elseClauseAssembly.InstructionCount() == 0))
@@ -60,12 +61,12 @@ namespace DCPUB
                         }
                         else
                         {
-                            var thenLabel = Assembly.Label.Make("THEN");
-                            var endLabel = Assembly.Label.Make("END");
+                            var thenLabel = Intermediate.Label.Make("THEN");
+                            var endLabel = Intermediate.Label.Make("END");
 
-                            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(thenLabel));
+                            r.AddInstruction(Instructions.SET, Operand("PC"), Label(thenLabel));
                             if (elseClauseAssembly != null) r.AddChild(elseClauseAssembly);
-                            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
+                            r.AddInstruction(Instructions.SET, Operand("PC"), Label(endLabel));
                             r.AddLabel(thenLabel);
 
                             r.AddChild(thenClauseAssembly);

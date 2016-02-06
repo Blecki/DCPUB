@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     public class LabelNode : IRNode
     {
@@ -19,7 +19,7 @@ namespace DCPUB.Assembly
             stream.WriteLine("[l /] :" + label);
         }
 
-        public override void EmitBinary(List<Box<ushort>> binary)
+        public override void EmitBinary(List<Assembly.Box<ushort>> binary)
         {
             label.position.data = (ushort)binary.Count;
         }

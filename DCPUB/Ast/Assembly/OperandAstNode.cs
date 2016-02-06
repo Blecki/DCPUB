@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Ast.Assembly
 {
     public class OperandAstNode : AstNode
     {
@@ -63,7 +64,7 @@ namespace DCPUB.Assembly
                 } catch (Exception)
                 {
                     r.semantics |= OperandSemantics.Label;
-                    r.label = new Label(reg);
+                    r.label = new Intermediate.Label(reg);
                 }
             }
 

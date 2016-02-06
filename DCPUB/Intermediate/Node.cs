@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     public class IRNode
     {
@@ -19,7 +19,7 @@ namespace DCPUB.Assembly
             AddChild(Instruction.Make(instruction, firstOperand, secondOperand));
         }
 
-        public void AddLabel(Assembly.Label label)
+        public void AddLabel(Intermediate.Label label)
         {
             AddChild(new LabelNode { label = label });
         }
@@ -50,7 +50,7 @@ namespace DCPUB.Assembly
             return children.Sum((node) => { return node.InstructionCount(); });
         }
 
-        public virtual void EmitBinary(List<Box<ushort>> binary)
+        public virtual void EmitBinary(List<Assembly.Box<ushort>> binary)
         {
             foreach (var child in children) child.EmitBinary(binary);
         }

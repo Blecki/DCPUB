@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -25,9 +26,9 @@ namespace DCPUB
             return scope.activeBlock;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
 
             var activeBlock = FindParentBlock(scope);
 
@@ -36,9 +37,9 @@ namespace DCPUB
             else
             {
                 if (activeBlock.blockScope.parent.variablesOnStack < scope.variablesOnStack)
-                    r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant(
+                    r.AddInstruction(Instructions.ADD, Operand("SP"), Constant(
                         (ushort)(scope.variablesOnStack - activeBlock.blockScope.parent.variablesOnStack)));
-                r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(activeBlock.breakLabel));
+                r.AddInstruction(Instructions.SET, Operand("PC"), Label(activeBlock.breakLabel));
             }
 
             return r;

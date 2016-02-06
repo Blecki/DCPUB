@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -11,7 +12,7 @@ namespace DCPUB
         public String typeName;
         public String memberName;
         public Struct _struct = null;
-        public Assembly.Operand CachedFetchToken;
+        public Intermediate.Operand CachedFetchToken;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -20,7 +21,7 @@ namespace DCPUB
             memberName = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override Assembly.Operand GetFetchToken()
+        public override Intermediate.Operand GetFetchToken()
         {
             if (CachedFetchToken == null) throw new InternalError("In offsetof, fetch token was not cached");
             return CachedFetchToken;
@@ -50,10 +51,10 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
-            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());
+            var r = new TransientNode();
+            r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());
             return r;
         }
 

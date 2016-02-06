@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -28,31 +29,31 @@ namespace DCPUB
             if (ChildNodes.Count > 0) Child(0).ResolveTypes(context, enclosingScope);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            var r = new StatementNode();
+            r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
             //if (preserveTarget)
-                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Target.Raw(targetRegister).GetOperand(TargetUsage.Pop));
+                r.AddInstruction(Instructions.SET, Operand("PUSH"), Target.Raw(targetRegister).GetOperand(TargetUsage.Pop));
             if (ChildNodes.Count > 0) r.AddChild(Child(0).Emit(context, scope, Target.Raw(targetRegister)));
             return r;
         }
 
-        public Assembly.IRNode Restore(CompileContext context, Scope scope)
+        public Intermediate.IRNode Restore(CompileContext context, Scope scope)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
             if (preserveTarget)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(targetRegister), Operand("POP"));
+                r.AddInstruction(Instructions.SET, Operand(targetRegister), Operand("POP"));
             }
             return r;
         }
 
-        public Assembly.IRNode Restore2(CompileContext context, Scope scope)
+        public Intermediate.IRNode Restore2(CompileContext context, Scope scope)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
             //if (preserveTarget)
-                r.AddInstruction(Assembly.Instructions.SET, Target.Raw(targetRegister).GetOperand(TargetUsage.Push),
+                r.AddInstruction(Instructions.SET, Target.Raw(targetRegister).GetOperand(TargetUsage.Push),
                     Operand("POP"));
             return r;
         }
@@ -61,7 +62,7 @@ namespace DCPUB
     public class InlineASMNode : CompilableNode
     {
         public string rawAssembly = "";
-        public static Irony.Parsing.Parser asmParser = new Irony.Parsing.Parser(new Assembly.AssemblyGrammar());
+        public static Irony.Parsing.Parser asmParser = new Irony.Parsing.Parser(new AssemblyGrammar());
         private Irony.Parsing.ParseTree ParsedAssembly = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -75,9 +76,9 @@ namespace DCPUB
             ParsedAssembly = asmParser.Parse(rawAssembly);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
 
             if (ParsedAssembly.HasErrors())
             {
@@ -86,7 +87,7 @@ namespace DCPUB
                 return r;
             }
 
-            var parsedNode = (ParsedAssembly.Root.AstNode as Assembly.InstructionListAstNode).resultNode;
+            var parsedNode = (ParsedAssembly.Root.AstNode as Ast.Assembly.InstructionListAstNode).resultNode;
 
             parsedNode.ErrorCheck(context, this);
 

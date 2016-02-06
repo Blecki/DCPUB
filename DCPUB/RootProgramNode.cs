@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -12,7 +13,7 @@ namespace DCPUB
         {
             (Child(0) as BlockNode).bypass = true;
 
-            footerLabel = Assembly.Label.Make("main_footer");
+            footerLabel = Intermediate.Label.Make("main_footer");
             function = new Function();
             function.localScope = enclosingScope;
             function.Node = this;
@@ -21,15 +22,15 @@ namespace DCPUB
             Child(0).GatherSymbols(context, function.localScope);
         }
 
-        public override Assembly.IRNode CompileFunction(CompileContext context)
+        public override Intermediate.IRNode CompileFunction(CompileContext context)
         {
             // Only emit functions that can actually be called.
             function.MarkReachableFunctions();
 
-            var r = new Assembly.IRNode();
+            var r = new Intermediate.IRNode();
             var localScope = function.localScope.Push();
 
-            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
+            r.AddInstruction(Instructions.SET, Operand("J"), Operand("SP"));
             var body = Child(0).Emit(context, localScope, Target.Discard);
 
             body.CollapseTransientNodes();
@@ -39,7 +40,7 @@ namespace DCPUB
 
             r.AddChild(body);
             r.AddLabel(footerLabel);
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
+            r.AddInstruction(Instructions.SET, Operand("PC"), Label(footerLabel));
 
             foreach (var nestedFunction in function.localScope.functions)
                 r.AddChild(nestedFunction.Node.CompileFunction(context));

@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
     public class BlockNode : CompilableNode
     {
-        public Assembly.Label breakLabel = null;
-        public Assembly.Label continueLabel = null;
+        public Intermediate.Label breakLabel = null;
+        public Intermediate.Label continueLabel = null;
         public Scope blockScope;
         public bool bypass = true;
 
@@ -49,9 +50,9 @@ namespace DCPUB
             base.ResolveTypes(context, bypass ? enclosingScope : blockScope);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new Intermediate.TransientNode();
 
             //r.AddChild(new Assembly.Annotation("Entering blocknode emit"));
             if (bypass)
@@ -69,7 +70,7 @@ namespace DCPUB
                     r.AddChild((child as CompilableNode).Emit(context, localScope, Target.Discard));
                 //if (breakLabel != null) r.AddLabel(breakLabel);
                 if (blockScope.variablesOnStack - scope.variablesOnStack > 0)
-                    r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
+                    r.AddInstruction(Instructions.ADD, Operand("SP"), Constant((ushort)(blockScope.variablesOnStack - scope.variablesOnStack)));
             }
             //r.AddChild(new Assembly.Annotation("Leaving blocknode emit"));
 

@@ -5,7 +5,7 @@ using System.Text;
 using Irony.Parsing;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB.Assembly.Peephole
+namespace DCPUB.Intermediate.Peephole
 {
     [Language("DCPUB PEEPHOLE", "0.1", "Peephole optimization instruction replacement definition")]
     public class Grammar : Irony.Parsing.Grammar

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -22,11 +23,11 @@ namespace DCPUB
             (Child(1) as BlockNode).bypass = false;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(headerSpan)));
-            var topLabel = Assembly.Label.Make("BEGIN_WHILE");
+            var r = new TransientNode();
+            r.AddChild(new Annotation(context.GetSourceSpan(headerSpan)));
+            var topLabel = Intermediate.Label.Make("BEGIN_WHILE");
             (Child(1) as BlockNode).continueLabel = topLabel;
 
             r.AddLabel(topLabel);
@@ -35,29 +36,29 @@ namespace DCPUB
             {
                 case ClauseOrder.ConstantPass:
                     {
-                        var endLabel = Assembly.Label.Make("END_WHILE");
+                        var endLabel = Intermediate.Label.Make("END_WHILE");
                         (Child(1) as BlockNode).breakLabel = endLabel;
                         r.AddChild(EmitBlock(context, scope, Child(1)));
-                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(topLabel));
+                        r.AddInstruction(Instructions.SET, Operand("PC"), Label(topLabel));
                         r.AddLabel(endLabel);
                     }
                     break;
                 case ClauseOrder.ConstantFail:
                     {
-                        var endLabel = Assembly.Label.Make("END_WHILE");
+                        var endLabel = Intermediate.Label.Make("END_WHILE");
                         r.AddLabel(endLabel);
                     }
                     break;
                 case ClauseOrder.FailFirst:
                     {
-                        var yesLabel = Assembly.Label.Make("YES");
-                        var endLabel = Assembly.Label.Make("END_WHILE");
+                        var yesLabel = Intermediate.Label.Make("YES");
+                        var endLabel = Intermediate.Label.Make("END_WHILE");
                         (Child(1) as BlockNode).breakLabel = endLabel;
-                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(yesLabel));
-                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(endLabel));
+                        r.AddInstruction(Instructions.SET, Operand("PC"), Label(yesLabel));
+                        r.AddInstruction(Instructions.SET, Operand("PC"), Label(endLabel));
                         r.AddLabel(yesLabel);
                         r.AddChild(EmitBlock(context, scope, Child(1)));
-                        r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(topLabel));
+                        r.AddInstruction(Instructions.SET, Operand("PC"), Label(topLabel));
                         r.AddLabel(endLabel);
                     }
                     break;

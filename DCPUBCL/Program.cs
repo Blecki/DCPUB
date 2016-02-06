@@ -137,7 +137,7 @@ namespace DCPUCCL
                 {
                     var error_count = 0;
 
-                    file = DCPUB.Preprocessor.Parser.Preprocess(file, (include_name) =>
+                    file = DCPUB.Preprocessor.Parser.Preprocess(options.@in, file, (include_name) =>
                     {
                         if (options.@in == "-") throw new ConfigurationError("Include used when input piped: When input is piped, I don't know where to look for included files.");
                         return System.IO.File.ReadAllText(include_name);

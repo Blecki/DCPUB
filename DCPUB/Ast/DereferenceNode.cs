@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -15,28 +16,28 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
             Target childTarget = target;
             if (target.target == Targets.Stack) childTarget = Target.Register(context.AllocateRegister());
             r.AddChild(Child(0).Emit(context, scope, childTarget));
-            r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), 
-                childTarget.GetOperand(TargetUsage.Pop, Assembly.OperandSemantics.Dereference));
+            r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), 
+                childTarget.GetOperand(TargetUsage.Pop, Intermediate.OperandSemantics.Dereference));
             return r;
         }
 
-        Assembly.IRNode AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
+        Intermediate.IRNode AssignableNode.EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Instructions opcode)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
             var target = Target.Register(context.AllocateRegister());
             r.AddChild(Child(0).Emit(context, scope, target));
             if (target.target == Targets.Stack)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+                r.AddInstruction(Instructions.SET, Operand("A"), Operand("POP"));
                 target = Target.Raw(Register.A);
             }
-            r.AddInstruction(opcode, target.GetOperand(TargetUsage.Push, Assembly.OperandSemantics.Dereference), from);
+            r.AddInstruction(opcode, target.GetOperand(TargetUsage.Push, Intermediate.OperandSemantics.Dereference), from);
             return r;
         }
     }

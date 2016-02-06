@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
     public class BinaryOperator
     {
-        public Assembly.Instructions instruction;
+        public Instructions instruction;
         public Func<ushort, ushort, ushort> fold;
     }
 
@@ -20,7 +21,7 @@ namespace DCPUB
 
         public void SetOp(string op) { AsString = op; }
 
-        public static BinaryOperator MakeBinOp(Assembly.Instructions ins, Func<ushort, ushort, ushort> fold)
+        public static BinaryOperator MakeBinOp(Instructions ins, Func<ushort, ushort, ushort> fold)
         {
             return new BinaryOperator
             {
@@ -35,25 +36,25 @@ namespace DCPUB
             {
                 opcodes = new Dictionary<string, BinaryOperator>();
 
-                opcodes.Add("+", MakeBinOp(Assembly.Instructions.ADD, (a, b) => (ushort)((ushort)a + (ushort)b) ));
-                opcodes.Add("-", MakeBinOp(Assembly.Instructions.SUB, (a, b) => (ushort)((ushort)a - (ushort)b)));
-                opcodes.Add("*", MakeBinOp(Assembly.Instructions.MUL, (a, b) => (ushort)((ushort)a * (ushort)b)));
-                opcodes.Add("/", MakeBinOp(Assembly.Instructions.DIV, (a, b) => (ushort)((ushort)a / (ushort)b)));
-                opcodes.Add("-*", MakeBinOp(Assembly.Instructions.MLI, (a, b) => (ushort)((short)a * (short)b)));
-                opcodes.Add("-/", MakeBinOp(Assembly.Instructions.DVI, (a, b) => (ushort)((short)a / (short)b)));
-                opcodes.Add("%", MakeBinOp(Assembly.Instructions.MOD, (a, b) => (ushort)((ushort)a % (ushort)b)));
-                opcodes.Add("-%", MakeBinOp(Assembly.Instructions.MDI, (a, b) => (ushort)((short)a % (short)b)));
-                opcodes.Add("<<", MakeBinOp(Assembly.Instructions.SHL, (a, b) => (ushort)((ushort)a << (ushort)b)));
-                opcodes.Add(">>", MakeBinOp(Assembly.Instructions.SHR, (a, b) => (ushort)((ushort)a >> (ushort)b)));
-                opcodes.Add("&", MakeBinOp(Assembly.Instructions.AND, (a, b) => (ushort)((ushort)a & (ushort)b)));
-                opcodes.Add("|", MakeBinOp(Assembly.Instructions.BOR, (a, b) => (ushort)((ushort)a | (ushort)b)));
-                opcodes.Add("^", MakeBinOp(Assembly.Instructions.XOR, (a, b) => (ushort)((ushort)a ^ (ushort)b)));
-                opcodes.Add("==", MakeBinOp(Assembly.Instructions.IFE, (a, b) => a == b ? (ushort)1 : (ushort)0));
-                opcodes.Add("!=", MakeBinOp(Assembly.Instructions.IFN, (a, b) => a != b ? (ushort)1 : (ushort)0));
-                opcodes.Add(">", MakeBinOp(Assembly.Instructions.IFG, (a, b) => a > b ? (ushort)1 : (ushort)0));
-                opcodes.Add("<", MakeBinOp(Assembly.Instructions.IFL, (a, b) => a < b ? (ushort)1 : (ushort)0));
-                opcodes.Add("->", MakeBinOp(Assembly.Instructions.IFA, (a, b) => (short)a > (short)b ? (ushort)1 : (ushort)0));
-                opcodes.Add("-<", MakeBinOp(Assembly.Instructions.IFU, (a, b) => (short)a < (short)b ? (ushort)1 : (ushort)0));
+                opcodes.Add("+", MakeBinOp(Instructions.ADD, (a, b) => (ushort)((ushort)a + (ushort)b) ));
+                opcodes.Add("-", MakeBinOp(Instructions.SUB, (a, b) => (ushort)((ushort)a - (ushort)b)));
+                opcodes.Add("*", MakeBinOp(Instructions.MUL, (a, b) => (ushort)((ushort)a * (ushort)b)));
+                opcodes.Add("/", MakeBinOp(Instructions.DIV, (a, b) => (ushort)((ushort)a / (ushort)b)));
+                opcodes.Add("-*", MakeBinOp(Instructions.MLI, (a, b) => (ushort)((short)a * (short)b)));
+                opcodes.Add("-/", MakeBinOp(Instructions.DVI, (a, b) => (ushort)((short)a / (short)b)));
+                opcodes.Add("%", MakeBinOp(Instructions.MOD, (a, b) => (ushort)((ushort)a % (ushort)b)));
+                opcodes.Add("-%", MakeBinOp(Instructions.MDI, (a, b) => (ushort)((short)a % (short)b)));
+                opcodes.Add("<<", MakeBinOp(Instructions.SHL, (a, b) => (ushort)((ushort)a << (ushort)b)));
+                opcodes.Add(">>", MakeBinOp(Instructions.SHR, (a, b) => (ushort)((ushort)a >> (ushort)b)));
+                opcodes.Add("&", MakeBinOp(Instructions.AND, (a, b) => (ushort)((ushort)a & (ushort)b)));
+                opcodes.Add("|", MakeBinOp(Instructions.BOR, (a, b) => (ushort)((ushort)a | (ushort)b)));
+                opcodes.Add("^", MakeBinOp(Instructions.XOR, (a, b) => (ushort)((ushort)a ^ (ushort)b)));
+                opcodes.Add("==", MakeBinOp(Instructions.IFE, (a, b) => a == b ? (ushort)1 : (ushort)0));
+                opcodes.Add("!=", MakeBinOp(Instructions.IFN, (a, b) => a != b ? (ushort)1 : (ushort)0));
+                opcodes.Add(">", MakeBinOp(Instructions.IFG, (a, b) => a > b ? (ushort)1 : (ushort)0));
+                opcodes.Add("<", MakeBinOp(Instructions.IFL, (a, b) => a < b ? (ushort)1 : (ushort)0));
+                opcodes.Add("->", MakeBinOp(Instructions.IFA, (a, b) => (short)a > (short)b ? (ushort)1 : (ushort)0));
+                opcodes.Add("-<", MakeBinOp(Instructions.IFU, (a, b) => (short)a < (short)b ? (ushort)1 : (ushort)0));
             }
         }
 
@@ -78,32 +79,32 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override Assembly.Operand GetFetchToken()
+        public override Intermediate.Operand GetFetchToken()
         {
             initOps();
             var A = Child(0).GetFetchToken();
             var B = Child(1).GetFetchToken();
-            if (A != null && (A.semantics & Assembly.OperandSemantics.Constant) == Assembly.OperandSemantics.Constant
-                && B != null && (B.semantics & Assembly.OperandSemantics.Constant) == Assembly.OperandSemantics.Constant)
+            if (A != null && (A.semantics & Intermediate.OperandSemantics.Constant) == Intermediate.OperandSemantics.Constant
+                && B != null && (B.semantics & Intermediate.OperandSemantics.Constant) == Intermediate.OperandSemantics.Constant)
                 return Constant(opcodes[AsString].fold(A.constant, B.constant));
             return null;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
             initOps();
             Target firstTarget = null;
             Target secondTarget = null;
             
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
 
             var opcode = opcodes[AsString];
             bool isComparison =
-                (opcode.instruction >= Assembly.Instructions.IFB && opcode.instruction <= Assembly.Instructions.IFU);
+                (opcode.instruction >= Instructions.IFB && opcode.instruction <= Instructions.IFU);
 
             if (isComparison)
             {
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Constant(0));
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Constant(0));
                 firstTarget = Target.Register(context.AllocateRegister());
             }
             else
@@ -122,18 +123,18 @@ namespace DCPUB
             if (firstFetchToken == null)
                 r.AddChild(Child(0).Emit(context, scope, firstTarget));
             else
-                r.AddInstruction(Assembly.Instructions.SET, firstTarget.GetOperand(TargetUsage.Push), firstFetchToken);
+                r.AddInstruction(Instructions.SET, firstTarget.GetOperand(TargetUsage.Push), firstFetchToken);
             firstFetchToken = firstTarget.GetOperand(TargetUsage.Peek);
 
             if (isComparison)
             {
                 r.AddInstruction(opcode.instruction, firstFetchToken, secondFetchToken);
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Peek), Constant(1));
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), Constant(1));
             }
             else
             {
                 if (target != firstTarget)
-                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Peek), firstFetchToken);
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), firstFetchToken);
                 r.AddInstruction(opcode.instruction, target.GetOperand(TargetUsage.Peek), secondFetchToken);
             }
 

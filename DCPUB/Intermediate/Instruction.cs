@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DCPUB.Assembly;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     public class Instruction : IRNode
     {

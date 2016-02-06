@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
+using DCPUB.Assembly;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Ast.Assembly
 {
     public class InstructionAstNode : AstNode
     {
@@ -34,8 +36,8 @@ namespace DCPUB.Assembly
             }
             else if (treeNode.Term.Name == "label")
             {
-                var lNode = new LabelNode();
-                lNode.label = new Label(treeNode.ChildNodes[0].FindTokenAndGetText());
+                var lNode = new Intermediate.LabelNode();
+                lNode.label = new Intermediate.Label(treeNode.ChildNodes[0].FindTokenAndGetText());
                 return lNode;
             }
             else if (treeNode.Term.Name == "dat")
@@ -49,7 +51,7 @@ namespace DCPUB.Assembly
                     if (token[0] == '\"')
                     {
                         dataNode.semantics |= OperandSemantics.Label;
-                        dataNode.label = new Label(token);
+                        dataNode.label = new Intermediate.Label(token);
                     }
                     else if (token[0] == '\'')
                     {
@@ -69,7 +71,7 @@ namespace DCPUB.Assembly
                         } catch (Exception)
                         {
                             dataNode.semantics |= OperandSemantics.Label;
-                            dataNode.label = new Label(token);
+                            dataNode.label = new Intermediate.Label(token);
                         }
                     }
                     dNode.data.Add(dataNode);

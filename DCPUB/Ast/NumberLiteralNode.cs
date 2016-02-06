@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -53,16 +54,16 @@ namespace DCPUB
             base.GatherSymbols(context, enclosingScope);
         }
 
-        public override Assembly.Operand GetFetchToken()
+        public override Intermediate.Operand GetFetchToken()
         {
             return Constant((ushort)Value);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            return new Assembly.Instruction
+            return new Instruction
             {
-                instruction = Assembly.Instructions.SET,
+                instruction = Instructions.SET,
                 firstOperand = target.GetOperand(TargetUsage.Push),
                 secondOperand = Constant((ushort)Value)
             };

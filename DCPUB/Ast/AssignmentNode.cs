@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
     public class AssignmentNode : CompilableNode
     {
-        private static Dictionary<String, Assembly.Instructions> opcodes = null;
+        private static Dictionary<String, Instructions> opcodes = null;
 
         public Register rvalueTargetRegister = Register.STACK;
         public String @operator;
@@ -23,23 +24,23 @@ namespace DCPUB
 
             if (opcodes == null)
             {
-                opcodes = new Dictionary<string, Assembly.Instructions>();
-                opcodes.Add("=", Assembly.Instructions.SET);
-                opcodes.Add("+=", Assembly.Instructions.ADD);
-                opcodes.Add("-=", Assembly.Instructions.SUB);
-                opcodes.Add("*=", Assembly.Instructions.MUL);
-                opcodes.Add("/=", Assembly.Instructions.DIV);
+                opcodes = new Dictionary<string, Instructions>();
+                opcodes.Add("=", Instructions.SET);
+                opcodes.Add("+=", Instructions.ADD);
+                opcodes.Add("-=", Instructions.SUB);
+                opcodes.Add("*=", Instructions.MUL);
+                opcodes.Add("/=", Instructions.DIV);
 
-                opcodes.Add("-*=", Assembly.Instructions.MLI);
-                opcodes.Add("-/=", Assembly.Instructions.DVI);
+                opcodes.Add("-*=", Instructions.MLI);
+                opcodes.Add("-/=", Instructions.DVI);
 
-                opcodes.Add("%=", Assembly.Instructions.MOD);
-                opcodes.Add("-%=", Assembly.Instructions.MDI);
-                opcodes.Add("<<=", Assembly.Instructions.SHL);
-                opcodes.Add(">>=", Assembly.Instructions.SHR);
-                opcodes.Add("&=", Assembly.Instructions.AND);
-                opcodes.Add("|=", Assembly.Instructions.BOR);
-                opcodes.Add("^=", Assembly.Instructions.XOR);
+                opcodes.Add("%=", Instructions.MOD);
+                opcodes.Add("-%=", Instructions.MDI);
+                opcodes.Add("<<=", Instructions.SHL);
+                opcodes.Add(">>=", Instructions.SHR);
+                opcodes.Add("&=", Instructions.AND);
+                opcodes.Add("|=", Instructions.BOR);
+                opcodes.Add("^=", Instructions.XOR);
             }
         }
 
@@ -56,10 +57,10 @@ namespace DCPUB
             ResultType = Child(0).ResultType;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            var r = new StatementNode();
+            r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
 
             var fetch_token = Child(1).GetFetchToken();
             if (fetch_token == null)

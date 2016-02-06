@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -69,11 +70,11 @@ namespace DCPUB
             }
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            Assembly.IRNode r = target.target == Targets.Discard ? 
-                (Assembly.IRNode)(new Assembly.StatementNode()) : new Assembly.TransientNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            Intermediate.IRNode r = target.target == Targets.Discard ? 
+                (Intermediate.IRNode)(new StatementNode()) : new TransientNode();
+            r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
 
             for (int i = ChildNodes.Count - 1; i >= 1; --i)
                 r.AddChild(Child(i).Emit(context, scope, Target.Stack));
@@ -88,18 +89,18 @@ namespace DCPUB
                     funcFetchToken = Virtual(funcTarget.virtualId);
                 }
 
-                r.AddInstruction(Assembly.Instructions.JSR, funcFetchToken);
+                r.AddInstruction(Instructions.JSR, funcFetchToken);
             }
             else
             {
-                r.AddInstruction(Assembly.Instructions.JSR, Label(function.label));
+                r.AddInstruction(Instructions.JSR, Label(function.label));
             }
 
             if (ChildNodes.Count > 1)
-                r.AddInstruction(Assembly.Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
+                r.AddInstruction(Instructions.ADD, Operand("SP"), Constant((ushort)(ChildNodes.Count - 1)));
 
             if (target.target != Targets.Discard)
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("A"));
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("A"));
 
             return r;
         }

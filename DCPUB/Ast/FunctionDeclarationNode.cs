@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -10,7 +11,7 @@ namespace DCPUB
     {
         public Function function = null;
         public List<Tuple<String,String>> parameters = new List<Tuple<String,String>>();
-        protected Assembly.Label footerLabel = null;
+        protected Intermediate.Label footerLabel = null;
         private Irony.Parsing.SourceSpan headerSpan;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -45,8 +46,8 @@ namespace DCPUB
             (Child(0) as BlockNode).bypass = true;
 
             function.LabelName = enclosingScope.activeFunction.function.LabelName + "_" + function.name;
-            function.label = Assembly.Label.Make(function.LabelName);
-            footerLabel = Assembly.Label.Make(function.name + "_footer");
+            function.label = Intermediate.Label.Make(function.LabelName);
+            footerLabel = Intermediate.Label.Make(function.name + "_footer");
 
             if (enclosingScope.type != ScopeType.Global)
                 context.AddWarning(this, "Experimental feature: Function declared within function.");
@@ -79,18 +80,18 @@ namespace DCPUB
                 (child as CompilableNode).ResolveTypes(context, function.localScope);
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            return new Assembly.Annotation("Declaration of function " + function.name);
+            return new Intermediate.Annotation("Declaration of function " + function.name);
         }
 
-        public virtual Assembly.IRNode CompileFunction(CompileContext context)
+        public virtual Intermediate.IRNode CompileFunction(CompileContext context)
         {
             if (context.options.strip && !function.reached)
-                return new Assembly.Annotation("Function " + function.name + " stripped.");
+                return new Intermediate.Annotation("Function " + function.name + " stripped.");
 
             context.nextVirtualRegister = 0;
-            var body = new Assembly.IRNode();
+            var body = new Intermediate.IRNode();
             foreach (var child in ChildNodes)
                 body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
 
@@ -110,40 +111,40 @@ namespace DCPUB
                 body.CorrectVariableOffsets(-used);
             }
 
-            var r = new Assembly.Function
+            var r = new Intermediate.Function
             {
                 functionName = function.name,
                 entranceLabel = function.label,
                 parameterCount = function.parameterCount
             };
 
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.headerSpan)));
+            r.AddChild(new Intermediate.Annotation(context.GetSourceSpan(this.headerSpan)));
 
             r.AddLabel(function.label);
 
-            r.AddChild(new Assembly.Annotation("Save frame pointer in J"));
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand("J"));
-            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
+            r.AddChild(new Intermediate.Annotation("Save frame pointer in J"));
+            r.AddInstruction(Instructions.SET, Operand("PUSH"), Operand("J"));
+            r.AddInstruction(Instructions.SET, Operand("J"), Operand("SP"));
 
             //Save registers
             for (int i = 1; i < 7; ++i)
                 if (registers[i])
-                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand((Register)i));
+                    r.AddInstruction(Instructions.SET, Operand("PUSH"), Operand((Register)i));
             
             r.AddChild(body);
 
             r.AddLabel(footerLabel);
-            r.AddInstruction(Assembly.Instructions.SET, Operand("SP"), Operand("J"));
+            r.AddInstruction(Instructions.SET, Operand("SP"), Operand("J"));
             if (used != 0)
-                r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)used));
+                r.AddInstruction(Instructions.SUB, Operand("SP"), Constant((ushort)used));
 
             //Restore registers
             for (int i = 6; i >= 1; --i)
                 if (registers[i])
-                    r.AddInstruction(Assembly.Instructions.SET, Operand((Register)i), Operand("POP"));
+                    r.AddInstruction(Instructions.SET, Operand((Register)i), Operand("POP"));
 
-            r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));
+            r.AddInstruction(Instructions.SET, Operand("J"), Operand("POP"));
+            r.AddInstruction(Instructions.SET, Operand("PC"), Operand("POP"));
 
             foreach (var nestedFunction in function.SubordinateFunctions)
                 r.AddChild(nestedFunction.Node.CompileFunction(context));
@@ -151,10 +152,10 @@ namespace DCPUB
             return r;
         }
 
-        internal virtual Assembly.IRNode CompileReturn(CompileContext context, Scope localScope)
+        internal virtual Intermediate.IRNode CompileReturn(CompileContext context, Scope localScope)
         {
-            var r = new Assembly.TransientNode();
-            r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Label(footerLabel));
+            var r = new Intermediate.TransientNode();
+            r.AddInstruction(Instructions.SET, Operand("PC"), Label(footerLabel));
             return r;
         }
     }

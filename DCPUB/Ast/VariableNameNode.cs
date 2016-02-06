@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -57,9 +58,9 @@ namespace DCPUB
             if (variable != null) ResultType = variable.typeSpecifier;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
 
             if (variable == null)
             {
@@ -69,45 +70,45 @@ namespace DCPUB
 
             if (variable.type == VariableType.Constant)
             {
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());
             }
             else if (variable.type == VariableType.ConstantLabel)
             {
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
                     Label(variable.staticLabel));
             }
             else if (variable.type == VariableType.External)
             {
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
-                    Label(new Assembly.Label("EXTERNALS")));
-                r.AddInstruction(Assembly.Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)variable.constantValue));
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Peek), target.GetOperand(TargetUsage.Peek, Assembly.OperandSemantics.Dereference));
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Peek), target.GetOperand(TargetUsage.Peek, Assembly.OperandSemantics.Dereference));
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
+                    Label(new Intermediate.Label("EXTERNALS")));
+                r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)variable.constantValue));
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), target.GetOperand(TargetUsage.Peek, Intermediate.OperandSemantics.Dereference));
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), target.GetOperand(TargetUsage.Peek, Intermediate.OperandSemantics.Dereference));
             }
             else if (variable.type == VariableType.Static)
             {
-                r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
+                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
                     variable.isArray ? Label(variable.staticLabel) : DereferenceLabel(variable.staticLabel));
             }
             else if (variable.type == VariableType.Local)
             {
                 if (variable.isArray)
                 {
-                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("J"));
-                    r.AddInstruction(Assembly.Instructions.ADD, target.GetOperand(TargetUsage.Peek),
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("J"));
+                    r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek),
                         VariableOffset((ushort)variable.stackOffset));
                 }
                 else
-                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push),
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
                         DereferenceVariableOffset((ushort)(variable.stackOffset)));
             }
 
             return r;
         }
 
-        public Assembly.IRNode EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
+        public Intermediate.IRNode EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Instructions opcode)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
             if (variable.isArray)
             {
                 context.ReportError(this, "Can't assign to arrays.");
@@ -127,7 +128,7 @@ namespace DCPUB
             return r;
         }
 
-        public override Assembly.Operand GetFetchToken()
+        public override Intermediate.Operand GetFetchToken()
         {
             if (variable == null) return null;
 

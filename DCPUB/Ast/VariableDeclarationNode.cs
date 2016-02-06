@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -59,7 +60,7 @@ namespace DCPUB
             else if (declLabel == "static")
             {
                 variable.type = VariableType.Static;
-                variable.staticLabel = Assembly.Label.Make("_STATIC_" + variable.name);
+                variable.staticLabel = Intermediate.Label.Make("_STATIC_" + variable.name);
             }
             else if (declLabel == "external")
             {
@@ -115,7 +116,7 @@ namespace DCPUB
                         context.AddData(variable.staticLabel, (Child(0) as ArrayInitializationNode).RawData);
                     else
                     {
-                            var data = new List<Assembly.Operand>();
+                            var data = new List<Intermediate.Operand>();
                             for (int i = 0; i < size; ++i) data.Add(Constant(0));
                         context.AddData(variable.staticLabel, data);
                     }
@@ -132,7 +133,7 @@ namespace DCPUB
                     {
                         if (valueToken.IsIntegralConstant())
                             context.AddData(variable.staticLabel, valueToken.constant);
-                        else if ((valueToken.semantics & Assembly.OperandSemantics.Label) == Assembly.OperandSemantics.Label)
+                        else if ((valueToken.semantics & Intermediate.OperandSemantics.Label) == Intermediate.OperandSemantics.Label)
                             context.AddData(variable.staticLabel, valueToken.label);
                         else
                             context.ReportError(this, "Static variables must be initialized with a static value.");
@@ -149,16 +150,16 @@ namespace DCPUB
             }
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            var r = new StatementNode();
+            r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
 
             if (variable.type == VariableType.Local)
             {
                 variable.stackOffset = -(scope.variablesOnStack + size);
                 if (hasInitialValue) r.AddChild(Child(0).Emit(context, scope, Target.Stack));
-                else r.AddInstruction(Assembly.Instructions.SUB, Operand("SP"), Constant((ushort)size));
+                else r.AddInstruction(Instructions.SUB, Operand("SP"), Constant((ushort)size));
                 scope.variablesOnStack += size;
             }
             return r;

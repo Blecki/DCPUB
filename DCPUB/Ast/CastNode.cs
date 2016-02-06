@@ -25,7 +25,7 @@ namespace DCPUB
             ResultType = typeName;
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
             return Child(0).Emit(context, scope, target);
         }

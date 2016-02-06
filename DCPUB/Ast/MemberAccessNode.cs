@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -48,9 +49,9 @@ namespace DCPUB
             }
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
 
             if (member == null)
             {
@@ -66,29 +67,29 @@ namespace DCPUB
             if (member.isArray)
             {
                 if (target != objectTarget)
-                    r.AddInstruction(Assembly.Instructions.SET, target.GetOperand(TargetUsage.Push), objectTarget.GetOperand(TargetUsage.Pop));
-                r.AddInstruction(Assembly.Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)member.offset));
+                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), objectTarget.GetOperand(TargetUsage.Pop));
+                r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)member.offset));
             }
             else
             {
                 if (member.offset == 0)
-                    r.AddInstruction(Assembly.Instructions.SET,
+                    r.AddInstruction(Instructions.SET,
                         target.GetOperand(TargetUsage.Push),
-                        objectTarget.GetOperand(TargetUsage.Pop, Assembly.OperandSemantics.Dereference));
+                        objectTarget.GetOperand(TargetUsage.Pop, Intermediate.OperandSemantics.Dereference));
                 else
-                    r.AddInstruction(Assembly.Instructions.SET,
+                    r.AddInstruction(Instructions.SET,
                         target.GetOperand(TargetUsage.Push),
                         objectTarget.GetOperand(TargetUsage.Pop, 
-                            Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset,
+                            Intermediate.OperandSemantics.Dereference | Intermediate.OperandSemantics.Offset,
                             (ushort)member.offset));
             }
             
             return r;
         }
 
-        Assembly.IRNode AssignableNode.EmitAssignment(CompileContext context, Scope scope, Assembly.Operand from, Assembly.Instructions opcode)
+        Intermediate.IRNode AssignableNode.EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Intermediate.Instructions opcode)
         {
-            var r = new Assembly.TransientNode();
+            var r = new TransientNode();
 
             if (member == null)
             {
@@ -99,7 +100,7 @@ namespace DCPUB
             var target = Target.Register(context.AllocateRegister());
             r.AddChild(Child(0).Emit(context, scope, target));
             r.AddInstruction(opcode, target.GetOperand(TargetUsage.Peek,
-                Assembly.OperandSemantics.Dereference | Assembly.OperandSemantics.Offset, (ushort)member.offset),
+                Intermediate.OperandSemantics.Dereference | Intermediate.OperandSemantics.Offset, (ushort)member.offset),
                 from);
             return r;
         }

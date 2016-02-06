@@ -30,8 +30,8 @@ namespace DCPUB
         public static Target Register(int id) { return new Target { target = Targets.Register, virtualId = id }; }
         public static Target Raw(Register r) { return new Target { target = Targets.Raw, virtualId = (int)r }; }
 
-        public Assembly.Operand GetOperand(TargetUsage usage,
-            Assembly.OperandSemantics semantics = Assembly.OperandSemantics.None, 
+        public Intermediate.Operand GetOperand(TargetUsage usage,
+            Intermediate.OperandSemantics semantics = Intermediate.OperandSemantics.None, 
             ushort offset = 0)
         {
             if (target == Targets.Stack)
@@ -46,9 +46,9 @@ namespace DCPUB
             else if (target == Targets.Discard)
                 throw new InternalError("Unable to get operand from target with semantic 'discard'.");
             else if (target == Targets.Raw)
-                return new Assembly.Operand
+                return new Intermediate.Operand
                 {
-                    register = (Assembly.OperandRegister)virtualId,
+                    register = (Intermediate.OperandRegister)virtualId,
                     semantics = semantics,
                     constant = offset
                 };

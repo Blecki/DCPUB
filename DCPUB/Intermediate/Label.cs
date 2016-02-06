@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
-
     public class Label
     {
         private static int labelCount = 0;
 
-        public Box<ushort> position = new Box<ushort> { data = 0 };
+        public Assembly.Box<ushort> position = new Assembly.Box<ushort> { data = 0 };
         public string rawLabel;
 
         public Label()

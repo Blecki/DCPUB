@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     public class InlineStaticData : IRNode
     {
@@ -31,7 +31,7 @@ namespace DCPUB.Assembly
             }
         }
 
-        public override void EmitBinary(List<Box<ushort>> binary)
+        public override void EmitBinary(List<Assembly.Box<ushort>> binary)
         {
             foreach (var op in data)
             {
@@ -39,12 +39,12 @@ namespace DCPUB.Assembly
                 {
                     if (op.label.rawLabel[0] == '\"')
                         foreach (var c in op.label.rawLabel.Substring(1, op.label.rawLabel.Length - 2))
-                            binary.Add(new Box<ushort> { data = (ushort)c });
+                            binary.Add(new Assembly.Box<ushort> { data = (ushort)c });
                     else
                         binary.Add(op.label.position);
                 }
                 else
-                    binary.Add(new Box<ushort> { data = op.constant });
+                    binary.Add(new Assembly.Box<ushort> { data = op.constant });
             }
         }
     }

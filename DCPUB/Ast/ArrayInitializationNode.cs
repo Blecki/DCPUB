@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
     public class ArrayInitializationNode : CompilableNode
     {
-        internal List<Assembly.Operand> RawData;
+        internal List<Intermediate.Operand> RawData;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -20,7 +21,7 @@ namespace DCPUB
 
         public override void ResolveTypes(CompileContext context, Scope enclosingScope)
         {
-            RawData = new List<Assembly.Operand>();
+            RawData = new List<Intermediate.Operand>();
 
             for (int i = 0; i < ChildNodes.Count; ++i)
             {
@@ -33,7 +34,7 @@ namespace DCPUB
                     RawData.Add(Constant(0));
                     context.ReportError(_c, "Array elements must be compile time constants.");
                 }
-                else if (itemFetchToken.IsIntegralConstant() || itemFetchToken.semantics == Assembly.OperandSemantics.Label)
+                else if (itemFetchToken.IsIntegralConstant() || itemFetchToken.semantics == Intermediate.OperandSemantics.Label)
                     RawData.Add(itemFetchToken);
                 else
                 {
@@ -43,12 +44,12 @@ namespace DCPUB
             }
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation("Array Initialization"));
+            var r = new StatementNode();
+            r.AddChild(new Annotation("Array Initialization"));
             for (int i = 0; i < ChildNodes.Count; ++i)
-                r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Child(i).GetFetchToken());
+                r.AddInstruction(Instructions.SET, Operand("PUSH"), Child(i).GetFetchToken());
             return r;
         }
     }

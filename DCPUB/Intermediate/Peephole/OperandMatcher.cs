@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB.Assembly.Peephole
+namespace DCPUB.Intermediate.Peephole
 {
     public class OperandMatcher : AstNode
     {

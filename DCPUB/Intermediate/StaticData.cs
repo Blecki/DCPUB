@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     public class StaticData : IRNode
     {
-        public Assembly.Label label;
+        public Intermediate.Label label;
         public List<Operand> Data;
 
         public override void Emit(EmissionStream stream)
@@ -28,12 +28,12 @@ namespace DCPUB.Assembly
             Emit(stream);
         }
 
-        public override void EmitBinary(List<Box<ushort>> binary)
+        public override void EmitBinary(List<Assembly.Box<ushort>> binary)
         {
             label.position.data = (ushort)binary.Count;
             foreach (var item in Data)
             {
-                if (item.IsIntegralConstant()) binary.Add(new Box<ushort> { data = item.constant });
+                if (item.IsIntegralConstant()) binary.Add(new Assembly.Box<ushort> { data = item.constant });
                 else if (item.semantics == OperandSemantics.Label) binary.Add(item.label.position);
                 else throw new InternalError("Incorrect operand in mixed static data");
             }

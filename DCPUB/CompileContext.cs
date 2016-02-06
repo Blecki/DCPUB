@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -13,12 +14,12 @@ namespace DCPUB
         public RootProgramNode rootNode = null;
         public Scope globalScope = new Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUB.Grammar());
-        private List<Tuple<Assembly.Label, List<Assembly.Operand>>> dataElements = new List<Tuple<Assembly.Label, List<Assembly.Operand>>>();
+        private List<Tuple<Intermediate.Label, List<Intermediate.Operand>>> dataElements = new List<Tuple<Intermediate.Label, List<Intermediate.Operand>>>();
         public int externalCount = 0;
         private int nextLabelID = 0;
         public string source = null;
         public CompileOptions options = new CompileOptions();
-        public Assembly.Peephole.Peepholes peepholes;
+        public Intermediate.Peephole.Peepholes peepholes;
         public int nextVirtualRegister = 0;
         public Action<String> OnError = null;
         public int ErrorCount = 0;
@@ -38,19 +39,19 @@ namespace DCPUB
             return source.Substring(span.Location.Position, span.Length + 1);
         }
 
-        public void AddData(Assembly.Label label, List<Assembly.Operand> FetchTokens)
+        public void AddData(Intermediate.Label label, List<Intermediate.Operand> FetchTokens)
         {
             dataElements.Add(Tuple.Create(label, FetchTokens));
         }
 
-        public void AddData(Assembly.Label label, Assembly.Label data)
+        public void AddData(Intermediate.Label label, Intermediate.Label data)
         {
-            AddData(label, new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Label(data) }));
+            AddData(label, new List<Intermediate.Operand>(new Intermediate.Operand[] { CompilableNode.Label(data) }));
         }
 
-        public void AddData(Assembly.Label label, ushort word)
+        public void AddData(Intermediate.Label label, ushort word)
         {
-            AddData(label, new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Constant(word) }));
+            AddData(label, new List<Intermediate.Operand>(new Intermediate.Operand[] { CompilableNode.Constant(word) }));
         }
 
         public void AddWarning(CompilableNode Node, String Message)
@@ -87,7 +88,7 @@ namespace DCPUB
 
         public bool Parse(String code, Action<string> onError)
         {
-            if (!String.IsNullOrEmpty(options.peephole)) peepholes = new Assembly.Peephole.Peepholes(options.peephole);
+            if (!String.IsNullOrEmpty(options.peephole)) peepholes = new Intermediate.Peephole.Peepholes(options.peephole);
 
             source = code;
             globalScope = new Scope();
@@ -114,11 +115,11 @@ namespace DCPUB
             return true;
         }
 
-        public Assembly.IRNode Compile(Action<string> OnError)
+        public Intermediate.IRNode Compile(Action<string> OnError)
         {
             this.OnError = OnError;
 
-            var end_label = new Assembly.Label("ENDOFPROGRAM");
+            var end_label = new Intermediate.Label("ENDOFPROGRAM");
             globalScope.variables.Add(new Variable { type = VariableType.ConstantLabel, name = "__endofprogram", staticLabel = end_label });
             globalScope.variables.Add(new Variable { name = "true", type = VariableType.Constant, constantValue = 1 });
             globalScope.variables.Add(new Variable { name = "false", type = VariableType.Constant, constantValue = 0 });
@@ -129,23 +130,23 @@ namespace DCPUB
                 rootNode.ResolveTypes(this, globalScope);
                 //rootNode.FoldConstants(this);
             
-                var r = new Assembly.IRNode();
+                var r = new Intermediate.IRNode();
 
                 if (options.externals)
                 {
-                    var startOfProgram = new Assembly.Label("STARTOFPROGRAM");
-                    r.AddInstruction(Assembly.Instructions.SET, CompilableNode.Operand("PC"), CompilableNode.Label(startOfProgram));
-                    r.AddChild(new Assembly.Annotation("External data block. Your assembler or program loader should fill these in."));
-                    r.AddLabel(new Assembly.Label("EXTERNALS"));
+                    var startOfProgram = new Intermediate.Label("STARTOFPROGRAM");
+                    r.AddInstruction(Instructions.SET, CompilableNode.Operand("PC"), CompilableNode.Label(startOfProgram));
+                    r.AddChild(new Annotation("External data block. Your assembler or program loader should fill these in."));
+                    r.AddLabel(new Intermediate.Label("EXTERNALS"));
                     foreach (var variable in globalScope.variables)
                     {
                         if (variable.type == VariableType.External)
                         {
-                            var blankList = new List<Assembly.Operand>(new Assembly.Operand[] { CompilableNode.Constant(0) });
+                            var blankList = new List<Intermediate.Operand>(new Intermediate.Operand[] { CompilableNode.Constant(0) });
 
-                            r.AddChild(new Assembly.StaticData
+                            r.AddChild(new StaticData
                             {
-                                label = new Assembly.Label("__external_" + variable.name),
+                                label = new Intermediate.Label("__external_" + variable.name),
                                 Data = blankList
                             });
                         }
@@ -156,7 +157,7 @@ namespace DCPUB
                 
                 r.AddChild(rootNode.CompileFunction(this));
                 foreach (var dataItem in dataElements)
-                    r.AddChild(new Assembly.StaticData { label = dataItem.Item1, Data = dataItem.Item2 });
+                    r.AddChild(new StaticData { label = dataItem.Item1, Data = dataItem.Item2 });
                 r.AddLabel(end_label);
                 
                 if (ErrorCount != 0) return null;

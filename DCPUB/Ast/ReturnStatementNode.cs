@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
+using DCPUB.Intermediate;
 
 namespace DCPUB
 {
@@ -16,15 +17,15 @@ namespace DCPUB
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override Assembly.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
         {
-            var r = new Assembly.StatementNode();
-            r.AddChild(new Assembly.Annotation(context.GetSourceSpan(this.Span)));
+            var r = new StatementNode();
+            r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
 
             if (ChildNodes.Count > 0)
             {
                 r.AddChild(Child(0).Emit(context, scope, Target.Stack));
-                r.AddInstruction(Assembly.Instructions.SET, Operand("A"), Operand("POP"));
+                r.AddInstruction(Instructions.SET, Operand("A"), Operand("POP"));
             }
             r.AddChild(scope.activeFunction.CompileReturn(context, scope));
 
