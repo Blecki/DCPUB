@@ -128,11 +128,11 @@ namespace DCPUB
             return null;
         }
 
-        //internal static bool IsBuiltIn(String s)
-        //{
-        //    if (s == "word") return true;
-        //    return false;
-        //}
+        internal static bool IsBuiltIn(String s)
+        {
+            if (s == "word") return true;
+            return false;
+        }
 
         public Struct FindType(string s)
         {
