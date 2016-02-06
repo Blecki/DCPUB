@@ -128,49 +128,11 @@ namespace DCPUB
             return null;
         }
 
-        internal int FindFreeRegister()
-        {
-            for (int i = 3; i < 8; ++i) if (registers[i] == RegisterState.Free) return i;
-            for (int i = 0; i < 3; ++i) if (registers[i] == RegisterState.Free) return i;
-            return (int)Register.STACK;
-        }
-
-        internal static string GetRegisterLabelFirst(int r) { if (r == (int)Register.STACK) return "PUSH"; else return ((Register)r).ToString(); }
-        internal static string GetRegisterLabelFirst(Register r) { return GetRegisterLabelFirst((int)r); }
-        internal static string GetRegisterLabelSecond(int r) { if (r == (int)Register.STACK) return "POP"; else return ((Register)r).ToString(); }
-        internal static string GetRegisterLabelSecond(Register r) { return GetRegisterLabelSecond((int)r); }
-        internal static string GetPeekLabel(int r) { if (r == (int)Register.STACK) return "PEEK"; else return ((Register)r).ToString(); }
-        internal static string GetPeekLabel(Register r) { return GetPeekLabel((int)r); }
-        internal void FreeRegister(int r) { registers[r] = RegisterState.Free; }
-        public void UseRegister(int r) { registers[r] = RegisterState.Used; }
-        internal static bool IsRegister(Register r) { return (int)(r) <= 7; }
-
-        internal RegisterState[] SaveRegisterState()
-        {
-            var r = new RegisterState[8];
-            for (int i = 0; i < 8; ++i) r[i] = registers[i];
-            return r;
-        }
-
-        internal void RestoreRegisterState(RegisterState[] state)
-        {
-            registers = state;
-        }
-
-        internal int FindAndUseFreeRegister()
-        {
-            var r = FindFreeRegister();
-            if (IsRegister((Register)r)) UseRegister(r);
-            return r;
-        }
-
-        internal void FreeMaybeRegister(int r) { if (IsRegister((Register)r)) FreeRegister(r); }
-
-        internal static bool IsBuiltIn(String s)
-        {
-            if (s == "word") return true;
-            return false;
-        }
+        //internal static bool IsBuiltIn(String s)
+        //{
+        //    if (s == "word") return true;
+        //    return false;
+        //}
 
         public Struct FindType(string s)
         {
@@ -179,15 +141,5 @@ namespace DCPUB
             if (parent != null) return parent.FindType(s);
             return null;
         }
-
-        //public void StripUnusedFunction()
-        //{
-        //    // Does not actually remove functions: Just marks them as stripped so they don't emit code.
-        //    foreach (var function in functions)
-        //    {
-        //        if (function.CalledBy.Count == 0)
-        //            function.stripped = true;
-        //    }
-        //}
     }
 }

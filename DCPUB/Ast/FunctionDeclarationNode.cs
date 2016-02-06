@@ -125,10 +125,10 @@ namespace DCPUB
             r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand("J"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("SP"));
 
-                //Save registers
-                for (int i = 1; i < 7; ++i)
-                    if (registers[i])
-                        r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand(Scope.GetRegisterLabelSecond(i)));
+            //Save registers
+            for (int i = 1; i < 7; ++i)
+                if (registers[i])
+                    r.AddInstruction(Assembly.Instructions.SET, Operand("PUSH"), Operand((Register)i));
             
             r.AddChild(body);
 
@@ -140,7 +140,7 @@ namespace DCPUB
             //Restore registers
             for (int i = 6; i >= 1; --i)
                 if (registers[i])
-                    r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond(i)), Operand("POP"));
+                    r.AddInstruction(Assembly.Instructions.SET, Operand((Register)i), Operand("POP"));
 
             r.AddInstruction(Assembly.Instructions.SET, Operand("J"), Operand("POP"));
             r.AddInstruction(Assembly.Instructions.SET, Operand("PC"), Operand("POP"));

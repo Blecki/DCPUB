@@ -47,6 +47,11 @@ namespace DCPUB
             return new Assembly.Operand { register = opReg, semantics = semantics, constant = offset };
         }
 
+        public static Assembly.Operand Operand(Register r)
+        {
+            return Operand(r.ToString());
+        }
+
         public static Assembly.Operand Dereference(String r) { return Operand(r, Assembly.OperandSemantics.Dereference); }
 
         public static Assembly.Operand DereferenceLabel(Assembly.Label l) 

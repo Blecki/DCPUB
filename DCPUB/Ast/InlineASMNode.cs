@@ -43,8 +43,7 @@ namespace DCPUB
             var r = new Assembly.TransientNode();
             if (preserveTarget)
             {
-                r.AddInstruction(Assembly.Instructions.SET, Operand(Scope.GetRegisterLabelSecond((int)targetRegister)), 
-                    Operand("POP"));
+                r.AddInstruction(Assembly.Instructions.SET, Operand(targetRegister), Operand("POP"));
             }
             return r;
         }
