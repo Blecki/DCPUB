@@ -22,12 +22,12 @@ namespace DCPUB
         public CompilableNode firstOperand = null;
         public CompilableNode secondOperand = null;
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             foreach (var child in ChildNodes) (child as CompilableNode).GatherSymbols(context, enclosingScope);
         }
 
-        public override void  ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void  ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
          	 base.ResolveTypes(context, enclosingScope);
             if (Child(0) is ComparisonNode)
@@ -37,7 +37,7 @@ namespace DCPUB
             }
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var conditionFetchToken = Child(0).GetFetchToken();
             if (conditionFetchToken != null &&
@@ -97,7 +97,7 @@ namespace DCPUB
             return r;
         }
 
-        public static Intermediate.IRNode EmitBlock(CompileContext context, Scope scope, CompilableNode block, bool restoreStack = true)
+        public static Intermediate.IRNode EmitBlock(CompileContext context, Model.Scope scope, CompilableNode block, bool restoreStack = true)
         {
             if (block is BlockNode)
                 return block.Emit(context, scope, Target.Discard);

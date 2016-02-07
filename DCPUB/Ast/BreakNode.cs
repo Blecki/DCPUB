@@ -15,7 +15,7 @@ namespace DCPUB
             this.AsString = "break";
         }
 
-        public static BlockNode FindParentBlock(Scope scope)
+        public static BlockNode FindParentBlock(Model.Scope scope)
         {
             if (scope == null) return null;
             if (scope.activeBlock == null) return FindParentBlock(scope.parent);
@@ -26,7 +26,7 @@ namespace DCPUB
             return scope.activeBlock;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
 

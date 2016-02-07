@@ -10,10 +10,10 @@ namespace DCPUB
 {
     public class AddressOfNode : CompilableNode
     {
-        public Variable variable = null;
-        public Function function = null;
+        public Model.Variable variable = null;
+        public Model.Function function = null;
         public String variableName;
-        public Label label = null;
+        public Model.Label label = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -21,7 +21,7 @@ namespace DCPUB
             variableName = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             variable = enclosingScope.FindVariable(variableName);
 
@@ -55,7 +55,7 @@ namespace DCPUB
         {
             if (variable != null)
             {
-                if (variable.type == VariableType.Static)
+                if (variable.type == Model.VariableType.Static)
                     return Label(variable.staticLabel);
                 else return null;
             }
@@ -66,22 +66,22 @@ namespace DCPUB
             return null;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             IRNode r = new TransientNode();
 
             if (variable != null)
             {
-                if (variable.type == VariableType.Static)
+                if (variable.type == Model.VariableType.Static)
                 {
                     r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(variable.staticLabel));
                 }
-                else if (variable.type == VariableType.Local)
+                else if (variable.type == Model.VariableType.Local)
                 {
                     r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Operand("J"));
                     r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek), VariableOffset((ushort)variable.stackOffset));
                 }
-                else if (variable.type == VariableType.External)
+                else if (variable.type == Model.VariableType.External)
                 {
                     r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(new Intermediate.Label("EXTERNALS")));
                     r.AddInstruction(Instructions.ADD, target.GetOperand(TargetUsage.Peek), Constant((ushort)variable.constantValue));

@@ -16,7 +16,7 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
             Target childTarget = target;
@@ -27,7 +27,7 @@ namespace DCPUB
             return r;
         }
 
-        Intermediate.IRNode AssignableNode.EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Instructions opcode)
+        Intermediate.IRNode AssignableNode.EmitAssignment(CompileContext context, Model.Scope scope, Intermediate.Operand from, Instructions opcode)
         {
             var r = new TransientNode();
             var target = Target.Register(context.AllocateRegister());
@@ -35,7 +35,7 @@ namespace DCPUB
             if (target.target == Targets.Stack)
             {
                 r.AddInstruction(Instructions.SET, Operand("A"), Operand("POP"));
-                target = Target.Raw(Register.A);
+                target = Target.Raw(Model.Register.A);
             }
             r.AddInstruction(opcode, target.GetOperand(TargetUsage.Push, Intermediate.OperandSemantics.Dereference), from);
             return r;

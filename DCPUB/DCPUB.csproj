@@ -122,15 +122,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Ast\ComparisonNode.cs" />
-    <Compile Include="BranchStatementNode.cs" />
+    <Compile Include="Ast\BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
-    <Compile Include="Function.cs" />
-    <Compile Include="Member.cs" />
-    <Compile Include="Label.cs" />
-    <Compile Include="Struct.cs" />
+    <Compile Include="Model\Function.cs" />
+    <Compile Include="Model\Member.cs" />
+    <Compile Include="Model\Label.cs" />
+    <Compile Include="Model\Struct.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="Upsert.cs" />
-    <Compile Include="Variable.cs" />
+    <Compile Include="Model\Variable.cs" />
     <Compile Include="Ast\WhileStatementNode.cs" />
     <Compile Include="Ast\FunctionCallNode.cs" />
     <Compile Include="Ast\FunctionDeclarationNode.cs" />
@@ -147,7 +147,7 @@
     <Compile Include="Ast\ReturnStatementNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Scope.cs">
+    <Compile Include="Model\Scope.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Ast\VariableDeclarationNode.cs">

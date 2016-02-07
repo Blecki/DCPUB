@@ -11,7 +11,7 @@ namespace DCPUB
     {
         private static Dictionary<String, Instructions> opcodes = null;
 
-        public Register rvalueTargetRegister = Register.STACK;
+        public Model.Register rvalueTargetRegister = Model.Register.STACK;
         public String @operator;
         
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -44,20 +44,20 @@ namespace DCPUB
             }
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             Child(0).GatherSymbols(context, enclosingScope);
             Child(1).GatherSymbols(context, enclosingScope);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             Child(0).ResolveTypes(context, enclosingScope);
             Child(1).ResolveTypes(context, enclosingScope);
             ResultType = Child(0).ResultType;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new StatementNode();
             r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));

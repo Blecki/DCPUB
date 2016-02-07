@@ -11,7 +11,7 @@ namespace DCPUB
     {
         public Intermediate.Label breakLabel = null;
         public Intermediate.Label continueLabel = null;
-        public Scope blockScope;
+        public Model.Scope blockScope;
         public bool bypass = true;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -35,7 +35,7 @@ namespace DCPUB
             return r;
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             if (bypass) base.GatherSymbols(context, enclosingScope);
             else
@@ -45,12 +45,12 @@ namespace DCPUB
             }
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             base.ResolveTypes(context, bypass ? enclosingScope : blockScope);
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new Intermediate.TransientNode();
 

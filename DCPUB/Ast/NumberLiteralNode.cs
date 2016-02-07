@@ -48,7 +48,7 @@ namespace DCPUB
             }
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             if (!String.IsNullOrEmpty(Error)) context.ReportError(this, Error);
             base.GatherSymbols(context, enclosingScope);
@@ -59,7 +59,7 @@ namespace DCPUB
             return Constant((ushort)Value);
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             return new Instruction
             {

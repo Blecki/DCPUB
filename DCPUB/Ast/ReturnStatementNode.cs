@@ -17,7 +17,7 @@ namespace DCPUB
             this.AsString = treeNode.FindTokenAndGetText();
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new StatementNode();
             r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));

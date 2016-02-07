@@ -25,7 +25,7 @@ namespace DCPUB
             ChildNodes.Add(expressionNode);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
             this.ResultType = baseNode.ResultType;

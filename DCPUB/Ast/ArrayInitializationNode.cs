@@ -19,7 +19,7 @@ namespace DCPUB
                 AddChild("child", item);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             RawData = new List<Intermediate.Operand>();
 
@@ -44,7 +44,7 @@ namespace DCPUB
             }
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new StatementNode();
             r.AddChild(new Annotation("Array Initialization"));

@@ -9,9 +9,9 @@ namespace DCPUB
 {
     public class MemberAccessNode : CompilableNode, AssignableNode
     {
-        public Member member = null;
+        public Model.Member member = null;
         public String memberName;
-        public Struct _struct = null;
+        public Model.Struct _struct = null;
         public bool IsAssignedTo { get; set; }
 
         public MemberAccessNode()
@@ -26,7 +26,7 @@ namespace DCPUB
             AddChild("Expression", treeNode.ChildNodes[0]);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             Child(0).ResolveTypes(context, enclosingScope);
             _struct = enclosingScope.FindType(Child(0).ResultType);
@@ -49,7 +49,7 @@ namespace DCPUB
             }
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
 
@@ -87,7 +87,7 @@ namespace DCPUB
             return r;
         }
 
-        Intermediate.IRNode AssignableNode.EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Intermediate.Instructions opcode)
+        Intermediate.IRNode AssignableNode.EmitAssignment(CompileContext context, Model.Scope scope, Intermediate.Operand from, Intermediate.Instructions opcode)
         {
             var r = new TransientNode();
 

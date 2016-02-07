@@ -23,7 +23,7 @@ namespace DCPUB
             (Child(1) as BlockNode).bypass = false;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
             r.AddChild(new Annotation(context.GetSourceSpan(headerSpan)));

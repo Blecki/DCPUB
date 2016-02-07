@@ -43,7 +43,7 @@ namespace DCPUB
             value = UnescapeString(value);
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
             staticLabel = Intermediate.Label.Make("_STRING");
@@ -60,7 +60,7 @@ namespace DCPUB
             return Label(staticLabel);
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new Intermediate.TransientNode();
             r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Label(staticLabel));

@@ -28,7 +28,7 @@ namespace DCPUB
         public static Target Stack { get { return new Target { target = Targets.Stack }; } }
         public static Target Discard { get { return new Target { target = Targets.Discard }; } }
         public static Target Register(int id) { return new Target { target = Targets.Register, virtualId = id }; }
-        public static Target Raw(Register r) { return new Target { target = Targets.Raw, virtualId = (int)r }; }
+        public static Target Raw(Model.Register r) { return new Target { target = Targets.Raw, virtualId = (int)r }; }
 
         public Intermediate.Operand GetOperand(TargetUsage usage,
             Intermediate.OperandSemantics semantics = Intermediate.OperandSemantics.None, 

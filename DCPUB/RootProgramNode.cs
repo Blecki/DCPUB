@@ -9,12 +9,12 @@ namespace DCPUB
 {
     public class RootProgramNode : FunctionDeclarationNode
     {
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             (Child(0) as BlockNode).bypass = true;
 
             footerLabel = Intermediate.Label.Make("main_footer");
-            function = new Function();
+            function = new Model.Function();
             function.localScope = enclosingScope;
             function.Node = this;
             enclosingScope.activeFunction = this;

@@ -9,7 +9,7 @@ namespace DCPUB
 {
     public class VariableNameNode : CompilableNode, AssignableNode
     {
-        public Variable variable = null;
+        public Model.Variable variable = null;
         public String variableName;
         public bool IsAssignedTo { get; set; }
 
@@ -24,7 +24,7 @@ namespace DCPUB
             variableName = treeNode.FindTokenAndGetText();
         }
 
-        public bool TryGatherSymbols(CompileContext Context, Scope EnclosingScope)
+        public bool TryGatherSymbols(CompileContext Context, Model.Scope EnclosingScope)
         {
             var scope = EnclosingScope;
             bool ignoreLocals = false;
@@ -33,12 +33,12 @@ namespace DCPUB
                 foreach (var v in scope.variables)
                     if (v.name == variableName)
                     {
-                        if (v.type == VariableType.Local && ignoreLocals) variable = null;
+                        if (v.type == Model.VariableType.Local && ignoreLocals) variable = null;
                         else variable = v;
                     }
                 if (variable == null)
                 {
-                    if (scope.type == ScopeType.Function) ignoreLocals = true;
+                    if (scope.type == Model.ScopeType.Function) ignoreLocals = true;
                     scope = scope.parent;
                 }
             }
@@ -46,19 +46,19 @@ namespace DCPUB
             return variable != null;
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             if (!TryGatherSymbols(context, enclosingScope))
                 context.ReportError(this, "Could not find variable " + variableName);
 
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             if (variable != null) ResultType = variable.typeSpecifier;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
 
@@ -68,16 +68,16 @@ namespace DCPUB
                 return r;
             }
 
-            if (variable.type == VariableType.Constant)
+            if (variable.type == Model.VariableType.Constant)
             {
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());
             }
-            else if (variable.type == VariableType.ConstantLabel)
+            else if (variable.type == Model.VariableType.ConstantLabel)
             {
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
                     Label(variable.staticLabel));
             }
-            else if (variable.type == VariableType.External)
+            else if (variable.type == Model.VariableType.External)
             {
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
                     Label(new Intermediate.Label("EXTERNALS")));
@@ -85,12 +85,12 @@ namespace DCPUB
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), target.GetOperand(TargetUsage.Peek, Intermediate.OperandSemantics.Dereference));
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), target.GetOperand(TargetUsage.Peek, Intermediate.OperandSemantics.Dereference));
             }
-            else if (variable.type == VariableType.Static)
+            else if (variable.type == Model.VariableType.Static)
             {
                 r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push),
                     variable.isArray ? Label(variable.staticLabel) : DereferenceLabel(variable.staticLabel));
             }
-            else if (variable.type == VariableType.Local)
+            else if (variable.type == Model.VariableType.Local)
             {
                 if (variable.isArray)
                 {
@@ -106,7 +106,7 @@ namespace DCPUB
             return r;
         }
 
-        public Intermediate.IRNode EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Instructions opcode)
+        public Intermediate.IRNode EmitAssignment(CompileContext context, Model.Scope scope, Intermediate.Operand from, Instructions opcode)
         {
             var r = new TransientNode();
             if (variable.isArray)
@@ -114,16 +114,16 @@ namespace DCPUB
                 context.ReportError(this, "Can't assign to arrays.");
                 return r;
             }
-            if (variable.type == VariableType.Constant || variable.type == VariableType.External 
-                || variable.type == VariableType.ConstantLabel)
+            if (variable.type == Model.VariableType.Constant || variable.type == Model.VariableType.External 
+                || variable.type == Model.VariableType.ConstantLabel)
             {
                 context.ReportError(this, "Can't assign to constant values.");
                 return r;
             }
 
-            if (variable.type == VariableType.Local)
+            if (variable.type == Model.VariableType.Local)
                     r.AddInstruction(opcode, DereferenceVariableOffset((ushort)variable.stackOffset), from);
-            else if (variable.type == VariableType.Static)
+            else if (variable.type == Model.VariableType.Static)
                 r.AddInstruction(opcode, DereferenceLabel(variable.staticLabel), from);
             return r;
         }
@@ -132,23 +132,23 @@ namespace DCPUB
         {
             if (variable == null) return null;
 
-            if (variable.type == VariableType.Static)
+            if (variable.type == Model.VariableType.Static)
             {
                 if (variable.isArray) return Label(variable.staticLabel);
                 else return DereferenceLabel(variable.staticLabel);
             }
-            else if (variable.type == VariableType.ConstantLabel)
+            else if (variable.type == Model.VariableType.ConstantLabel)
             {
                 return Label(variable.staticLabel);
             }
-            else if (variable.type == VariableType.Local)
+            else if (variable.type == Model.VariableType.Local)
             {
                 if (variable.isArray) return null;
                 return DereferenceVariableOffset((ushort)(variable.stackOffset));
             }
-            else if (variable.type == VariableType.Constant)
+            else if (variable.type == Model.VariableType.Constant)
                 return Constant((ushort)variable.constantValue);
-            else if (variable.type == VariableType.External)
+            else if (variable.type == Model.VariableType.External)
             {
                 return null;
             }

@@ -36,7 +36,7 @@ namespace DCPUB
             if (ChildNodes.Count == 3) ChildNodes[2] = BlockNode.Wrap(Child(2));
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
             r.AddChild(base.Emit(context, scope, target));

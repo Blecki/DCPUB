@@ -12,7 +12,7 @@ namespace DCPUB
         public static String Version { get { return "DCPUB 0.3"; } }
 
         public RootProgramNode rootNode = null;
-        public Scope globalScope = new Scope();
+        public Model.Scope globalScope = new Model.Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUB.Grammar());
         private List<Tuple<Intermediate.Label, List<Intermediate.Operand>>> dataElements = new List<Tuple<Intermediate.Label, List<Intermediate.Operand>>>();
         public int externalCount = 0;
@@ -91,7 +91,7 @@ namespace DCPUB
             if (!String.IsNullOrEmpty(options.peephole)) peepholes = new Intermediate.Peephole.Peepholes(options.peephole);
 
             source = code;
-            globalScope = new Scope();
+            globalScope = new Model.Scope();
             dataElements.Clear();
             nextLabelID = 0;
             externalCount = 0;
@@ -120,9 +120,9 @@ namespace DCPUB
             this.OnError = OnError;
 
             var end_label = new Intermediate.Label("ENDOFPROGRAM");
-            globalScope.variables.Add(new Variable { type = VariableType.ConstantLabel, name = "__endofprogram", staticLabel = end_label });
-            globalScope.variables.Add(new Variable { name = "true", type = VariableType.Constant, constantValue = 1 });
-            globalScope.variables.Add(new Variable { name = "false", type = VariableType.Constant, constantValue = 0 });
+            globalScope.variables.Add(new Model.Variable { type = Model.VariableType.ConstantLabel, name = "__endofprogram", staticLabel = end_label });
+            globalScope.variables.Add(new Model.Variable { name = "true", type = Model.VariableType.Constant, constantValue = 1 });
+            globalScope.variables.Add(new Model.Variable { name = "false", type = Model.VariableType.Constant, constantValue = 0 });
 
             try
             {
@@ -140,7 +140,7 @@ namespace DCPUB
                     r.AddLabel(new Intermediate.Label("EXTERNALS"));
                     foreach (var variable in globalScope.variables)
                     {
-                        if (variable.type == VariableType.External)
+                        if (variable.type == Model.VariableType.External)
                         {
                             var blankList = new List<Intermediate.Operand>(new Intermediate.Operand[] { CompilableNode.Constant(0) });
 

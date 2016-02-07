@@ -14,7 +14,7 @@ namespace DCPUB
             AsString = "NULL STATEMENT";
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             return new Intermediate.Annotation("Empty statement.");
         }

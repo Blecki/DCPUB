@@ -18,7 +18,7 @@ namespace DCPUB
             return new Intermediate.Operand { register = opReg, semantics = semantics, constant = offset };
         }
 
-        public static Intermediate.Operand Operand(Register r)
+        public static Intermediate.Operand Operand(Model.Register r)
         {
             return Operand(r.ToString());
         }

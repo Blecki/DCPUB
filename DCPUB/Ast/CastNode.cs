@@ -17,7 +17,7 @@ namespace DCPUB
             AddChild("Expression", treeNode.ChildNodes[0]);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             Child(0).ResolveTypes(context, enclosingScope);
             var _struct = enclosingScope.FindType(typeName);
@@ -25,7 +25,7 @@ namespace DCPUB
             ResultType = typeName;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             return Child(0).Emit(context, scope, target);
         }

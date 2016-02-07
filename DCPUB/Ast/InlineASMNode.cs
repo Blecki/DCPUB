@@ -11,8 +11,8 @@ namespace DCPUB
     {
         public string targetRegisterName = "";
         public bool preserveTarget = false;
-        public Register targetRegister;
-        public Scope rememberScope = null;
+        public Model.Register targetRegister;
+        public Model.Scope rememberScope = null;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -22,14 +22,14 @@ namespace DCPUB
                 AddChild("expression", treeNode.ChildNodes[1].FirstChild.ChildNodes[1]);
         }
 
-        public override void  ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void  ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
-            targetRegister = (Register)Enum.Parse(typeof(Register), this.targetRegisterName);
+            targetRegister = (Model.Register)Enum.Parse(typeof(Model.Register), this.targetRegisterName);
             rememberScope = enclosingScope;
             if (ChildNodes.Count > 0) Child(0).ResolveTypes(context, enclosingScope);
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new StatementNode();
             r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
@@ -39,7 +39,7 @@ namespace DCPUB
             return r;
         }
 
-        public Intermediate.IRNode Restore(CompileContext context, Scope scope)
+        public Intermediate.IRNode Restore(CompileContext context, Model.Scope scope)
         {
             var r = new TransientNode();
             if (preserveTarget)
@@ -49,7 +49,7 @@ namespace DCPUB
             return r;
         }
 
-        public Intermediate.IRNode Restore2(CompileContext context, Scope scope)
+        public Intermediate.IRNode Restore2(CompileContext context, Model.Scope scope)
         {
             var r = new TransientNode();
             //if (preserveTarget)
@@ -76,7 +76,7 @@ namespace DCPUB
             ParsedAssembly = asmParser.Parse(rawAssembly);
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
 

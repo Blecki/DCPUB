@@ -10,7 +10,7 @@ namespace DCPUB
     public class VariableDeclarationNode : CompilableNode
     {
         string declLabel = "";
-        Variable variable = null;
+        Model.Variable variable = null;
         int size = 1;
         bool hasInitialValue = false;
         bool isArray = false;
@@ -38,7 +38,7 @@ namespace DCPUB
             }
 
             declLabel = treeNode.ChildNodes[0].FindTokenAndGetText();
-            variable = new Variable();
+            variable = new Model.Variable();
             variable.name = treeNode.ChildNodes[1].FindTokenAndGetText();
             variable.typeSpecifier = treeNode.ChildNodes[2].FindTokenAndGetText();
             variable.assignedBy = this;
@@ -46,7 +46,7 @@ namespace DCPUB
             if (variable.typeSpecifier == null) variable.typeSpecifier = "word";
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
             
@@ -55,11 +55,11 @@ namespace DCPUB
             
             if (declLabel == "local")
             {
-                variable.type = VariableType.Local;
+                variable.type = Model.VariableType.Local;
             }
             else if (declLabel == "static")
             {
-                variable.type = VariableType.Static;
+                variable.type = Model.VariableType.Static;
                 variable.staticLabel = Intermediate.Label.Make("_STATIC_" + variable.name);
             }
             else if (declLabel == "external")
@@ -67,22 +67,22 @@ namespace DCPUB
                 if (context.options.externals == false)
                 {
                     context.ReportError(this, "Compile with -externals to support externals.");
-                    variable.type = VariableType.Local;
+                    variable.type = Model.VariableType.Local;
                 }
-                if (enclosingScope.type != ScopeType.Global)
+                if (enclosingScope.type != Model.ScopeType.Global)
                 {
                     context.ReportError(this, "Externals can only be declared at global scope.");
-                    variable.type = VariableType.Local;
+                    variable.type = Model.VariableType.Local;
                 }
-                variable.type = VariableType.External;
+                variable.type = Model.VariableType.External;
             }
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
 
-            if (!Scope.IsBuiltIn(variable.typeSpecifier))
+            if (!Model.Scope.IsBuiltIn(variable.typeSpecifier))
             {
                 variable.structType = enclosingScope.FindType(variable.typeSpecifier);
                 if (variable.structType == null)
@@ -150,12 +150,12 @@ namespace DCPUB
             }
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new StatementNode();
             r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
 
-            if (variable.type == VariableType.Local)
+            if (variable.type == Model.VariableType.Local)
             {
                 variable.stackOffset = -(scope.variablesOnStack + size);
                 if (hasInitialValue) r.AddChild(Child(0).Emit(context, scope, Target.Stack));

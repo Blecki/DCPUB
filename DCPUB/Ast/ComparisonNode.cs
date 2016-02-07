@@ -16,7 +16,7 @@ namespace DCPUB
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             throw new InternalError("Branch node should have handled this.");
         }

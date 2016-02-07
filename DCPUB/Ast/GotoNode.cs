@@ -17,9 +17,9 @@ namespace DCPUB
             label = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
-            Label destination = null;
+            Model.Label destination = null;
             foreach (var _label in scope.activeFunction.function.labels)
                 if (_label.declaredName == label) destination = _label;
             if (destination == null) context.ReportError(this, "Unknown label - " + label);

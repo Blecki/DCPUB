@@ -7,6 +7,6 @@ namespace DCPUB
 {
     public interface AssignableNode
     {
-        Intermediate.IRNode EmitAssignment(CompileContext context, Scope scope, Intermediate.Operand from, Intermediate.Instructions opcode);
+        Intermediate.IRNode EmitAssignment(CompileContext context, Model.Scope scope, Intermediate.Operand from, Intermediate.Instructions opcode);
     }
 }

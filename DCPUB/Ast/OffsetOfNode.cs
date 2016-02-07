@@ -11,7 +11,7 @@ namespace DCPUB
     {
         public String typeName;
         public String memberName;
-        public Struct _struct = null;
+        public Model.Struct _struct = null;
         public Intermediate.Operand CachedFetchToken;
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
@@ -27,7 +27,7 @@ namespace DCPUB
             return CachedFetchToken;
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             _struct = enclosingScope.FindType(typeName);
 
@@ -51,7 +51,7 @@ namespace DCPUB
             ResultType = "word";
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();
             r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), GetFetchToken());

@@ -16,8 +16,6 @@ namespace DCPUB
     public class BinaryOperationNode : CompilableNode
     {
         private static Dictionary<String, BinaryOperator> opcodes = null;
-        public Register firstOperandResult = Register.STACK;
-        public Register secondOperandResult = Register.STACK;
 
         public void SetOp(string op) { AsString = op; }
 
@@ -68,12 +66,12 @@ namespace DCPUB
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             base.GatherSymbols(context, enclosingScope);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
             ResultType = "word";
@@ -90,7 +88,7 @@ namespace DCPUB
             return null;
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             initOps();
             Target firstTarget = null;

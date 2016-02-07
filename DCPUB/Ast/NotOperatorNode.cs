@@ -16,7 +16,7 @@ namespace DCPUB
             AsString = "^";
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             base.ResolveTypes(context, enclosingScope);
             ResultType = "word";

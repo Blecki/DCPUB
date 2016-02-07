@@ -9,7 +9,7 @@ namespace DCPUB
 {
     public class LabelNode : CompilableNode
     {
-        public Label label = new Label();
+        public Model.Label label = new Model.Label();
 
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
@@ -17,17 +17,17 @@ namespace DCPUB
             label.declaredName = treeNode.FirstChild.FindTokenAndGetText();
         }
 
-        public override void GatherSymbols(CompileContext context, Scope enclosingScope)
+        public override void GatherSymbols(CompileContext context, Model.Scope enclosingScope)
         {
             label.realName = Intermediate.Label.Make("_" + label.declaredName);
         }
 
-        public override void ResolveTypes(CompileContext context, Scope enclosingScope)
+        public override void ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
             enclosingScope.activeFunction.function.labels.Add(label);
         }
 
-        public override Intermediate.IRNode Emit(CompileContext context, Scope scope, Target target)
+        public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new StatementNode();
             r.AddLabel(label.realName);
