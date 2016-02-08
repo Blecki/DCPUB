@@ -19,7 +19,7 @@ namespace DCPUB.Intermediate
             stream.WriteLine("[l /] :" + label);
         }
 
-        public override void EmitBinary(List<Assembly.Box<ushort>> binary)
+        public override void EmitBinary(List<Box<ushort>> binary)
         {
             label.position.data = (ushort)binary.Count;
         }

@@ -40,6 +40,7 @@ namespace DCPUB
 
             r.AddChild(body);
             r.AddLabel(footerLabel);
+            r.AddInstruction(Instructions.HLT); // Stop operation at end of program.
             r.AddInstruction(Instructions.SET, Operand("PC"), Label(footerLabel));
 
             foreach (var nestedFunction in function.localScope.functions)

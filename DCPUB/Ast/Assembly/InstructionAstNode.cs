@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 using DCPUB.Intermediate;
-using DCPUB.Assembly;
 
 namespace DCPUB.Ast.Assembly
 {

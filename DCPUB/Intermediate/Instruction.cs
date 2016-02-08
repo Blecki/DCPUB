@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DCPUB.Assembly;
 
 namespace DCPUB.Intermediate
 {
-    public class Instruction : IRNode
+    public partial class Instruction : IRNode
     {
         public Instructions instruction;
         public Operand firstOperand;
@@ -62,13 +61,17 @@ namespace DCPUB.Intermediate
             var ins = new Box<ushort>{ data = 0 };
             binary.Add(ins);
             
-            if (instruction < Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+            if (instruction == Instructions.HLT)
             {
-                var A = DCPU.EncodeOperand(secondOperand, OperandUsage.A);
+                ins.data += (ushort)(((ushort)instruction - (ushort)Instructions.SINGLE_OPERAND_INSTRUCTIONS) << 5);
+            }
+            else if (instruction < Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+            {
+                var A = EncodeOperand(secondOperand, OperandUsage.A);
                 if (A.Item2 != null) binary.Add(A.Item2);
                 ins.data += (ushort)(A.Item1 << 10);
 
-                var B = DCPU.EncodeOperand(firstOperand, OperandUsage.B);
+                var B = EncodeOperand(firstOperand, OperandUsage.B);
                 if (B.Item2 != null) binary.Add(B.Item2);
                 ins.data += (ushort)(B.Item1 << 5);
 
@@ -76,7 +79,7 @@ namespace DCPUB.Intermediate
             }
             else
             {
-                var A = DCPU.EncodeOperand(firstOperand, OperandUsage.A);
+                var A = EncodeOperand(firstOperand, OperandUsage.A);
                 if (A.Item2 != null) binary.Add(A.Item2);
                 ins.data += (ushort)(A.Item1 << 10);
 

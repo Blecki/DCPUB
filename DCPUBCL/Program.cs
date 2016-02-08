@@ -160,7 +160,7 @@ namespace DCPUCCL
                     if (options.binary)
                     {
                         var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
-                        var bin = new List<DCPUB.Assembly.Box<ushort>>();
+                        var bin = new List<DCPUB.Intermediate.Box<ushort>>();
                         assembly.EmitBinary(bin);
                         foreach (var word in bin)
                         {

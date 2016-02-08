@@ -9,7 +9,7 @@ namespace DCPUB.Intermediate
     {
         private static int labelCount = 0;
 
-        public Assembly.Box<ushort> position = new Assembly.Box<ushort> { data = 0 };
+        public Box<ushort> position = new Box<ushort> { data = 0 };
         public string rawLabel;
 
         public Label()

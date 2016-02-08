@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DCPUB.Intermediate;
 
-namespace DCPUB.Assembly
+namespace DCPUB.Intermediate
 {
     /*
      * --- Values: (5/6 bits) ---------------------------------------------------------
@@ -30,18 +29,17 @@ namespace DCPUB.Assembly
 * Attempting to write to a literal value fails silently
      * */
 
-    public enum OperandUsage
+    
+    
+    public partial class Instruction
     {
-        A,
-        B
-    }
+        private enum OperandUsage
+        {
+            A,
+            B
+        }
 
-    public class Box<T> where T : struct { public T data; }
-
-    public class DCPU
-    {
-        
-        public static Tuple<ushort, Box<ushort>> EncodeOperand(Operand op, OperandUsage usage)
+        private static Tuple<ushort, Box<ushort>> EncodeOperand(Operand op, OperandUsage usage)
         {
             if ((op.semantics & OperandSemantics.Label) == OperandSemantics.Label)
             {

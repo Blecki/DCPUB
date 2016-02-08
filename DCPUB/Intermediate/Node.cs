@@ -14,7 +14,7 @@ namespace DCPUB.Intermediate
             children.Add(child);
         }
 
-        public void AddInstruction(Instructions instruction, Operand firstOperand, Operand secondOperand = null)
+        public void AddInstruction(Instructions instruction, Operand firstOperand = null, Operand secondOperand = null)
         {
             AddChild(Instruction.Make(instruction, firstOperand, secondOperand));
         }
@@ -50,7 +50,7 @@ namespace DCPUB.Intermediate
             return children.Sum((node) => { return node.InstructionCount(); });
         }
 
-        public virtual void EmitBinary(List<Assembly.Box<ushort>> binary)
+        public virtual void EmitBinary(List<Box<ushort>> binary)
         {
             foreach (var child in children) child.EmitBinary(binary);
         }

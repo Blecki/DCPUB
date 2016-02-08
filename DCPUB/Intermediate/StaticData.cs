@@ -28,12 +28,12 @@ namespace DCPUB.Intermediate
             Emit(stream);
         }
 
-        public override void EmitBinary(List<Assembly.Box<ushort>> binary)
+        public override void EmitBinary(List<Box<ushort>> binary)
         {
             label.position.data = (ushort)binary.Count;
             foreach (var item in Data)
             {
-                if (item.IsIntegralConstant()) binary.Add(new Assembly.Box<ushort> { data = item.constant });
+                if (item.IsIntegralConstant()) binary.Add(new Box<ushort> { data = item.constant });
                 else if (item.semantics == OperandSemantics.Label) binary.Add(item.label.position);
                 else throw new InternalError("Incorrect operand in mixed static data");
             }

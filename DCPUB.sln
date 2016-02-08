@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCPUB", "DCPUB\DCPUB.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "b", "DCPUBCL\b.csproj", "{FB985366-D895-41E8-9B24-D944DE16E88F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegressionTests", "RegressionTests\RegressionTests.csproj", "{43E0E294-1EC1-4CD7-A491-845578070423}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,18 @@ Global
 		{FB985366-D895-41E8-9B24-D944DE16E88F}.Release|Mixed Platforms.Build.0 = Release|x86
 		{FB985366-D895-41E8-9B24-D944DE16E88F}.Release|x86.ActiveCfg = Release|x86
 		{FB985366-D895-41E8-9B24-D944DE16E88F}.Release|x86.Build.0 = Release|x86
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Debug|x86.Build.0 = Debug|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Release|x86.ActiveCfg = Release|Any CPU
+		{43E0E294-1EC1-4CD7-A491-845578070423}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
