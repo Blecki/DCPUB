@@ -60,7 +60,7 @@ namespace DCPUB.Intermediate
             return s;
         }
 
-        public void ErrorCheck(CompileContext Context, CompilableNode Ast)
+        public void ErrorCheck(CompileContext Context, Ast.CompilableNode Ast)
         {
             if ((semantics & OperandSemantics.Dereference) == OperandSemantics.Dereference &&
                 register == OperandRegister.PEEK)

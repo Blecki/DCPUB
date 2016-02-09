@@ -9,7 +9,7 @@ namespace DCPUB.Model
     public class Function
     {
         public String name;
-        public FunctionDeclarationNode Node;
+        public Ast.FunctionDeclarationNode Node;
         public Scope localScope;
         public Intermediate.Label label;
         public string LabelName;

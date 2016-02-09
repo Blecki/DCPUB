@@ -11,7 +11,7 @@ namespace DCPUB.Intermediate
         public Operand firstOperand;
         public Operand secondOperand;
 
-        internal override void ErrorCheck(CompileContext Context, CompilableNode Ast)
+        internal override void ErrorCheck(CompileContext Context, Ast.CompilableNode Ast)
         {
             if (firstOperand == null)
                 Context.ReportError(Ast, "No operands for instruction");

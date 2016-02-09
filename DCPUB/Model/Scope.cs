@@ -38,9 +38,9 @@ namespace DCPUB.Model
         public List<Function> functions = new List<Function>();
         public List<Struct> structs = new List<Struct>();
         public int variablesOnStack = 0;
-        public List<FunctionDeclarationNode> pendingFunctions = new List<FunctionDeclarationNode>();
-        public FunctionDeclarationNode activeFunction = null;
-        public BlockNode activeBlock = null;
+        public List<Ast.FunctionDeclarationNode> pendingFunctions = new List<Ast.FunctionDeclarationNode>();
+        public Ast.FunctionDeclarationNode activeFunction = null;
+        public Ast.BlockNode activeBlock = null;
 
         internal Scope Push(Scope child)
         {

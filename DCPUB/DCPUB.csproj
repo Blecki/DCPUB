@@ -92,8 +92,8 @@
     <Compile Include="Intermediate\StaticData.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AssignableNode.cs" />
-    <Compile Include="IntermediateFactories.cs" />
+    <Compile Include="Ast\AssignableNode.cs" />
+    <Compile Include="Ast\IntermediateFactories.cs" />
     <Compile Include="InternalError.cs" />
     <Compile Include="ConfigurationError.cs" />
     <Compile Include="CompileOptions.cs" />
@@ -114,7 +114,7 @@
     <Compile Include="Ast\StructDeclarationNode.cs" />
     <Compile Include="Preprocessor\Parser.cs" />
     <Compile Include="Preprocessor\ParseState.cs" />
-    <Compile Include="RootProgramNode.cs" />
+    <Compile Include="Ast\RootProgramNode.cs" />
     <Compile Include="Ast\AssignmentNode.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -124,7 +124,7 @@
     <Compile Include="Ast\BlockNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CompilableNode.cs">
+    <Compile Include="Ast\CompilableNode.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Ast\ComparisonNode.cs" />
@@ -134,7 +134,7 @@
     <Compile Include="Model\Member.cs" />
     <Compile Include="Model\Label.cs" />
     <Compile Include="Model\Struct.cs" />
-    <Compile Include="Target.cs" />
+    <Compile Include="Ast\Target.cs" />
     <Compile Include="Upsert.cs" />
     <Compile Include="Model\Variable.cs" />
     <Compile Include="Ast\WhileStatementNode.cs" />

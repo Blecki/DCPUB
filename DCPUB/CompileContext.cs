@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 using DCPUB.Intermediate;
+using DCPUB.Ast;
 
 namespace DCPUB
 {
@@ -11,7 +12,7 @@ namespace DCPUB
     {
         public static String Version { get { return "DCPUB 0.3"; } }
 
-        public RootProgramNode rootNode = null;
+        public Ast.RootProgramNode rootNode = null;
         public Model.Scope globalScope = new Model.Scope();
         private Irony.Parsing.Parser Parser = new Irony.Parsing.Parser(new DCPUB.Grammar());
         private List<Tuple<Intermediate.Label, List<Intermediate.Operand>>> dataElements = new List<Tuple<Intermediate.Label, List<Intermediate.Operand>>>();
@@ -109,8 +110,8 @@ namespace DCPUB
                 return false;
             }
 
-            var root = program.Root.AstNode as DCPUB.CompilableNode;
-            rootNode = new RootProgramNode();
+            var root = program.Root.AstNode as CompilableNode;
+            rootNode = new Ast.RootProgramNode();
             rootNode.ChildNodes.Add(root);
             return true;
         }

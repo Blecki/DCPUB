@@ -88,7 +88,7 @@ namespace DCPUB.Intermediate
             }).ToList();
         }
 
-        internal virtual void ErrorCheck(CompileContext Context, CompilableNode Ast)
+        internal virtual void ErrorCheck(CompileContext Context, Ast.CompilableNode Ast)
         {
             foreach (var child in children) child.ErrorCheck(Context, Ast);
         }

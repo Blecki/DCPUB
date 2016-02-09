@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB
+namespace DCPUB.Ast
 {
     public class ComparisonNode : CompilableNode
     {

@@ -5,7 +5,7 @@ using System.Text;
 using Irony.Interpreter.Ast;
 using DCPUB.Intermediate;
 
-namespace DCPUB
+namespace DCPUB.Ast
 {
     public class GotoNode : CompilableNode
     {

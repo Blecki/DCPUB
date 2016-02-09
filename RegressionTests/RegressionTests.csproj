@@ -50,6 +50,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Structs.cs" />
     <Compile Include="StaticInitialization.cs" />
     <Compile Include="TestFrameworkTest.cs" />
     <Compile Include="CompilerReportsErrors.cs" />

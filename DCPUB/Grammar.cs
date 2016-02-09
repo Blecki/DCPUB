@@ -25,58 +25,58 @@ namespace DCPUB
             integerLiteral.AddPrefix("0b", NumberOptions.Binary);
             integerLiteral.AddSuffix("u", TypeCode.UInt16);
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
-            identifier.AstNodeType = typeof(VariableNameNode);
+            identifier.AstNodeType = typeof(Ast.VariableNameNode);
             
 
             var stringLiteral = new StringLiteral("string", "\"");
-            stringLiteral.AstNodeType = typeof(StringLiteralNode);
+            stringLiteral.AstNodeType = typeof(Ast.StringLiteralNode);
             var characterLiteral = new StringLiteral("char", "'", StringOptions.IsChar);
            
 
-            var inlineASM = new NonTerminal("inline", typeof(InlineASMNode));
+            var inlineASM = new NonTerminal("inline", typeof(Ast.InlineASMNode));
 
-            var numberLiteral = new NonTerminal("Number", typeof(NumberLiteralNode));
+            var numberLiteral = new NonTerminal("Number", typeof(Ast.NumberLiteralNode));
             var expression = new NonTerminal("Expression");
             var parenExpression = new NonTerminal("Paren Expression");
-            var binaryOperation = new NonTerminal("Binary Operation", typeof(BinaryOperationNode));
-            var unaryNot = new NonTerminal("Unary Not", typeof(NotOperatorNode));
-            var unaryNegate = new NonTerminal("Unary Negate", typeof(NegateOperatorNode));
-            var comparison = new NonTerminal("Comparison", typeof(ComparisonNode));
+            var binaryOperation = new NonTerminal("Binary Operation", typeof(Ast.BinaryOperationNode));
+            var unaryNot = new NonTerminal("Unary Not", typeof(Ast.NotOperatorNode));
+            var unaryNegate = new NonTerminal("Unary Negate", typeof(Ast.NegateOperatorNode));
+            var comparison = new NonTerminal("Comparison", typeof(Ast.ComparisonNode));
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "-*" | "-/" | "-%"
                 | "==" | "!=" | ">" | "->" | "<" | "-<";
             var comparisonOperator = ToTerm("==") | "!=" | ">" | "<" | "->" | "-<";
-            var variableDeclaration = new NonTerminal("Variable Declaration", typeof(VariableDeclarationNode));
-            var arrayInitialization = new NonTerminal("Array Initialization", typeof(ArrayInitializationNode));
-            var dereference = new NonTerminal("Dereference", typeof(DereferenceNode));
+            var variableDeclaration = new NonTerminal("Variable Declaration", typeof(Ast.VariableDeclarationNode));
+            var arrayInitialization = new NonTerminal("Array Initialization", typeof(Ast.ArrayInitializationNode));
+            var dereference = new NonTerminal("Dereference", typeof(Ast.DereferenceNode));
             var statement = new NonTerminal("Statement");
-            var statementList = new NonTerminal("Statement List", typeof(BlockNode));
-            var assignment = new NonTerminal("Assignment", typeof(AssignmentNode));
-            var ifStatement = new NonTerminal("If", typeof(IfStatementNode));
-            var whileStatement = new NonTerminal("While", typeof(WhileStatementNode));
+            var statementList = new NonTerminal("Statement List", typeof(Ast.BlockNode));
+            var assignment = new NonTerminal("Assignment", typeof(Ast.AssignmentNode));
+            var ifStatement = new NonTerminal("If", typeof(Ast.IfStatementNode));
+            var whileStatement = new NonTerminal("While", typeof(Ast.WhileStatementNode));
             var block = new NonTerminal("Block");
-            var ifElseStatement = new NonTerminal("IfElse", typeof(IfStatementNode));
+            var ifElseStatement = new NonTerminal("IfElse", typeof(Ast.IfStatementNode));
             var parameterList = new NonTerminal("Parameter List");
-            var functionDeclaration = new NonTerminal("Function Declaration", typeof(FunctionDeclarationNode));
+            var functionDeclaration = new NonTerminal("Function Declaration", typeof(Ast.FunctionDeclarationNode));
             var parameterDeclaration = new NonTerminal("Parameter Declaration");
             var parameterListDeclaration = new NonTerminal("Parameter Declaration List");
-            var returnStatement = new NonTerminal("Return", typeof(ReturnStatementNode));
-            var functionCall = new NonTerminal("Function Call", typeof(FunctionCallNode));
-            var structDefinition = new NonTerminal("Struct", typeof(StructDeclarationNode));
-            var memberDeclaration = new NonTerminal("Member", typeof(MemberNode));
+            var returnStatement = new NonTerminal("Return", typeof(Ast.ReturnStatementNode));
+            var functionCall = new NonTerminal("Function Call", typeof(Ast.FunctionCallNode));
+            var structDefinition = new NonTerminal("Struct", typeof(Ast.StructDeclarationNode));
+            var memberDeclaration = new NonTerminal("Member", typeof(Ast.MemberNode));
             var memberList = new NonTerminal("Member List");
-            var registerBinding = new NonTerminal("Register Binding", typeof(RegisterBindingNode));
+            var registerBinding = new NonTerminal("Register Binding", typeof(Ast.RegisterBindingNode));
             var registerBindingList = new NonTerminal("Register Binding List");
-            var addressOf = new NonTerminal("Address Of", typeof(AddressOfNode));
-            var memberAccess = new NonTerminal("Member Access", typeof(MemberAccessNode));
-            var @sizeof = new NonTerminal("sizeof", typeof(SizeofNode));
-            var offsetof = new NonTerminal("offsetof", typeof(OffsetOfNode));
-            var indexOperator = new NonTerminal("index", typeof(IndexOperatorNode));
+            var addressOf = new NonTerminal("Address Of", typeof(Ast.AddressOfNode));
+            var memberAccess = new NonTerminal("Member Access", typeof(Ast.MemberAccessNode));
+            var @sizeof = new NonTerminal("sizeof", typeof(Ast.SizeofNode));
+            var offsetof = new NonTerminal("offsetof", typeof(Ast.OffsetOfNode));
+            var indexOperator = new NonTerminal("index", typeof(Ast.IndexOperatorNode));
             var dataList = new NonTerminal("Array Data");
-            var label = new NonTerminal("Label", typeof(LabelNode));
-            var @goto = new NonTerminal("Goto", typeof(GotoNode));
-            var cast = new NonTerminal("Cast", typeof(CastNode));
-            var @break = new NonTerminal("Break", typeof(BreakNode));
-            var nullStatement = new NonTerminal("NullStatement", typeof(NullStatementNode));
+            var label = new NonTerminal("Label", typeof(Ast.LabelNode));
+            var @goto = new NonTerminal("Goto", typeof(Ast.GotoNode));
+            var cast = new NonTerminal("Cast", typeof(Ast.CastNode));
+            var @break = new NonTerminal("Break", typeof(Ast.BreakNode));
+            var nullStatement = new NonTerminal("NullStatement", typeof(Ast.NullStatementNode));
 
             numberLiteral.Rule = integerLiteral | characterLiteral;
             expression.Rule = cast | numberLiteral | parenExpression | identifier

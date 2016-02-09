@@ -27,7 +27,7 @@ namespace DCPUB.Model
         public VariableType type;
         public bool isArray = false;
 
-        public CompilableNode assignedBy = null;
+        public Ast.CompilableNode assignedBy = null;
     }
 
     

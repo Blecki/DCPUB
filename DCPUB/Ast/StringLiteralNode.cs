@@ -5,7 +5,7 @@ using System.Text;
 using DCPUB.Intermediate;
 using Irony.Interpreter.Ast;
 
-namespace DCPUB
+namespace DCPUB.Ast
 {
     public class StringLiteralNode : CompilableNode
     {

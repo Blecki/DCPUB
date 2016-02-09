@@ -10,7 +10,7 @@ namespace DCPUB.Model
     {
         public String name;
         public List<Member> members = new List<Member>();
-        public StructDeclarationNode Node;
+        public Ast.StructDeclarationNode Node;
         public int size;
     }
 }
