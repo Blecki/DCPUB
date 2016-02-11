@@ -95,7 +95,7 @@ namespace DCPUB.Ast
                 body.AddChild((child as CompilableNode).Emit(context, function.localScope, Target.Discard));
 
             body.CollapseTransientNodes();
-
+            body.MergeConsecutiveStatements();
             body.PeepholeTree(context.peepholes);
 
             var registers = new bool[] { true, false, false, false, false, false, false, true };

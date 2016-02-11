@@ -43,6 +43,23 @@ namespace DCPUB.Intermediate
         public Label label;
         public ushort virtual_register;
 
+        public static bool OperandsEqual(Operand A, Operand B)
+        {
+            if (A == null && B == null) return true;
+            if (A == null || B == null) return false;
+
+            if (A.register == OperandRegister.PEEK || B.register == OperandRegister.PEEK) return false;
+            if (A.register == OperandRegister.POP || B.register == OperandRegister.POP) return false;
+            if (A.register == OperandRegister.PUSH || B.register == OperandRegister.PUSH) return false;
+            if (A.register != B.register) return false;
+            if (A.semantics != B.semantics) return false;
+            if (A.constant != B.constant) return false;
+            if (A.virtual_register != B.virtual_register) return false;
+
+            if (A.label == null) return B.label == null;
+            return Object.ReferenceEquals(A.label, B.label);
+        }
+        
         public override string ToString()
         {
             var s = "";

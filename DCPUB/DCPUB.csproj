@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Intermediate\Box.cs" />
     <Compile Include="Intermediate\Instruction_EncodeOperand.cs" />
+    <Compile Include="Intermediate\StatementNode_SSA.cs" />
     <Compile Include="Testing\Emulator.cs" />
     <Compile Include="Testing\HardwareDevice.cs" />
     <Compile Include="Testing\TeleTerminalHardware.cs" />

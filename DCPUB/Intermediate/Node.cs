@@ -88,6 +88,27 @@ namespace DCPUB.Intermediate
             }).ToList();
         }
 
+        public void MergeConsecutiveStatements()
+        {
+            foreach (var child in children) child.MergeConsecutiveStatements();
+
+            if (children.Count <= 1) return;
+
+            for (var index = 0; index < children.Count - 1;)
+            {
+                var first = children[index] as StatementNode;
+                var second = children[index + 1] as StatementNode;
+
+                if (first != null && second != null)
+                {
+                    first.children.AddRange(second.children);
+                    children.RemoveAt(index + 1);
+                }
+                else
+                    index += 1;
+            }
+        }
+
         internal virtual void ErrorCheck(CompileContext Context, Ast.CompilableNode Ast)
         {
             foreach (var child in children) child.ErrorCheck(Context, Ast);

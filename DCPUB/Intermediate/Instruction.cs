@@ -28,10 +28,22 @@ namespace DCPUB.Intermediate
 
         public override void Emit(EmissionStream stream)
         {
-            if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+            if (instruction == Instructions.HLT)
+                stream.WriteLine(instruction.ToString());
+            else if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
                 stream.WriteLine(instruction.ToString() + " " + firstOperand);
             else
                 stream.WriteLine(instruction.ToString() + " " + firstOperand + ", " + secondOperand);
+        }
+
+        public override string ToString()
+        {
+            if (instruction == Instructions.HLT)
+                return instruction.ToString();
+            else if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+                return instruction.ToString() + " " + firstOperand;
+            else
+                return instruction.ToString() + " " + firstOperand + ", " + secondOperand;
         }
 
         public override void EmitIR(EmissionStream stream)

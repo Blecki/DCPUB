@@ -12,7 +12,7 @@ namespace DCPUB.Intermediate
         public OperandRegister assignedRegister = OperandRegister.A;
     }
 
-    public class StatementNode : IRNode 
+    public partial class StatementNode : IRNode 
     {
         public override void PeepholeTree(Peephole.Peepholes peepholes)
         {

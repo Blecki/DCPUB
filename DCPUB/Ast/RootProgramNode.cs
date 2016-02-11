@@ -34,6 +34,7 @@ namespace DCPUB.Ast
             var body = Child(0).Emit(context, localScope, Target.Discard);
 
             body.CollapseTransientNodes();
+            body.MergeConsecutiveStatements();
             body.PeepholeTree(context.peepholes);
 
             if (!context.options.emit_ir) body.AssignRegisters(null);

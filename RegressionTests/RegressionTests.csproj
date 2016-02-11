@@ -50,6 +50,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="SSA_Statement_Optimization.cs" />
     <Compile Include="Structs.cs" />
     <Compile Include="StaticInitialization.cs" />
     <Compile Include="TestFrameworkTest.cs" />
