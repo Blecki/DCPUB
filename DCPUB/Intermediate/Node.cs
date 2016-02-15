@@ -31,13 +31,13 @@ namespace DCPUB.Intermediate
             stream.indentDepth -= 1;
         }
 
-        public virtual void EmitIR(EmissionStream stream)
+        public virtual void EmitIR(EmissionStream stream, bool Tidy)
         {
-            stream.WriteLine("[generic node]");
+            if (!Tidy) stream.WriteLine("[generic node]");
             stream.indentDepth += 1;
-            foreach (var child in children) child.EmitIR(stream);
+            foreach (var child in children) child.EmitIR(stream, Tidy);
             stream.indentDepth -= 1;
-            stream.WriteLine("[/generic node]");
+            if (!Tidy) stream.WriteLine("[/generic node]");
         }
 
         public virtual void PeepholeTree(Peephole.Peepholes peepholes) 
@@ -109,6 +109,11 @@ namespace DCPUB.Intermediate
             }
         }
 
+        public virtual void ApplySSA()
+        {
+            foreach (var child in children) child.ApplySSA();
+        }
+
         internal virtual void ErrorCheck(CompileContext Context, Ast.CompilableNode Ast)
         {
             foreach (var child in children) child.ErrorCheck(Context, Ast);
@@ -117,13 +122,13 @@ namespace DCPUB.Intermediate
 
     public class TransientNode : IRNode 
     {
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
-            stream.WriteLine("[transient node]");
+            if (!Tidy) stream.WriteLine("[transient node]");
             stream.indentDepth += 1;
-            foreach (var child in children) child.EmitIR(stream);
+            foreach (var child in children) child.EmitIR(stream, Tidy);
             stream.indentDepth -= 1;
-            stream.WriteLine("[/transient node]");
+            if (!Tidy) stream.WriteLine("[/transient node]");
 
         }
     }

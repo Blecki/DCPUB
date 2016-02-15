@@ -8,7 +8,7 @@ namespace DCPUB.Intermediate
 {
     public partial class StatementNode : IRNode 
     {
-        public void ApplySSA()
+        public void __ApplySSA()
         {
             /* Step 1:      Should become ==>
                 SET R0, [0x0002+J]     SET R0, [0x0002+J]
@@ -30,13 +30,20 @@ namespace DCPUB.Intermediate
                 if (ins == null) ssa_instructions.children.Add(child);
                 else
                 {
-                    var second_operand = ins.secondOperand.Clone();
-                    if (second_operand.register == OperandRegister.VIRTUAL)
+                    Operand second_operand = null;
+
+                    if (ins.secondOperand != null)
                     {
-                        if (!operandMapping.ContainsKey(second_operand.virtual_register))
-                            throw new InternalError("Virtual register used as source before being encountered as destination");
-                        second_operand.virtual_register = operandMapping[second_operand.virtual_register];
+                        second_operand = ins.secondOperand.Clone();
+                        if (second_operand.register == OperandRegister.VIRTUAL)
+                        {
+                            if (!operandMapping.ContainsKey(second_operand.virtual_register))
+                                throw new InternalError("Virtual register used as source before being encountered as destination");
+                            second_operand.virtual_register = operandMapping[second_operand.virtual_register];
+                        }
                     }
+
+                    var operands_modified = ins.instruction.GetOperandsModified();
 
                     var first_operand = ins.firstOperand.Clone();
                     var ori_first_operand = first_operand.Clone();
@@ -48,15 +55,15 @@ namespace DCPUB.Intermediate
                             ori_first_operand.virtual_register = first_operand.virtual_register;
                         }
 
-                        if ((first_operand.semantics & OperandSemantics.Dereference) != OperandSemantics.Dereference)
+                        if (operands_modified == OperandsModified.A
+                            && (first_operand.semantics & OperandSemantics.Dereference) != OperandSemantics.Dereference)
                         {
                             var new_register = new_vr++;
                             operandMapping.Upsert(ins.firstOperand.virtual_register, new_register);
                             first_operand.virtual_register = new_register;
                         }
                     }
-                    
-                    var operands_modified = ins.instruction.GetOperandsModified();
+
 
                     if (ins.instruction == Instructions.SET)
                     {
@@ -66,8 +73,13 @@ namespace DCPUB.Intermediate
                     }
                     else if (operands_modified == OperandsModified.A)
                     {
-                        ssa_instructions.AddInstruction(Instructions.SET, CompilableNode.Virtual(first_operand.virtual_register), ori_first_operand);
-                        ssa_instructions.AddInstruction(ins.instruction, CompilableNode.Virtual(first_operand.virtual_register), second_operand);
+                        if (first_operand.register == OperandRegister.VIRTUAL)
+                        {
+                            ssa_instructions.AddInstruction(Instructions.SET, CompilableNode.Virtual(first_operand.virtual_register), ori_first_operand);
+                            ssa_instructions.AddInstruction(ins.instruction, CompilableNode.Virtual(first_operand.virtual_register), second_operand);
+                        }
+                        else
+                            ssa_instructions.AddInstruction(ins.instruction, first_operand, second_operand);
                     }
                     else
                     {
@@ -76,7 +88,7 @@ namespace DCPUB.Intermediate
                 }
             }
 
-            
+
             /* Step 2:      Should become ==>
                 SET R0, [0x0002+J]      SET R0, [0x0002+J]
                 SET R1, [0x0001+R0]     SET R1, [0x0001+R0]
@@ -132,11 +144,12 @@ namespace DCPUB.Intermediate
                         var candidateForReplacement = children[c];
                         var c_ins = candidateForReplacement as Instruction;
                         if (c_ins == null) continue;
-                        if (c_ins.secondOperand == null) continue;
+                        //if (c_ins.secondOperand == null) continue;
 
                         if (simplyReplace)
                         {
-                            if (c_ins.secondOperand.register == OperandRegister.VIRTUAL
+                            if (c_ins.secondOperand != null
+                                && c_ins.secondOperand.register == OperandRegister.VIRTUAL
                                 && c_ins.secondOperand.virtual_register == ins.firstOperand.virtual_register)
                                 c_ins.secondOperand.virtual_register = ins.secondOperand.virtual_register;
                             if (c_ins.firstOperand.register == OperandRegister.VIRTUAL
@@ -144,16 +157,19 @@ namespace DCPUB.Intermediate
                                 c_ins.firstOperand.virtual_register = ins.secondOperand.virtual_register;
                             continue;
                         }
+
                         // If second operand is a duplicate of value, replace with our register.
-                        else if (Operand.OperandsEqual(c_ins.secondOperand, value))
+                        if (c_ins.secondOperand != null
+                            && Operand.OperandsEqual(c_ins.secondOperand, value))
                         {
                             usage_count += 1;
                             c_ins.secondOperand = valueName;
                         }
-                        // If second operand is a bare refference to our register, replace with our value..
-                        else if (c_ins.secondOperand.semantics == OperandSemantics.None &&
-                            c_ins.secondOperand.register == OperandRegister.VIRTUAL &&
-                            c_ins.secondOperand.virtual_register == valueName.virtual_register)
+                        // If second operand is a bare reference to our register, replace with our value..
+                        else if (c_ins.secondOperand != null
+                            && c_ins.secondOperand.semantics == OperandSemantics.None
+                            && c_ins.secondOperand.register == OperandRegister.VIRTUAL
+                            && c_ins.secondOperand.virtual_register == valueName.virtual_register)
                         {
                             if (usage_count == 0)
                             {
@@ -161,10 +177,13 @@ namespace DCPUB.Intermediate
                                 substitutionsMade = true;
                             }
                         }
-                        // Repeat, but for the first register.
-                        else if (c_ins.firstOperand.semantics == OperandSemantics.None &&
-                            c_ins.firstOperand.register == OperandRegister.VIRTUAL &&
-                            c_ins.firstOperand.virtual_register == valueName.virtual_register)
+
+                        // Repeat, but for the first operand.
+                        if (c_ins.firstOperand.semantics == OperandSemantics.None
+                            && c_ins.firstOperand.register == OperandRegister.VIRTUAL
+                            && c_ins.firstOperand.virtual_register == valueName.virtual_register
+                            // But don't fuck with J
+                            && !(value.semantics == OperandSemantics.None && value.register == OperandRegister.J))
                         {
                             if (usage_count == 0)
                             {
@@ -172,9 +191,11 @@ namespace DCPUB.Intermediate
                                 substitutionsMade = true;
                             }
                         }
+
                         // Now check to see if our register is actually ever mentioned again.
-                        else if (c_ins.secondOperand.register == OperandRegister.VIRTUAL &&
-                            c_ins.secondOperand.virtual_register == valueName.virtual_register)
+                        if (c_ins.secondOperand != null
+                            && c_ins.secondOperand.register == OperandRegister.VIRTUAL
+                            && c_ins.secondOperand.virtual_register == valueName.virtual_register)
                         {
                             if (usage_count == 0 && substitutionsMade)
                             {
@@ -188,8 +209,9 @@ namespace DCPUB.Intermediate
                             }
                             usage_count += 1;
                         }
-                        else if (c_ins.firstOperand.register == OperandRegister.VIRTUAL &&
-                            c_ins.firstOperand.virtual_register == valueName.virtual_register)
+
+                        if (c_ins.firstOperand.register == OperandRegister.VIRTUAL &&
+                        c_ins.firstOperand.virtual_register == valueName.virtual_register)
                         {
                             if (usage_count == 0 && substitutionsMade)
                             {
@@ -211,7 +233,6 @@ namespace DCPUB.Intermediate
             }
 
             this.children = new List<IRNode>(ssa_instructions.children);
-
         }
     }
 }

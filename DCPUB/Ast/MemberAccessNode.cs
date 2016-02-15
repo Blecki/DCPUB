@@ -48,7 +48,7 @@ namespace DCPUB.Ast
                     ResultType = member.typeSpecifier;
             }
         }
-
+        
         public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             var r = new TransientNode();

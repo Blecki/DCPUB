@@ -60,6 +60,18 @@ namespace DCPUCCL
                         options.strip = true;
                         argumentIndex += 1;
                     }
+                    else if (argument == "-ssa")
+                    {
+                        Console.WriteLine("%WARNING: Experimental feature: Statement merging and SSA");
+                        //options.collapse_statements = true;
+                        options.ssa = true;
+                        argumentIndex += 1;
+                    }
+                    else if (argument == "-tidy")
+                    {
+                        options.tidy_ir = true;
+                        argumentIndex += 1;
+                    }
                     else if (argument == "-e" || argument == "--externals")
                     {
                         options.externals = true;
@@ -179,7 +191,7 @@ namespace DCPUCCL
                         if (options.@out == "-")
                             stream.WriteLine("@- BEGIN PROGRAM -@");
                         if (options.emit_ir)
-                            assembly.EmitIR(stream);
+                            assembly.EmitIR(stream, options.tidy_ir);
                         else
                             assembly.Emit(stream);
                         if (options.@out == "-")

@@ -19,13 +19,18 @@ namespace DCPUB.Intermediate
             if (peepholes != null) peepholes.ProcessAssembly(children);
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
-            stream.WriteLine("[statement node]");
+            if (!Tidy) stream.WriteLine("[statement node]");
             stream.indentDepth += 1;
-            foreach (var child in children) child.EmitIR(stream);
+            foreach (var child in children) child.EmitIR(stream, Tidy);
             stream.indentDepth -= 1;
-            stream.WriteLine("[/statement node]");
+            if (!Tidy) stream.WriteLine("[/statement node]");
+        }
+
+        public override void ApplySSA()
+        {
+            __ApplySSA();
         }
 
         /// <summary>

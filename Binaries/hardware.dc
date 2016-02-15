@@ -20,7 +20,7 @@ function detect_hardware( id:num32 /* A pointer to a num32 struct */)
 	{
 		local hardware_id[2];
 
-		asm ( A = n; I = hardware_id ) // Fetch the hardware id of hardware n
+		asm ( A = n; B = 0; I = hardware_id ) // Fetch the hardware id of hardware n. B is mentioned just so it will be preserved.
 		{
 			HWQ A
 			SET [I + 0x0001], A

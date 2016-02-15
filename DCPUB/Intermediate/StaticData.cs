@@ -23,7 +23,7 @@ namespace DCPUB.Intermediate
             stream.WriteLine(str);
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
             Emit(stream);
         }

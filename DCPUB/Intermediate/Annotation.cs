@@ -18,8 +18,9 @@ namespace DCPUB.Intermediate
                 stream.WriteLine("; " + line);
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
+            if (Tidy) return;
             var commentLines = comment.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in commentLines)
                 stream.WriteLine("[a /] ; " + line);

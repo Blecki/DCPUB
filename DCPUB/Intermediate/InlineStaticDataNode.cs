@@ -16,7 +16,7 @@ namespace DCPUB.Intermediate
             stream.WriteLine(str);
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
             var str = "DAT " + String.Join(" ", data);
             stream.WriteLine(str);

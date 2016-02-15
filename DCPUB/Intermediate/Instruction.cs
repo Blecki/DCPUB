@@ -46,12 +46,14 @@ namespace DCPUB.Intermediate
                 return instruction.ToString() + " " + firstOperand + ", " + secondOperand;
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
-            if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
-                stream.WriteLine("[i /] " + instruction.ToString() + " " + firstOperand);
+            if (instruction == Instructions.HLT)
+                stream.WriteLine((Tidy ? "" : "[i /] ") + "HLT");
+            else if (instruction > Instructions.SINGLE_OPERAND_INSTRUCTIONS)
+                stream.WriteLine((Tidy ? "" : "[i /] ") + instruction.ToString() + " " + firstOperand);
             else
-                stream.WriteLine("[i /] " + instruction.ToString() + " " + firstOperand + ", " + secondOperand);
+                stream.WriteLine((Tidy ? "" : "[i /] ") + instruction.ToString() + " " + firstOperand + ", " + secondOperand);
         }
 
         public static IRNode Make(Instructions instruction, Operand firstOperand, Operand secondOperand = null)

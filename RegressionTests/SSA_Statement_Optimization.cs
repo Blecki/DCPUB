@@ -102,5 +102,43 @@ namespace RegressionTests
             Assert.IsTrue(statement.children[2].ToString() == "SET VR2, [0x0003+J]");
             Assert.IsTrue(statement.children[3].ToString() == "SET [0x0002+J], [0x0005+VR2]");
         }
+
+        [TestMethod]
+        public void SSA_Regression_IFG_Sequence()
+        {
+            /*
+                ; if (x.a > x.b) ...
+                SET VR0, J
+                ADD VR0, 0xFFFE
+                SET VR0, [0x0001+VR0]
+                SET VR1, J          // This load is not being removed.
+                ADD VR1, 0xFFFE
+                SET VR1, [VR1]
+                IFG VR1, VR0        // Somehow, the first operand is not being properly replaced.
+            */
+
+            var statement = new StatementNode();
+            statement.AddInstruction(Instructions.SET, CompilableNode.Virtual(0), CompilableNode.Operand(Register.J));
+            statement.AddInstruction(Instructions.ADD, CompilableNode.Virtual(0), CompilableNode.Constant(0xFFFE));
+            statement.AddInstruction(Instructions.SET, CompilableNode.Virtual(0), CompilableNode.Virtual(0, OperandSemantics.Offset | OperandSemantics.Dereference, 1));
+            statement.AddInstruction(Instructions.SET, CompilableNode.Virtual(1), CompilableNode.Operand(Register.J));
+            statement.AddInstruction(Instructions.ADD, CompilableNode.Virtual(1), CompilableNode.Constant(0xFFFE));
+            statement.AddInstruction(Instructions.SET, CompilableNode.Virtual(1), CompilableNode.Virtual(1, OperandSemantics.Dereference));
+            statement.AddInstruction(Instructions.IFG, CompilableNode.Virtual(1), CompilableNode.Virtual(0));
+
+            Assert.IsTrue(statement.children.Count == 7);
+            Assert.IsTrue(statement.children[0].ToString() == "SET VR0, J");
+            Assert.IsTrue(statement.children[1].ToString() == "ADD VR0, 0xFFFE");
+            Assert.IsTrue(statement.children[2].ToString() == "SET VR0, [0x0001+VR0]");
+            Assert.IsTrue(statement.children[3].ToString() == "SET VR1, J");
+            Assert.IsTrue(statement.children[4].ToString() == "ADD VR1, 0xFFFE");
+            Assert.IsTrue(statement.children[5].ToString() == "SET VR1, [VR1]");
+            Assert.IsTrue(statement.children[6].ToString() == "IFG VR1, VR0");
+
+            statement.ApplySSA();
+
+            //Assert.IsTrue(false);
+
+        }
     }
 }

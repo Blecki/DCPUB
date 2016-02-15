@@ -19,13 +19,13 @@ namespace DCPUB.Intermediate
             stream.WriteLine("");
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
-            stream.WriteLine("[function node]");
+            if (!Tidy) stream.WriteLine("[function node]");
             stream.WriteLine(";DCPUB FUNCTION " + functionName + " " + entranceLabel + " " + parameterCount);
-            base.EmitIR(stream);
+            base.EmitIR(stream, Tidy);
             stream.WriteLine(";END FUNCTION");
-            stream.WriteLine("[/function node]");
+            if (!Tidy) stream.WriteLine("[/function node]");
             stream.WriteLine("");
         }
     }

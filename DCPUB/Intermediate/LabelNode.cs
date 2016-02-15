@@ -14,9 +14,9 @@ namespace DCPUB.Intermediate
             stream.WriteLine(new String(' ', stream.indentDepth * 3) + ":" + label);
         }
 
-        public override void EmitIR(EmissionStream stream)
+        public override void EmitIR(EmissionStream stream, bool Tidy)
         {
-            stream.WriteLine("[l /] :" + label);
+            stream.WriteLine((Tidy ? "" : "[l /] ") + ":" + label);
         }
 
         public override void EmitBinary(List<Box<ushort>> binary)

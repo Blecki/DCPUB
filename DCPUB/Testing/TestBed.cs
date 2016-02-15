@@ -68,7 +68,7 @@ namespace DCPUB.Testing
             if (Test.BuildResult != null && Test.BuildResult.Assembly != null)
             {
                 var stream = new StringEmissionStream();
-                Test.BuildResult.Assembly.EmitIR(stream);
+                Test.BuildResult.Assembly.EmitIR(stream, false);
                 Test.IntermediateRepresentation = stream.Builder.ToString();
             }
         }
