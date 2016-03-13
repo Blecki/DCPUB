@@ -1,0 +1,21 @@
+
+#ifndef DCPUB_LIB_STD
+#define DCPUB_LIB_STD
+
+function memset(
+	destination,
+	value,
+	count)
+{
+	local end = destination + count;
+
+	while (destination < end)
+	{
+		*destination = value;
+		destination += 1;
+	}
+}
+
+#endif
+
+
