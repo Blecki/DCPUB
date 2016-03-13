@@ -4,6 +4,7 @@
 #ifndef DCPUC_LIB_CONSOLE
 #define DCPUC_LIB_CONSOLE
 
+#include std.dc
 #include vec.dc
 
 #define CONSOLE_SIZE 384
@@ -27,6 +28,14 @@ function console_initialize(
 	console.cursor_position = 0;
 	console.color = 0xF000; // Default color is white on black.
 	console.backspace_point = 0;
+}
+
+// Clear the console buffer
+function console_clear(console:Console)
+{
+	console.cursor_position = 0;
+	console.backspace_point = 0;
+	memset(console.buffer, 0xF000, 384);
 }
 
 // Change the cursor position. Must always be in range (0,CONSOLE_SIZE).
