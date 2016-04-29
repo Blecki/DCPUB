@@ -8,20 +8,22 @@
 *
 *       (c) BITWISE SCIENCES 1984 - 2108
 *
-*	Hardware detection routine
+*       Hardware detection routine
 */
 
 #ifndef _BITWISE_LIB_HARDWARE_
 #define _BITWISE_LIB_HARDWARE_
 
-#include number32.dc
+#include number32.b
 
-// Find a piece of hardware with the supplied id.
-// Returns 0xFFFF if no matching hardware found.
+/*
+	Find a piece of hardware with the supplied id.
+	Returns 0xFFFF if no matching hardware found.
+*/
 function detect_hardware( id:num32 /* A pointer to a num32 struct */)
 {
 	local num_hardware = 0;
-	asm ( B = &num_hardware ) // Passing the address of a local is currently the only way to get data out of an asm block.
+	asm ( B = &num_hardware )
 	{
 		HWN [B]
 	}
@@ -31,7 +33,7 @@ function detect_hardware( id:num32 /* A pointer to a num32 struct */)
 	{
 		local hardware_id[2];
 
-		asm ( A = n; B = 0; I = hardware_id ) // Fetch the hardware id of hardware n. B is mentioned just so it will be preserved.
+		asm ( A = n; I = hardware_id ) 
 		{
 			HWQ A
 			SET [I + 0x0001], A
@@ -43,7 +45,8 @@ function detect_hardware( id:num32 /* A pointer to a num32 struct */)
 
 		n += 1;
 	}
-	return -1; // No matching hardware was found
+	
+	return 0xFFFF;
 } 
 
 #endif

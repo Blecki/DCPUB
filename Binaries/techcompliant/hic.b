@@ -37,6 +37,10 @@ static KAICOMM_HIC_MANUFACTURER_ID[2] = { 0xA87C, 0x900E };
 #define KAICOMM_HIC_TRANSMIT_ERROR_NOT_CONNECTED 0x0003
 #define KAICOMM_HIC_TRANSMIT_ERROR_BUSY 0x0004
 
+#define KAICOMM_HIC_NAME_ERROR_NO_ERROR 0x0000
+#define KAICOMM_HIC_NAME_ERROR_OUT_OF_BOUNDS 0x0001
+#define KAICOMM_HIC_NAME_ERROR_INVALID_ADDRESS 0x0002
+
 function kaicomm_hic_query(
 	device_id, // Id of device to query
 	in_port, // Port number to query
@@ -44,9 +48,9 @@ function kaicomm_hic_query(
 	out_port_ready ) // Write address for ready port word
 	// Returns KAICOMM_HIC_FAIL or KAICOMM_HIC_SUCCEED
 {
-	asm ( Y = device_id,
-		C = in_port,
-		I = out_status,
+	asm ( Y = device_id;
+		C = in_port;
+		I = out_status;
 		J = out_port_ready )
 	{
 		SET A, 0x0000
@@ -65,15 +69,71 @@ function kaicomm_hic_receive(
 	out_status ) // Write address for status code
 	// Returns KAICOMM_HIC_FAIL or KAICOMM_HIC_SUCCEED
 {
-	asm ( Y = device_id,
-		C = in_port,
-		I = out_data,
+	asm ( Y = device_id;
+		C = in_port;
+		I = out_data;
 		J = out_status )
 	{
 		SET A, 0x0001
 		HWI Y
 		SET [I], B
 		SET [J], C
+	}
+
+	return KAICOMM_HIC_SUCCEED;
+}
+
+function kaicomm_hic_transmit(
+	device_id, // Id of device to transmit with
+	in_port, // Port number to write to
+	in_data, // Data to send
+	out_status ) // Write address for status code
+	// Returns KAICOMM_HIC_FAIL or KAICOMM_HIC_SUCCEED
+{
+	asm ( Y = device_id;
+		B = in_data;
+		C = in_port;
+		I = out_status )
+	{
+		SET A, 0x0002
+		HWI Y
+		SET [I], C
+	}
+
+	return KAICOMM_HIC_SUCCEED;
+}
+
+function kaicomm_hic_configure(
+	device_id, // Id of device to configure
+	in_on_receive, // Interrupt message on receive
+	in_on_transmit ) // Interrupt message on transmit
+	// Returns KAICOMM_HIC_FAIL or KAICOMM_HIC_SUCCEED
+{
+	asm ( Y = device_id;
+		B = in_on_receive;
+		C = in_on_transmit )
+	{
+		SET A, 0x0003
+		HWI Y
+	}
+
+	return KAICOMM_HIC_SUCCEED;
+}
+
+function kaicomm_hic_load_port_name(
+	device_id, // Id of device to query
+	in_port, // Port to get name of
+	out_name, // Write address of name (8 words)
+	out_status ) // Write address of status code
+{
+	asm ( Y = device_id;
+		B = out_name;
+		C = in_port;
+		I = out_status )
+	{
+		SET A, 0x0004
+		HWI Y
+		SET [I], C
 	}
 
 	return KAICOMM_HIC_SUCCEED;

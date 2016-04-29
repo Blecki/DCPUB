@@ -68,9 +68,9 @@ function rci_query_status(
 {
 	local status = 0x0000;
 
-	asm ( Y = device_id,
-		I = out_channel,
-		J = out_power,
+	asm ( Y = device_id;
+		I = out_channel;
+		J = out_power;
 		X = &status )
 	{
 		SET A, 0
@@ -91,9 +91,9 @@ function rci_receive(
 {
 	local status = 0x0000;
 
-	asm ( Y = device_id,
-		B = out_buffer,
-		I = out_size,
+	asm ( Y = device_id;
+		B = out_buffer;
+		I = out_size;
 		J = &status )
 	{
 		SET A, 1
@@ -112,9 +112,9 @@ function rci_send(
 {
 	local status = 0x0000;
 
-	asm ( Y = device_id,
-		B = in_buffer,
-		C = in_size,
+	asm ( Y = device_id;
+		B = in_buffer;
+		C = in_size;
 		I = &status)
 	{
 		SET A, 2
@@ -132,9 +132,9 @@ function rci_tune(
 {
 	local status = 0x0000;
 
-	asm ( Y = device_id,
-		B = in_channel,
-		C = in_power,
+	asm ( Y = device_id;
+		B = in_channel;
+		C = in_power;
 		I = &status )
 	{
 		SET A, 3
@@ -150,8 +150,8 @@ function rci_configure_interrupts(
 	in_receive_message,
 	in_send_message )
 {
-	asm ( Y = device_id,
-		B = in_receive_message,
+	asm ( Y = device_id;
+		B = in_receive_message;
 		C = in_send_message )
 	{
 		SET A, 4
