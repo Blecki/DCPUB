@@ -114,7 +114,7 @@ namespace DCPUB
             @break.Rule = ToTerm("break");
 
             registerBinding.Rule = identifier + (ToTerm("=") + expression).Q();
-            registerBindingList.Rule = MakePlusRule(registerBindingList, ToTerm(";"), registerBinding);
+            registerBindingList.Rule = MakeStarRule(registerBindingList, (ToTerm(";") | ToTerm(",")), registerBinding);
             inlineASM.Rule = ToTerm("asm") + (ToTerm("(") + registerBindingList + ")").Q() + "{" + new FreeTextLiteral("inline asm", "}") + "}";
             ifStatement.Rule = ToTerm("if") + "(" + (comparison | expression) + ")" + statement;
             ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;

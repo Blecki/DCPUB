@@ -41,7 +41,7 @@ static RINYU_VTACI_MANUFACTURER_ID[2] = { 0xC220, 0x0311 };
 
 struct rinyu_vtaci_thruster_info
 {
-	x;
+	x;  // Installed position relative some reference point on the ship.
 	y;
 	z;
 	direction;
