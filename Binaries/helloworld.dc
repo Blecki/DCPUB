@@ -1,4 +1,0 @@
-#include default_environment.dc
-
-clear();
-printf("Hello world!");

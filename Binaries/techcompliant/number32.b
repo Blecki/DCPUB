@@ -42,4 +42,51 @@ function add32(a:num32, b:num32, out:num32)
 	}
 }
 
+function sub32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		SET X, [A+1]
+		SUB X, [B+1]
+		SET [C+1], X
+		SET X, [A]
+		SBX X, [B]
+		SET [C], X
+	}
+}
+
+function mul32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		// The result of a 32 bit multiply is a 
+		//	64 bit number. But we only want the
+		//  lower 32 bits.
+		
+		// Calculate low word
+		SET X, [A+1]
+		MUL X, [B+1]
+		SET I, EX 		// Save overflow to add to high word.
+
+		// Calculate high word. We can safely 
+		//   ignore the overflow of each sub mul.
+		SET Y, [A]
+		MUL Y, [B+1]
+		SET Z, [A+1]
+		MUL Z, [B]
+		ADD Y, Z
+		ADD Y, I
+		SET [C], Y
+		SET [C+1], X
+
+	}
+}
+
+
 #endif
