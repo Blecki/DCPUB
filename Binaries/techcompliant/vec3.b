@@ -10,37 +10,37 @@
 *
 */
 
-#ifndef _BITWISE_LIB_STD_
-#define _BITWISE_LIB_STD_
 
-function memset(
-	destination,
-	value,
-	count)
+#ifndef _BITWISE_LIB_VEC3_
+#define _BITWISE_LIB_VEC3_
+
+struct vector3
 {
-	local end = destination + count;
-
-	while (destination < end)
-	{
-		*destination = value;
-		destination += 1;
-	}
+	x;
+	y;
+	z;
 }
 
-function memcpy(
-	destination,
-	source,
-	count)
+function vec3_lengthsquared(a:vec3)
 {
-	while (count > 0)
-	{
-		*destination = *source;
-		destination += 1;
-		source += 1;
-		count -= 1;
-	}
+	return (a.x * a.x) + (a.y * a.y) + (a.z * a.z);
 }
 
-#endif
+function vec3_add(a:vec3, b:vec3, out:vec3)
+{
+	out.x = a.x + b.x;
+	out.y = a.y + b.y;
+	out.z = a.z + b.z;
+}
 
+function vec3_sub(a:vec3, b:vec3, out:vec3)
+{
+	out.x = a.x - b.x;
+	out.y = a.y - b.y;
+	out.z = a.z - b.z;
+}
 
+function vec3_dot(a:vec3, b:vec3)
+{
+	return (a.x * b.x) + (a.y * b.y);
+}

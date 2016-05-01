@@ -10,37 +10,29 @@
 *
 */
 
-#ifndef _BITWISE_LIB_STD_
-#define _BITWISE_LIB_STD_
+#ifndef _BITWISE_LIB_SQRT_
+#define _BITWISE_LIB_SQRT_
 
-function memset(
-	destination,
-	value,
-	count)
+function sqrt(n)
 {
-	local end = destination + count;
+	local r = 0;
+	local b = 1 << 14;
 
-	while (destination < end)
-	{
-		*destination = value;
-		destination += 1;
-	}
-}
+	while (n < b) b >>= 2;
 
-function memcpy(
-	destination,
-	source,
-	count)
-{
-	while (count > 0)
+	while (b != 0)
 	{
-		*destination = *source;
-		destination += 1;
-		source += 1;
-		count -= 1;
+		if (n < r + b) r >>= 1;
+		else
+		{
+			n -= r + b;
+			r = (r >> 1) + b;
+		}
+
+		b >>= 2;
 	}
+
+	return r;
 }
 
 #endif
-
-

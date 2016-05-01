@@ -10,37 +10,16 @@
 *
 */
 
-#ifndef _BITWISE_LIB_STD_
-#define _BITWISE_LIB_STD_
+#include default_environment.b
+#include sqrt.b
 
-function memset(
-	destination,
-	value,
-	count)
-{
-	local end = destination + count;
+clear();
+printf("TESTING SQRT.\n");
 
-	while (destination < end)
-	{
-		*destination = value;
-		destination += 1;
-	}
-}
-
-function memcpy(
-	destination,
-	source,
-	count)
-{
-	while (count > 0)
-	{
-		*destination = *source;
-		destination += 1;
-		source += 1;
-		count -= 1;
-	}
-}
-
-#endif
+printf("SQRT 25 = %\n", sqrt(25));
+printf("SQRT 9 = %\n", sqrt(9));
+printf("SQRT 16 = %\n", sqrt(16));
+printf("SQRT 17 = %\n", sqrt(17));
+printf("SQRT 81 = %\n", sqrt(81));
 
 

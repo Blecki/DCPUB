@@ -22,7 +22,7 @@
 	at 4.0? Does that mean there are three even worse versions out there? It's a wonder we 
 	aren't all dead. Look, bitwise doesn't want me releasing this. They want you to buy
 	their thruster controller instead. But we both know the rinyu one is going to be
-	cheaper and the bitwise one is going to suck just as much. So there's this.
+	cheap and the bitwise one is vaporware. So there's this.
 
 	Usage:
 		Call svtaci_initialize to setup and automatically calibrate the device.
