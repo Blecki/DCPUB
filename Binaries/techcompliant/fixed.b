@@ -13,6 +13,8 @@
 #ifndef _BITWISE_LIB_FIXED_
 #define _BITWISE_LIB_FIXED_
 
+#include sqrt.b
+
 #define fix_to_int(a) ((a) >> 8)
 #define fix_from_int(a) ((a) << 8)
 #define fix_add(a, b) ((a) + (b))
@@ -44,6 +46,11 @@ function fix_div(a, b)
 		SET [C], A
 	}
 	return a;
+}
+
+function fix_sqrt(a)
+{
+	return sqrt(a) << 4;
 }
 
 #endif

@@ -14,7 +14,9 @@
 #ifndef _BITWISE_LIB_VEC3_
 #define _BITWISE_LIB_VEC3_
 
-struct vector3
+#include fixed.b
+
+struct vec3
 {
 	x;
 	y;
@@ -23,7 +25,12 @@ struct vector3
 
 function vec3_lengthsquared(a:vec3)
 {
-	return (a.x * a.x) + (a.y * a.y) + (a.z * a.z);
+	return fix_mul(a.x, a.x) + fix_mul(a.y, a.y) + fix_mul(a.z, a.z);
+}
+
+function vec3_length(a:vec3)
+{
+	return fix_sqrt(vec3_lengthsquared(a));
 }
 
 function vec3_add(a:vec3, b:vec3, out:vec3)
@@ -42,5 +49,5 @@ function vec3_sub(a:vec3, b:vec3, out:vec3)
 
 function vec3_dot(a:vec3, b:vec3)
 {
-	return (a.x * b.x) + (a.y * b.y);
+	return fix_mul(a.x, b.x) + fix_mul(a.y, b.y);
 }
