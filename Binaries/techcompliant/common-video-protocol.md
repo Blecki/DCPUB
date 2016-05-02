@@ -17,14 +17,124 @@ this specification, and a compatible device should identify itself as a
 LEM1802 device. The device will report additional capabilities using 
 interrupt 0x0004. 
 
-In addition to LEM modes, a compatible device will implement these 
-interrupts.
-
 This interface supports any device of a resolution up to 1024*1024 pixels
-at up to 32 bits per pixel in two modes. In pixel mode, each pixel on the
-screen can be set individually. In cell mode, the device operates the
-same as a LEM1802 device and can use the same font glyph system. However,
-a device may support far higher resolutions and number of possible glyphs.
+at up to 32 bits per pixel in multiple modes. In pixel mode, each pixel
+on the screen can be set individually. In cell mode, the device operates
+under the same principles as a LEM1802 device and can use the same font
+glyph system. However, a device may support far higher resolutions and
+number of possible glyphs.
+
+A display mode descriptor describes a supported display mode and is used
+both to detect supported modes and to set the desired mode. A descriptor
+is 4 words long. 
+
+The first two words of a descriptor encode the width, height, type, and
+element size of the display mode.
+
+.- 10 bits - Width of the screen in pixels or cells.
+|             .- 10 bits - Height of the screen in pixels or cells.
+|             |             .- 2 bits - Display Mode Type
+|             |             |   .- 5 bits - Size of elements in bits
+|             |             |   |      .- 3 bits - If cell-glyph mode,
+|             |             |   |      |		indicates glyph bbp.
+[00000000 00][000000 00000][00][0 0000][000][0] - Pack flag
+
+Display Mode Types:
+0x0000: Two-color cell-glyph mode (LEM mode)
+0x0001: Cell-glyph mode. In this mode, each element in display memory
+			is an index into a table of glyphs.
+0x0002: Palette-index mode. In this mode, each element is an index 
+			into a table of colors. Usually the index uses a relatively
+			small number of bits (4 for 16 total colors, for example)
+			and the color table uses a large number (as high as 24).
+0x0003: Direct pixel mode. Each element is a color directly encoded.
+
+The interprettation of the second set of words depends on the display
+mode type specified in the first.
+
+For Two-Color cell-glyph mode (LEM mode):
+
+Two-Color Cell-glyph mode is included for compatibility with software 
+designed for the ever popular LEM1802 display. The LEM uses a restricted 
+two color glyph system, where the color can be changed per glyph.
+
+In this mode, the bit depth and dimensions of the glyph are set to those
+of the LEM1802 specification. However, the color depth of the palette
+can be changed.
+
+.- 3 bits - Number of bits for blue component
+|     .- 3 bits - Number of bits for green component
+|     |    .- 3 bits - Number of bits for red component
+|     |    |     .- Unused.
+|     |    |     |
+|     |    |     |    
+[000][000][00 0][0000000]
+
+The palette is restricted to 16 colors, and screen elements are
+encoded as on the LEM1802.
+
+For Cell-Glyph Mode: 
+
+In Cell-glyph mode, the final 3 bits of the first portion of the
+descriptor contains the bits per pixel of each glyph.
+
+.- 3 bits - Number of bits for blue component
+|     .- 3 bits - Number of bits for green component
+|     |    .- 3 bits - Number of bits for red component
+|     |    |     .- Width in pixels of glyphs
+|     |    |     |    .- Height in pixels of glyphs
+|     |    |     |    |
+[000][000][00 0][000][0000]
+
+* Color bit describes the values in the palette.
+* The bits per pixel of glyph determines the size of the palette.
+* The bits per element determines the number of glyphs needed.
+
+For Palette-index mode:
+
+.- 3 bits - Number of bits for blue component
+|     .- 3 bits - Number of bits for green component
+|     |    .- 3 bits - Number of bits for red component
+|     |    |     .- Unused.
+|     |    |     |
+|     |    |     |    
+[000][000][00 0][0000000]
+
+* Color bit describes the values in the palette.
+* The total of the color bits will describe the	overall color depth, 
+	eg 16 or 24 bit color.
+* The element size specified in the first portion of the descriptor
+	determines the number of elements in the palette. eg, if the
+	element size is 8, the palette must contain 256 colors.
+
+For Direct pixel mode:
+
+.- 3 bits - Number of bits for blue component
+|     .- 3 bits - Number of bits for green component
+|     |    .- 3 bits - Number of bits for red component
+|     |    |     .- Unused
+|     |    |     |
+|     |    |     |    
+[000][000][00 0][0000000]
+
+* Number of bits per color should total to the size of elements specified
+	in the first portion of the descriptor.
+
+
+* Palette entries are left-padded to whole words.
+* Compatible displays must support non-aligned screen elements, though
+	performance may be degraded in these cases.
+* Display memory may be packed. For example, if using palette-index
+	mode with a 256 color palette, 4 pixels can be packed into one 
+	word. If this is the case, the display mode will have the pack
+	flag set. It should be assumed that the hardware will return
+	only the mode with the flag set if the mode supports packing,
+	but will support both packed and unpacked modes.
+
+A perfectly LEM compatible descriptor would be as follows.
+
+ 32           12                 16       		 4    4    4
+[00000000 00][000000 00000][00][0 0000][000][0] [000][000][00 0][0000000]
 
 0x0004: Report Capabilities
 	B should contain the address in DCPU memory to begin writing display
@@ -33,18 +143,31 @@ a device may support far higher resolutions and number of possible glyphs.
 		program does not provide enough memory to record all modes the 
 		display is capable of, some modes may not be detected.
 
-	Up to C descriptors are written to memory begining at B. A descriptor 
-	is two words long. The first 10 bits describe the width of the display
-	in pixels or cells. The next 10 bits describe the height. Five bits describe the number of bits per pixel. 1 bit describes the type of 
-	mode, either pixel or cell. The final 6 bits are reserved for future
-	expansion. The display modes must be written in order and are indexed
-	from zero.
+	Up to 3 * C words will be written to memory begining at B.
 
 0x0005: Set display mode
-	B should contain the first word of the display mode descriptor to set.
-	C should contain the second word.
+	CXY should contain the complete display mode descriptor to be set.
+	B will be set to an error code. Note that 0x000 is never used.
+		0x0001: Mode set.
+		0x0002: Mode not supported.
 
-	The display mode determines the number of words needed for mapped 
-	memory. Use the memory map interrupt from the LEM spec to assign
-	memory to the display device.
+	To see if you are dealing with an actual LEM device, set B to 0 and
+	attempt to set a display mode. If B remains 0, the device is a
+	legacy LEM1802.
+
+Lem interrupts and new uses:
+
+0: MEM_MAP_SCREEN
+	Usage is the same as LEM1802.
+1: MEM_MAP_FONT
+	Use to memory map glyph tables.
+2: MEM_MAP_PALETTE
+	Usage is the same as LEM1802.
+    If B is 0, the default palette is used instead. Default palette is
+    only valid in mode 0 - Lem Compatible mode.
+3: SET_BORDER_COLOR
+	Only valid in mode 0 - Lem Compatible mode.
+	
+
+
 
