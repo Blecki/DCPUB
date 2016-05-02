@@ -148,7 +148,7 @@ Or, in hex, 0x0800 0x6100 0x9200
 
 0x0005: Set display mode
 	CXY should contain the complete display mode descriptor to be set.
-	B will be set to an error code. Note that 0x000 is never used.
+	B will be set to an error code. Note that 0x0000 is never used.
 		0x0001: Mode set.
 		0x0002: Mode not supported.
 

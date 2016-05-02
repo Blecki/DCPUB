@@ -56,7 +56,14 @@ function __printf(string /* Followed by some number of arguments */)
 			local parameter = 0;
 			VARARG(parameter_index, parameter);
 			parameter_index += 1;
-			itoa(parameter, number_buffer);
+			
+			index += 1;
+
+			if (string[index + 1] == 'N')
+				itoa(parameter, number_buffer);
+			else if (string[index + 1] == 'X')
+				itox(parameter, number_buffer);
+
 			console_stringout(console, number_buffer);
 		}
 		else
