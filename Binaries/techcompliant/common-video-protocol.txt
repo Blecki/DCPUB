@@ -133,8 +133,9 @@ For Direct pixel mode:
 
 A perfectly LEM compatible descriptor would be as follows.
 
- 32           12                 16       		 4    4    4
-[00000000 00][000000 00000][00][0 0000][000][0] [000][000][00 0][0000000]
+[00001000 00][000000 01100][00][1 0000][000][0] [100][100][10 0][0000000]
+Or, in hex, 0x0800 0x6100 0x9200
+
 
 0x0004: Report Capabilities
 	B should contain the address in DCPU memory to begin writing display
