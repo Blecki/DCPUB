@@ -35,4 +35,9 @@ b.low = 0x0004;
 mul32(a, b, a);
 printf("A * B = %-%\n", a.high, a.low);
 
-
+a.high = 32;
+a.low = 32;
+b.high = 4;
+b.low = 8;
+div32(a, b, a);
+printf("A / B = %-%\n", a.high, a.low);

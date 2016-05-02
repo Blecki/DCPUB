@@ -25,4 +25,7 @@ a.z = fix_from_int(1);
 
 printf("LSQARD A = %\n", fix_to_int(vec3_lengthsquared(a)));
 printf("LENGTH A = %\n", fix_to_int(vec3_length(a)));
+vec3_normalize(a);
+printf("LENGTH A = %\n", vec3_length(a));
+printf("LSQARD A = %\n", vec3_lengthsquared(a));
 

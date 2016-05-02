@@ -88,5 +88,19 @@ function mul32(a:num32, b:num32, out:num32)
 	}
 }
 
+function div32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		// We get 'close' by ignoring the low words entirely.
+		SET X, [A]
+		DIV X, [B]
+		SET [C], 0x0000
+		SET [C+1], X
+	}
+}
 
 #endif
