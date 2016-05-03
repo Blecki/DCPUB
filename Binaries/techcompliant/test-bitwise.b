@@ -10,17 +10,32 @@
 *
 */
 
-#include default_environment.b
+#include test-framework.b
 #include bitwise.b
 
-clear();
-printf("TESTING BITWISE\n");
+printf("TESTING BITWISE.B\n");
 
-printf("FFFF TRIMED = %X\n", bp_trim(8, 0xFFFF));
+EQUAL("FFFF TRIM 8 = 00FF", 0x00FF, bp_trim(8, 0xFFFF));
+EQUAL("FFFF TRIM 4 = 000F", 0x000F, bp_trim(4, 0xFFFF));
 
-local a[2];
+static a[2];
 a[0] = 0;
 a[1] = 0;
 
-bp_dpack(16, 8, 0xFFFF, a);
-printf("FFFF PACKED = %X:%X\n", a[0], a[1]);
+function cleara()
+{
+	a[0] = 0;
+	a[1] = 0;
+}
+
+bp_dpack(16, 4, 0xFFFF, a);
+EQUAL2("FFFF PACKED 8 = 0FFF:F000", 0x0FFF, a[0], 0xF000, a[1]);
+EQUAL("UNPACKED = FFFF", 0xFFFF, bp_upack(16, 4, a));
+
+cleara();
+
+bp_dpack(8, 12, 0x00FF, a);
+EQUAL2("00FF PACKED 12 = 000F:F000", 0x000F, a[0], 0xF000, a[1]);
+
+STATS();
+

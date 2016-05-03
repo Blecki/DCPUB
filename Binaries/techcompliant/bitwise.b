@@ -34,6 +34,7 @@ function bp_trim(size, value)
 // Pack the value into the destination buffer, begining at bit offset
 //  and using bits size.
 // Destination should already be zeroed.
+// Value should be 'trimmed' to size. Use bp_trim.
 function bp_dpack(size, offset, value, destination)
 {
 	local value_interior_offset = 16 - size; // Assume value is in last size bits.
@@ -41,14 +42,44 @@ function bp_dpack(size, offset, value, destination)
 	local first_offset = offset % 16;
 
 	// We need to align the value_interior_offset bit of value with the first_offset bit. Offset by difference does it.
-	local pre_value = value >> (first_offset - value_interior_offset);
-	destination[words_deep] |= pre_value;
+	if (first_offset > value_interior_offset) // >>
+	{
+		destination[words_deep] |= (value >> (first_offset - value_interior_offset));
+	}
+	else // <<
+	{ 
+		destination[words_deep] |= (value << (value_interior_offset - first_offset));
+	}
 
 	if ((first_offset + size) > 15) // need to write post-value
 	{
-		local post_value = value << (16 - (size - (first_offset - value_interior_offset)));
+		local post_value = value << (16 - (size - (16 - first_offset)));
 		destination[words_deep + 1] |= post_value;
 	}
+}
+
+function bp_upack(size, offset, buffer)
+{
+	local value_interior_offset = 16 - size;
+	local words_deep = offset / 16;
+	local first_offset = offset % 16;
+
+	local result = 0;
+	if (first_offset > value_interior_offset)
+	{
+		result |= (buffer[words_deep] << (first_offset - value_interior_offset));
+	}
+	else
+	{
+		result |= (buffer[words_deep] >> (value_interior_offset - first_offset));
+	}
+	
+	if ((first_offset + size) > 15)
+	{
+		result |= (buffer[words_deep + 1] >> (16 - (size - (16 - first_offset))));
+	}
+
+	return result;
 }
 
 #endif
