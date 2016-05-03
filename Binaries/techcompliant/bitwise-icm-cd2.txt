@@ -1,0 +1,43 @@
+Enter file contents here    _________.________________.      __.___  ____________________
+    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+     |    |   \   | |    |   \        /|   |/        \ |        \
+     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+            \/                     \/              \/         \/ 
+
+       (c) BITWISE SCIENCES 1984 - 2108
+
+
+BITWISE HARDWARE DIVISION ICM-CD2 DISPLAY MEDIA
+
+The ICM-CD2 is an ultra-modern square display capable of reproducing
+16 unique colors in a single image at resolutions up to 256*256.
+
+The ICM-CD2 is compatible with the Bitwise Common Video Protocol.
+
+Supported Indexed Display Modes:
+NAME      RESOLUTION      BITS-PER-PIXEL    TOTAL-COLORS  PIXELS-PER-WORD  VIDEO-MEMORY-SIZE (Words)
+HIGH02    128*128         1                 2             16               1024
+SUPER02   256*256         1                 2             16               4096
+MID04     64*64           2                 4             8                512
+HIGH04    128*128         2                 4             8                2048
+SUPER04   256*256         2                 4             8                8192
+LOW16     32*32           4                 16            4                256
+MID16     64*64           4                 16            4                1024
+HIGH16    128*128         4                 16            4                4096
+* Video memory size is only valid for PACKED modes. To be CVP compatible, the ICM-CD2 also supports these
+   formats UNPACKED. However, unpacking is extremely memory wasteful.
+
+The ICM-CD2 also supports a fully LEM1802 compatible glyph font mode, however LEM colors will be
+converted to the ICM-CD2 color format internally and some loss of color fidelity may occur.
+
+All indexed modes use a palette in the same format. The ICM-CD2 can map a 16 color palette, and display
+them in 16 bit true color. The color format uses 5 bits for blue, 6 bits for green, and 5 bits for red.
+
+[00000][000000][00000]
+ |      |       L Red component
+ |      L Green component
+ L Blue component
+	
+This device does not implement functionality that is not covered by the CVP. Refer to the CVP for
+instructions on interacting with this device.
