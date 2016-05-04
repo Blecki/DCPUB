@@ -1,0 +1,38 @@
+    _________.________________.      __.___  ____________________
+    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+     |    |   \   | |    |   \        /|   |/        \ |        \
+     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+            \/                     \/              \/         \/ 
+
+       (c) BITWISE SCIENCES 1984 - 2108
+
+       BITWISE EXTERNAL FLOATING POINT UNIT
+
+       Amazing 32 bit floating point technology at your fingertips! The Bitwise 
+       External Floating Point Unit or BFPU provides the ability to do 32 bit
+       floating point operations on the DCPU. The BFPU can perform operations
+       on two floating point numbers stored in appropriate registers or directly
+       on DCPU memory.
+
+       Hardware interrupt:
+       0x0000: REGISTER ADD. AB is set to AB + XY.
+       0x0001: REGISTER SUBTRACT. AB is set to AB - XY.
+       0x0002: REGISTER MULTIPLY. AB is set to AB * XY.
+       0x0003: REGISTER DIVIDE. AB is set to AB / XY.
+       0x0004: REGISTER SQRT. AB is set to the square root of AB.
+       0x0005: REGISTER INVERSE. AB is set to 1 / AB.
+       0x0006: REGISTER FLOOR. AB is set to floor(AB).
+       0x0007: REGISTER TRUNCATE. A is set to the integer portion of AB.
+       0x0008: REGISTER CEILING. AB is set to ceil(AB).
+
+       0x1000: MEMORY ADD. [A] is set to [A] + [B] (both elements are two words long)
+       0x1000: MEMORY SUBTRACT. [A] is set to [A] - [B] (both elements are two words long)
+       0x1000: MEMORY MULTIPLY. [A] is set to [A] * [B] (both elements are two words long)
+       0x1000: MEMORY DIVIDE. [A] is set to [A] / [B] (both elements are two words long)
+       0x1000: MEMORY SQRT. [A] is set to square root [A] (element is two words long)
+       0x1000: MEMORY INVERSE. [A] is set to 1 / [A] (element is two words long)
+       0x1000: MEMORY FLOOR. [A] is set to floor([A]) (element is two words long)
+       0x1000: MEMORY TRUNCATE. [A] is set to the integer portion of [A] (element is two words long)
+       0x1000: MEMORY CEILING. [A] is set to ceil([A]) (element is two words long)
+       
