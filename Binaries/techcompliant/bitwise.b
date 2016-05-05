@@ -18,17 +18,26 @@
 // Set all bits over SIZE bits to 0.
 function bp_trim(size, value)
 {
-	local to_trim = 16 - size;
-	local mask = 0xFFFF;
-
-	while (to_trim != 0)
+	asm ( A = value, B = size )
 	{
-		mask >>= 1;
-		value &= mask;
-		to_trim -= 1;
-	}
+		SET C, 0x0010
+		SUB C, B
+		SET B, 0xFFFF
 
-	return value;
+		:BP_TRIM_TOP
+		IFE C, 0x0000
+		SET PC, BP_TRIM_END
+
+		SHR B, 0x0001
+		AND A, B
+		SUB C, 0x0001
+
+		SET PC, BP_TRIM_TOP
+
+		:BP_TRIM_END
+
+		// Leave return value in A
+	}
 }
 
 // Pack the value into the destination buffer, begining at bit offset

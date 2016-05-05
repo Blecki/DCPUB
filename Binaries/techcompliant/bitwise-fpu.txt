@@ -9,6 +9,8 @@
 
        BITWISE EXTERNAL FLOATING POINT UNIT
 
+       V1.0.2
+
        Amazing 32 bit floating point technology at your fingertips! The Bitwise 
        External Floating Point Unit or BFPU provides the ability to do 32 bit
        floating point operations on the DCPU. The BFPU can perform operations
@@ -23,16 +25,27 @@
        0x0004: REGISTER SQRT. AB is set to the square root of AB.
        0x0005: REGISTER INVERSE. AB is set to 1 / AB.
        0x0006: REGISTER FLOOR. AB is set to floor(AB).
-       0x0007: REGISTER TRUNCATE. A is set to the integer portion of AB.
+       0x0007: REGISTER TRUNCATE. AB is set to the integer portion of AB.
        0x0008: REGISTER CEILING. AB is set to ceil(AB).
+       0x0009: REGISTER EXPAND. AB is convered to floating point.
+       0x000A: REGISTER COMPARE. IF AB == XY, A is set to 1. Otherwise, A is set to 0.
+       0x000B: REGISTER >. IF AB > XY, A is set to 1. Otherwise, A is set to 0.
+       0x000C: REGISTER <. IF AB < XY, A is set to 1. Otherwise, A is set to 0.
+       0x000D: REGISTER >=. IF AB >= XY, A is set to 1. Otherwise, A is set to 0.
+       0x000E: REGISTER <=. IF AB <= XY, A is set to 1. Otherwise, A is set to 0.
 
        0x1000: MEMORY ADD. [A] is set to [A] + [B] (both elements are two words long)
-       0x1000: MEMORY SUBTRACT. [A] is set to [A] - [B] (both elements are two words long)
-       0x1000: MEMORY MULTIPLY. [A] is set to [A] * [B] (both elements are two words long)
-       0x1000: MEMORY DIVIDE. [A] is set to [A] / [B] (both elements are two words long)
-       0x1000: MEMORY SQRT. [A] is set to square root [A] (element is two words long)
-       0x1000: MEMORY INVERSE. [A] is set to 1 / [A] (element is two words long)
-       0x1000: MEMORY FLOOR. [A] is set to floor([A]) (element is two words long)
-       0x1000: MEMORY TRUNCATE. [A] is set to the integer portion of [A] (element is two words long)
-       0x1000: MEMORY CEILING. [A] is set to ceil([A]) (element is two words long)
-       
+       0x1001: MEMORY SUBTRACT. [A] is set to [A] - [B] (both elements are two words long)
+       0x1002: MEMORY MULTIPLY. [A] is set to [A] * [B] (both elements are two words long)
+       0x1003: MEMORY DIVIDE. [A] is set to [A] / [B] (both elements are two words long)
+       0x1004: MEMORY SQRT. [A] is set to square root [A] (element is two words long)
+       0x1005: MEMORY INVERSE. [A] is set to 1 / [A] (element is two words long)
+       0x1006: MEMORY FLOOR. [A] is set to floor([A]) (element is two words long)
+       0x1007: MEMORY TRUNCATE. [A] is set to the integer portion of [A] (element is two words long)
+       0x1008: MEMORY CEILING. [A] is set to ceil([A]) (element is two words long)
+	   0x1009: MEMORY EXPAND. [A] is convered to floating point.
+       0x100A: MEMORY COMPARE. IF [A] == [B], A is set to 1. Otherwise, A is set to 0.
+       0x100B: MEMORY >. IF [A] > [B], A is set to 1. Otherwise, A is set to 0.
+       0x100C: MEMORY <. IF [A] < [B], A is set to 1. Otherwise, A is set to 0.
+       0x100D: MEMORY >=. IF [A] >= [B], A is set to 1. Otherwise, A is set to 0.
+       0x100E: MEMORY <=. IF [A] <= [B], A is set to 1. Otherwise, A is set to 0.

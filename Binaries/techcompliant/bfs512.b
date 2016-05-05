@@ -33,7 +33,7 @@ function bfs512_initialize(allocator)
 	while (i < bfs512_num_drives)
 	{
 		local drive = bfs512_drives[i];
-		bfs512_drives[i] = allocate_memory(sizeof(bfs512_SYSTEM_HEADER), allocator);
+		bfs512_drives[i] = allocate_memory(sizeof bfs512_SYSTEM_HEADER, allocator);
 		bfs512_load_disc(drive, bfs512_drives[i]);
 		bfs512_drives[i][1] = drive; //Store drive ID in unused portion of file system header.
 	}
@@ -46,9 +46,9 @@ function bfs512_search_path(path)
 	local bi = 0;
 	local i = 0;
 	local pl = veclen(path);
-	local directory:bfs512_OPEN_DIRECTORY[sizeof(bfs512_OPEN_DIRECTORY)];
-	local entry:bfs512_DIRECTORY_ENTRY[sizeof(bfs512_DIRECTORY_ENTRY)];
-	entry.sector = 3;
+	local directory:bfs512_OPEN_DIRECTORY[sizeof bfs512_OPEN_DIRECTORY];
+	local entry:bfs512_DIRECTORY_ENTRY[sizeof bfs512_DIRECTORY_ENTRY];
+	entry.sector = 4;
 
 	//Detect drive letter to setup disc/file_system.
 	local file_system = bfs512_drives[0];

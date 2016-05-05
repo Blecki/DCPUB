@@ -34,18 +34,8 @@ namespace DCPUB.Ast
             var r = new StatementNode();
             r.AddChild(new Annotation(context.GetSourceSpan(this.Span)));
             //if (preserveTarget)
-                r.AddInstruction(Instructions.SET, Operand("PUSH"), Target.Raw(targetRegister).GetOperand(TargetUsage.Pop));
+            //    r.AddInstruction(Instructions.SET, Operand("PUSH"), Target.Raw(targetRegister).GetOperand(TargetUsage.Pop));
             if (ChildNodes.Count > 0) r.AddChild(Child(0).Emit(context, scope, Target.Raw(targetRegister)));
-            return r;
-        }
-
-        public Intermediate.IRNode Restore(CompileContext context, Model.Scope scope)
-        {
-            var r = new TransientNode();
-            if (preserveTarget)
-            {
-                r.AddInstruction(Instructions.SET, Operand(targetRegister), Operand("POP"));
-            }
             return r;
         }
 
@@ -96,8 +86,8 @@ namespace DCPUB.Ast
 
             r.AddChild(parsedNode);
 
-            for (var i = ChildNodes.Count - 1; i >= 0; --i)
-                r.AddChild((Child(i) as RegisterBindingNode).Restore2(context, scope));
+            //for (var i = ChildNodes.Count - 1; i >= 0; --i)
+            //    r.AddChild((Child(i) as RegisterBindingNode).Restore2(context, scope));
 
             return r;
         }

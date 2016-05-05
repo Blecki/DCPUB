@@ -32,7 +32,7 @@ function EQUAL(msg, a, b)
 	}
 	else
 	{
-		printf(" NO\n");
+		printf(" NO %X\n", b);
 		fail += 1;
 	}
 }

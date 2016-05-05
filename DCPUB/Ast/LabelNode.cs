@@ -29,7 +29,7 @@ namespace DCPUB.Ast
 
         public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
-            var r = new StatementNode();
+            var r = new TransientNode();
             r.AddLabel(label.realName);
             return r;
         }

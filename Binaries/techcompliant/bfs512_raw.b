@@ -31,10 +31,14 @@ D) File data
 
 Total filesystem overhead : 1536 words or 3 sectors.
 
+The first sector used is sector 1 - Sector 0 is boot sector.
+
 */
 
 #define BFS512_VERSION 0xBF55
 #define BFS512_SECTOR_WORDS (1440 / 16)
+
+#define BFS512_END_OF_FILE_SENTINEL 0x8000
 
 // File system header. Allocate one of these and keep it for interacting with the filesystem.
 struct bfs512_SYSTEM_HEADER
@@ -48,9 +52,9 @@ struct bfs512_SYSTEM_HEADER
 //Load a disc header from an m35fd device.
 function bfs512_load_disc(device, header:bfs512_SYSTEM_HEADER /* Pointer to sizeof(bfs512_SYSTEM_HEADER) words of memory.*/)
 {
-	m35fd_blocking_read(device, 0, header);
-	m35fd_blocking_read(device, 1, header + M35FD_SECTOR_SIZE);
-	m35fd_blocking_read(device, 2, header + (M35FD_SECTOR_COUNT * 2));
+	m35fd_blocking_read(device, 1, header);
+	m35fd_blocking_read(device, 2, header + M35FD_SECTOR_SIZE);
+	m35fd_blocking_read(device, 3, header + (M35FD_SECTOR_COUNT * 2));
 }
 
 //Find free sector
@@ -84,9 +88,9 @@ function bfs512_find_free_sector(header:bfs512_SYSTEM_HEADER)
 //files on the disc may be corrupted.
 function bfs512_save_header(device, header)
 {
-	m35fd_blocking_write(device, 0, header);
-	m35fd_blocking_write(device, 1, header + M35FD_SECTOR_SIZE);
-	m35fd_blocking_write(device, 2, header + (M35FD_SECTOR_SIZE * 2));
+	m35fd_blocking_write(device, 1, header);
+	m35fd_blocking_write(device, 2, header + M35FD_SECTOR_SIZE);
+	m35fd_blocking_write(device, 3, header + (M35FD_SECTOR_SIZE * 2));
 }
 
 //Format a header block. To format a disc, allocate a header, call this function, and then save the header. 
@@ -94,6 +98,7 @@ function bfs512_format_header(header)
 {
 	header[0] = BFS512_VERSION;
 
+	// Blank out next five words as reserved.
 	local i = 1;
 	while (i < 6)
 	{
@@ -101,7 +106,8 @@ function bfs512_format_header(header)
 		i += 1;
 	}
 
-	header[i] = 0b1111111111111000;
+	// Mark first 4 sectors as used.
+	header[i] = 0b1111111111110000;
 	i += 1;
 
 	//Prime free_mask
@@ -114,7 +120,7 @@ function bfs512_format_header(header)
 	//Prime sector links
 	while (i < (M35FD_SECTOR_SIZE * 3))
 	{
-		header[i] = 0xFFFF;
+		header[i] = BFS512_END_OF_FILE_SENTINEL;
 		i += 1;
 	}
 }
