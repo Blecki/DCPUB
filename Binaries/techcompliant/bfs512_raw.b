@@ -94,7 +94,7 @@ function bfs512_save_header(device, header)
 }
 
 //Format a header block. To format a disc, allocate a header, call this function, and then save the header. 
-function bfs512_format_header(header)
+function bfs512_format_header(header, bootable)
 {
 	header[0] = BFS512_VERSION;
 
@@ -107,7 +107,10 @@ function bfs512_format_header(header)
 	}
 
 	// Mark first 4 sectors as used.
-	header[i] = 0b1111111111110000;
+	if (bootable != 0)
+		header[i] = 0b1111111111110000;
+	else
+		header[i] = 0b1111111111110001;
 	i += 1;
 
 	//Prime free_mask

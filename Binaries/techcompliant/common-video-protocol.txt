@@ -33,11 +33,11 @@ element size of the display mode.
 
 .- 10 bits - Width of the screen in pixels or cells.
 |             .- 10 bits - Height of the screen in pixels or cells.
-|             |             .- 2 bits - Display Mode Type
-|             |             |   .- 5 bits - Size of elements in bits
-|             |             |   |      .- 3 bits - If cell-glyph mode,
-|             |             |   |      |		indicates glyph bbp.
-[00000000 00][000000 00000][00][0 0000][000][0] - Pack flag
+|             |             .- 3 bits - Display Mode Type
+|             |             |    .- 5 bits - Size of elements in bits
+|             |             |    |      .- 3 bits - If cell-glyph mode,
+|             |             |    |      |		indicates glyph bbp.
+[00000000 00][000000 00000][000] [00000][000]
 
 Display Mode Types:
 0x0000: Two-color cell-glyph mode (LEM mode)
@@ -122,18 +122,15 @@ For Direct pixel mode:
 
 
 * Palette entries are left-padded to whole words.
-* Compatible displays must support non-aligned screen elements, though
+* Compatible displays may support non-aligned screen elements, though
 	performance may be degraded in these cases.
-* Display memory may be packed. For example, if using palette-index
-	mode with a 256 color palette, 4 pixels can be packed into one 
-	word. If this is the case, the display mode will have the pack
-	flag set. It should be assumed that the hardware will return
-	only the mode with the flag set if the mode supports packing,
-	but will support both packed and unpacked modes.
+* Display memory is packed. For example, if using palette-index
+	mode with a 256 color palette, 4 pixels will be packed into one 
+	word.
 
 A perfectly LEM compatible descriptor would be as follows.
 
-[00001000 00][000000 01100][00][1 0000][000][0] [100][100][10 0][0000000]
+[00001000 00][000000 01100][000] [10000][000] [100][100][10 0][0000000]
 Or, in hex, 0x0800 0x6100 0x9200
 
 

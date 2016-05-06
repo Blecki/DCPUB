@@ -40,6 +40,10 @@ function bp_trim(size, value)
 	}
 }
 
+#define BIT_MASK_RIGHT(size) (0xFFFF >> (16 - size))
+#define BIT_MASK_LEFT(size) (0xFFFF << (16 - size))
+#define BIT_MASK(size, offset) ((0xFFFF << (16 - size)) >> offset)
+
 // Pack the value into the destination buffer, begining at bit offset
 //  and using bits size.
 // Destination should already be zeroed.
@@ -90,5 +94,23 @@ function bp_upack(size, offset, buffer)
 
 	return result;
 }
+
+
+// Clear the bits that would be occupied to zero.
+function bp_dclear(size, offset, destination) 
+{ 
+ 	local words_deep = offset / 16; 
+ 	local first_offset = offset % 16; 
+
+       local mask = 0xFFFF >> (16 - size);
+
+       if (first_offset > (16 - size)) 
+          destination[words_deep] |= !(mask >> (16 - (size - first_offset)));
+      else
+         destination[words_deep] |= !(mask << (16 - (size - first_offset)));
+
+      if ((first_offset + size) > 15)
+         destination[words_deep + 1] |= !(value << (16 - (size - (16 - first_offset)));
+} 
 
 #endif
