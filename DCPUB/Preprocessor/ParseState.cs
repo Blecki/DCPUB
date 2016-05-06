@@ -25,10 +25,12 @@ namespace DCPUB.Preprocessor
         public Dictionary<String, Macro> macros = new Dictionary<string, Macro>();
         public Func<String, String> readIncludeFile;
         public Action<String> ReportErrors;
+        public PreprocessedLineLocationTable LineLocationTable;
 
         public void Error(String Message)
         {
-            ReportErrors(String.Format("{0} {1}: {2}", filename, currentLine, Message));
+            var realLocation = LineLocationTable.FindRealLocation(currentLine);
+            ReportErrors(String.Format("{0} {1}: {2}", realLocation.Item1, realLocation.Item2, Message));
         }
 
         public ParseState(String source)

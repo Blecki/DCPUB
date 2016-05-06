@@ -32,12 +32,19 @@ function memcpy(
 	source,
 	count)
 {
-	while (count > 0)
+	asm (
+		I = destination;
+		A = source;
+		C = count)
 	{
-		*destination = *source;
-		destination += 1;
-		source += 1;
-		count -= 1;
+		SET PUSH, J
+		SET J, A
+		ADD C, I
+			:__MEMCPY_BEGIN_LOOP
+		STI [J], [I]
+		IFL I, C
+			SET PC, __MEMCPY_BEGIN_LOOP
+		SET J, POP
 	}
 }
 

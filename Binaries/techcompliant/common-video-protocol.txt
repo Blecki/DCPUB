@@ -17,6 +17,8 @@ this specification, and a compatible device should identify itself as a
 LEM1802 device. The device will report additional capabilities using 
 interrupt 0x0004. 
 
+* A device that uses the 
+
 This interface supports any device of a resolution up to 1024*1024 pixels
 at up to 32 bits per pixel in multiple modes. In pixel mode, each pixel
 on the screen can be set individually. In cell mode, the device operates

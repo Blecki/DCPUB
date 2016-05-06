@@ -45,6 +45,7 @@
     <Compile Include="Intermediate\Box.cs" />
     <Compile Include="Intermediate\Instruction_EncodeOperand.cs" />
     <Compile Include="Intermediate\StatementNode_SSA.cs" />
+    <Compile Include="Preprocessor\PreprocessedLineLocationTable.cs" />
     <Compile Include="SSA\SSA.cs" />
     <Compile Include="SSA\SSAInstruction.cs" />
     <Compile Include="SSA\SSAValue_Constant.cs" />

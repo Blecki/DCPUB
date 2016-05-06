@@ -24,6 +24,7 @@ namespace DCPUB
         public int nextVirtualRegister = 0;
         public Action<String> OnError = null;
         public int ErrorCount = 0;
+        public Preprocessor.PreprocessedLineLocationTable LineLocationTable;
 
         public int AllocateRegister()
         {
@@ -102,8 +103,13 @@ namespace DCPUB
             if (program.HasErrors())
             {
                 foreach (var msg in program.ParserMessages)
-                {
+                {                    
                     onError("%PARSER " + msg.Level + ": " + msg.Message + " [line:" + msg.Location.Line + " column:" + msg.Location.Column + "]\r\n");
+                    if (LineLocationTable != null)
+                    {
+                        var realLocation = LineLocationTable.FindRealLocation(msg.Location.Line);
+                        onError("@" + realLocation.Item1 + " LINE " + realLocation.Item2 + "\r\n");
+                    }
                     onError(extractLine(code, msg.Location.Line) + "\r\n");
                     onError(new String(' ', msg.Location.Column) + "^\r\n");
                 }
@@ -190,12 +196,20 @@ namespace DCPUB
             var codeLine = "";
             if (Span.HasValue)
             {
-                errorString = "%" + Label + " " + Span.Value.Location.Line + ": " + Message;
+                if (LineLocationTable != null)
+                {
+                    var realLocation = LineLocationTable.FindRealLocation(Span.Value.Location.Line);
+                    errorString = "%" + Label + " " + realLocation.Item1 + " LINE " + realLocation.Item2 + ": " + Message;
+                }
+                else
+                    errorString = "%" + Label + " " + Span.Value.Location.Line + ": " + Message;
+
                 codeLine = extractLine(source, Span.Value.Location.Line);
                 errorString += "\r\n" + codeLine + "\r\n" + new String(' ', Span.Value.Location.Column) + "^";
             }
             else
                 errorString = "%ERROR: " + Message;
+
             OnError(errorString);
         }
 

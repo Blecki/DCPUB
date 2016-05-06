@@ -149,7 +149,7 @@ namespace DCPUCCL
                 {
                     var error_count = 0;
 
-                    file = DCPUB.Preprocessor.Parser.Preprocess(options.@in, file, (include_name) =>
+                    var preprocessorResult = DCPUB.Preprocessor.Parser.Preprocess(options.@in, file, (include_name) =>
                     {
                         if (options.@in == "-") throw new ConfigurationError("Include used when input piped: When input is piped, I don't know where to look for included files.");
                         return System.IO.File.ReadAllText(include_name);
@@ -159,6 +159,12 @@ namespace DCPUCCL
                         Console.WriteLine("%PREPROCESSOR ERROR: {0}", error_message);
                         error_count += 1;
                     });
+
+                    foreach (var entry in preprocessorResult.Item2.LineLocationTable.Locations)
+                        Console.WriteLine("{0} : {1}, {2}", entry.FileName, entry.StartLine, entry.OffsetLine);
+
+                    file = preprocessorResult.Item1;
+                    context.LineLocationTable = preprocessorResult.Item2.LineLocationTable;
 
                     if (error_count != 0) throw new DCPUB.Preprocessor.PreprocessorAbort();
                 }

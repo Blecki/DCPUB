@@ -48,7 +48,7 @@ asm (A = &sp) { SET [A], SP }
 printf("Memory used: %N words\n", entry + (sizeof bfs512_DIRECTORY_ENTRY) + (0xFFFF - sp));
 
 
-bfs512_format_header(file_system);
+bfs512_format_header(file_system, 0);
 
 
 //Create root directory.

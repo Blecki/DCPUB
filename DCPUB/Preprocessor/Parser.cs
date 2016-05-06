@@ -155,7 +155,11 @@ namespace DCPUB.Preprocessor
             else if (directive == "#include")
             {
                 var fileName = rest.Trim();
-                return Preprocess(fileName, state.readIncludeFile(fileName), state);
+                var result = Preprocess(fileName, state.readIncludeFile(fileName), state);
+                state.LineLocationTable.Merge(result.Item2.LineLocationTable, state.currentLine);
+                state.LineLocationTable.AddLocation(state.filename, state.currentLine + result.Item2.currentLine, state.currentLine);
+                state.currentLine += result.Item2.currentLine;
+                return result.Item1;
             }
             else
             {
@@ -263,7 +267,8 @@ namespace DCPUB.Preprocessor
             return result.ToString();
         }
 
-        public static String Preprocess(String FileName, String file, ParseState parentState)
+        public static Tuple<String, ParseState>
+            Preprocess(String FileName, String file, ParseState parentState)
         {
             var state = new ParseState(CollapseLineEscapes(file));
             if (parentState != null)
@@ -273,16 +278,21 @@ namespace DCPUB.Preprocessor
                 state.ReportErrors = parentState.ReportErrors;
             }
             state.filename = FileName;
-            return ParseBlock(null, state);
+            state.LineLocationTable = new PreprocessedLineLocationTable();
+            state.LineLocationTable.AddLocation(FileName, 0, 0);
+            return Tuple.Create(ParseBlock(null, state), state);
         }
 
-        public static String Preprocess(String FileName, String file, Func<String,String> fileSource, Action<String> ReportErrors)
+        public static Tuple<String, ParseState>
+            Preprocess(String FileName, String file, Func<String,String> fileSource, Action<String> ReportErrors)
         {
             var state = new ParseState(CollapseLineEscapes(file));
             state.filename = FileName;
             state.readIncludeFile = fileSource;
             state.ReportErrors = ReportErrors;
-            return ParseBlock(null, state);
+            state.LineLocationTable = new PreprocessedLineLocationTable();
+            state.LineLocationTable.AddLocation(FileName, 0, 0);
+            return Tuple.Create(ParseBlock(null, state), state);
         }
     }
 }

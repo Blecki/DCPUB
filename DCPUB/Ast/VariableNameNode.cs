@@ -109,6 +109,13 @@ namespace DCPUB.Ast
         public Intermediate.IRNode EmitAssignment(CompileContext context, Model.Scope scope, Intermediate.Operand from, Instructions opcode)
         {
             var r = new TransientNode();
+
+            if (variable == null)
+            {
+                context.ReportError(this, "Variable name was not resolved.");
+                return r;
+            }
+
             if (variable.isArray)
             {
                 context.ReportError(this, "Can't assign to arrays.");
