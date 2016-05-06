@@ -1,7 +1,7 @@
 # DCPUB
 
 DCPUB is a language similar to [B](http://en.wikipedia.org/wiki/B_%28programming_language%29). This compiler targets the
-1.7 [DCPU-16 specification]([DCPU-16 specification](http://pastebin.com/raw.php?i=Q4JvQvnM).
+1.7 [DCPU-16 specification](http://pastebin.com/raw.php?i=Q4JvQvnM).
 
 ## Features
 
