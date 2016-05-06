@@ -18,12 +18,16 @@ function memset(
 	value,
 	count)
 {
-	local end = destination + count;
-
-	while (destination < end)
+	asm (	A = destination;
+		B = value;
+		C = count)
 	{
-		*destination = value;
-		destination += 1;
+		ADD C, A
+			:__MEMSET_BEGIN_LOOP
+		SET [A], B
+		ADD A, 1
+		IFL A, C
+			SET PC, __MEMSET_BEGIN_LOOP
 	}
 }
 
