@@ -13,11 +13,12 @@ BITWISE COMMON VIDEO PROTOCOL
 
 Presented here is a Video Protocol designed to be backwards compatible
 with the ever popular NE LEM1802. LEM functions should not collide with
-this specification, and a compatible device should identify itself as a
+this specification, and a compatible device could identify itself as a
 LEM1802 device. The device will report additional capabilities using 
 interrupt 0x0004. 
 
-* A device that uses the 
+Compatible devices should conform to the [INSERT REFERENCE TO HARDWARE
+ID SPEC], using API class "Display Device" and sub class "CVP Compatible".
 
 This interface supports any device of a resolution up to 1024*1024 pixels
 at up to 32 bits per pixel in multiple modes. In pixel mode, each pixel
@@ -28,7 +29,7 @@ number of possible glyphs.
 
 A display mode descriptor describes a supported display mode and is used
 both to detect supported modes and to set the desired mode. A descriptor
-is 4 words long. 
+is 3 words long. 
 
 The first two words of a descriptor encode the width, height, type, and
 element size of the display mode.
@@ -38,7 +39,7 @@ element size of the display mode.
 |             |             .- 3 bits - Display Mode Type
 |             |             |    .- 5 bits - Size of elements in bits
 |             |             |    |      .- 3 bits - If cell-glyph mode,
-|             |             |    |      |		indicates glyph bbp.
+|             |             |    |      |		indicates glyph bpp.
 [00000000 00][000000 00000][000] [00000][000]
 
 Display Mode Types:
@@ -50,6 +51,7 @@ Display Mode Types:
 			small number of bits (4 for 16 total colors, for example)
 			and the color table uses a large number (as high as 24).
 0x0003: Direct pixel mode. Each element is a color directly encoded.
+0x0004: Reserved for future expansion.
 
 The interprettation of the second set of words depends on the display
 mode type specified in the first.
@@ -88,7 +90,8 @@ descriptor contains the bits per pixel of each glyph.
 |     |    |     |    |
 [000][000][00 0][000][0000]
 
-* Color bit describes the values in the palette.
+* Glyphs behave like the frame buffer in palette-index mode.
+* Color bits describe the values in the palette.
 * The bits per pixel of glyph determines the size of the palette.
 * The bits per element determines the number of glyphs needed.
 
@@ -135,6 +138,19 @@ A perfectly LEM compatible descriptor would be as follows.
 [00001000 00][000000 01100][000] [10000][000] [100][100][10 0][0000000]
 Or, in hex, 0x0800 0x6100 0x9200
 
+0x0000: Memory Map Screen
+	Map screen memory begining at the address in B.
+	If B is zero, screen is disabled.
+	
+0x0001: Memory Map Glyphs
+	Map glyph memory begining at the address in B.
+	If B is 0, use built in glyphs.
+	
+0x0002: Memory Map Palette
+	Map palette memory begining at the address in B.
+	If B is 0, use built in palette.
+	
+0x0003: Reserved for LEM compatibility.
 
 0x0004: Report Capabilities
 	B should contain the address in DCPU memory to begin writing display
@@ -150,24 +166,5 @@ Or, in hex, 0x0800 0x6100 0x9200
 	B will be set to an error code. Note that 0x0000 is never used.
 		0x0001: Mode set.
 		0x0002: Mode not supported.
-
-	To see if you are dealing with an actual LEM device, set B to 0 and
-	attempt to set a display mode. If B remains 0, the device is a
-	legacy LEM1802.
-
-Lem interrupts and new uses:
-
-0: MEM_MAP_SCREEN
-	Usage is the same as LEM1802.
-1: MEM_MAP_FONT
-	Use to memory map glyph tables.
-2: MEM_MAP_PALETTE
-	Usage is the same as LEM1802.
-    If B is 0, the default palette is used instead. Default palette is
-    only valid in mode 0 - Lem Compatible mode.
-3: SET_BORDER_COLOR
-	Only valid in mode 0 - Lem Compatible mode.
 	
-
-
-
+0x0006 through 0x001F: Reserved for future expansion.
