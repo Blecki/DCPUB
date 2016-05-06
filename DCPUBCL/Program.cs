@@ -160,8 +160,8 @@ namespace DCPUCCL
                         error_count += 1;
                     });
 
-                    foreach (var entry in preprocessorResult.Item2.LineLocationTable.Locations)
-                        Console.WriteLine("{0} : {1}, {2}", entry.FileName, entry.StartLine, entry.OffsetLine);
+                    //foreach (var entry in preprocessorResult.Item2.LineLocationTable.Locations)
+                    //    Console.WriteLine("{0} : {1}, {2}", entry.FileName, entry.StartLine, entry.OffsetLine);
 
                     file = preprocessorResult.Item1;
                     context.LineLocationTable = preprocessorResult.Item2.LineLocationTable;
