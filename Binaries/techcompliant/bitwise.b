@@ -110,7 +110,7 @@ function bp_dclear(size, offset, destination)
          destination[words_deep] |= !(mask << (16 - (size - first_offset)));
 
       if ((first_offset + size) > 15)
-         destination[words_deep + 1] |= !(value << (16 - (size - (16 - first_offset)));
+         destination[words_deep + 1] |= !(dmask << (16 - (size - (16 - first_offset))));
 } 
 
 #endif

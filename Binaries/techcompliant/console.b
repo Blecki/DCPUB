@@ -61,18 +61,9 @@ function console_scroll(console:Console, lines)
 {
 	local chars = lines * CONSOLE_WIDTH;
 	if (chars > CONSOLE_SIZE) chars = CONSOLE_SIZE;
-	local place = 0;
 	local copy_maximum = CONSOLE_SIZE - chars;
-	while (place < copy_maximum)
-	{
-		console.buffer[place] = console.buffer[place + chars];
-		place += 1;
-	}
-	while (place < CONSOLE_SIZE)
-	{
-		console.buffer[place] = console.color;
-		place += 1;
-	}
+	memcpy(console.buffer, console.buffer + chars, copy_maximum);
+	memset(console.buffer + copy_maximum, console.color, chars);
 	console.cursor_position -= chars;
 }
 

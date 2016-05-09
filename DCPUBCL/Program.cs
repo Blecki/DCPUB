@@ -40,7 +40,7 @@ namespace DCPUCCL
                         options.be = true;
                         argumentIndex += 1;
                     }
-                    else if (argument == "-p" || argument == "--peepholes")
+                    /*else if (argument == "-p" || argument == "--peepholes")
                     {
                         if (argumentIndex == args.Length - 1)
                         {
@@ -49,7 +49,7 @@ namespace DCPUCCL
                         }
                         options.peephole = args[argumentIndex + 1];
                         argumentIndex += 2;
-                    }
+                    }*/
                     else if (argument == "-ir")
                     {
                         options.emit_ir = true;
@@ -140,7 +140,10 @@ namespace DCPUCCL
                 if (options.@in == "-")
                     file = Console.In.ReadToEnd();
                 else
+                {
+                    options.@in = System.IO.Path.GetFullPath(options.@in);
                     file = System.IO.File.ReadAllText(options.@in);
+                }
 
                 var context = new DCPUB.CompileContext();
                 context.Initialize(options);
@@ -177,6 +180,7 @@ namespace DCPUCCL
 
                     if (options.binary)
                     {
+                        options.@out = System.IO.Path.GetFullPath(options.@out);
                         var writer = new System.IO.BinaryWriter(System.IO.File.OpenWrite(options.@out));
                         var bin = new List<DCPUB.Intermediate.Box<ushort>>();
                         assembly.EmitBinary(bin);
@@ -192,6 +196,9 @@ namespace DCPUCCL
                     }
                     else
                     {
+                        if (options.@out != "-")
+                            options.@out = System.IO.Path.GetFullPath(options.@out);
+
                         var writer = options.@out == "-" ? Console.Out : new System.IO.StreamWriter(options.@out, false);
                         var stream = new FileEmissionStream(writer);
                         if (options.@out == "-")

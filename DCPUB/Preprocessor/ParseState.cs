@@ -55,14 +55,15 @@ namespace DCPUB.Preprocessor
         {
             if (Next() == '\n' || Next() == '\r') lastWasNewline = true;
             else lastWasNewline = false;
+
             start += 1;
             if (start > end)
             {
                 Error("Unexpected end of file");
                 throw new PreprocessorAbort();
             }
+
             if (!AtEnd() && Next() == '\n') 
-            
                 currentLine += 1;
         }
         

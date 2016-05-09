@@ -43,6 +43,7 @@ namespace DCPUB.Preprocessor
         {
             //Scan document for '#endif".
             int depth = 0;
+            int startLine = state.currentLine;
             while (!state.AtEnd())
             {
                 if (state.lastWasNewline && (state.MatchNext("#ifdef") || state.MatchNext("#ifndef")))
@@ -59,7 +60,13 @@ namespace DCPUB.Preprocessor
                         return;
                     }
                     depth -= 1;
-                    if (depth < 0) return;
+                    if (depth < 0)
+                    {
+                        // These lines are excised entirely from the finished file; we don't want their lines
+                        // messing up our line counts.
+                        state.currentLine = startLine;
+                        return;
+                    }
                     else continue;
                 }
                 else state.Advance();
@@ -155,8 +162,11 @@ namespace DCPUB.Preprocessor
             else if (directive == "#include")
             {
                 var fileName = rest.Trim();
-                var result = Preprocess(fileName, state.readIncludeFile(fileName), state);
-                state.LineLocationTable.Merge(result.Item2.LineLocationTable, state.currentLine);
+                var fullPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(state.filename), fileName);
+                fullPath = System.IO.Path.GetFullPath(fullPath);
+
+                var result = Preprocess(fullPath, state.readIncludeFile(fullPath), state);
+                state.LineLocationTable.Merge(result.Item2.LineLocationTable, state.currentLine - 1);
                 state.LineLocationTable.AddLocation(state.filename, state.currentLine + result.Item2.currentLine, state.currentLine);
                 state.currentLine += result.Item2.currentLine;
                 return result.Item1;

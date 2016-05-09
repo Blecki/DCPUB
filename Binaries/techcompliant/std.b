@@ -24,10 +24,12 @@ function memset(
 	{
 		ADD C, A
 			:__MEMSET_BEGIN_LOOP
+		IFL A, C
+			SET PC, __MEMSET_END_LOOP
 		SET [A], B
 		ADD A, 1
-		IFL A, C
-			SET PC, __MEMSET_BEGIN_LOOP
+		SET PC, __MEMSET_BEGIN_LOOP
+			:__MEMSET_END_LOOP
 	}
 }
 
@@ -45,9 +47,11 @@ function memcpy(
 		SET J, A
 		ADD C, I
 			:__MEMCPY_BEGIN_LOOP
-		STI [J], [I]
 		IFL I, C
-			SET PC, __MEMCPY_BEGIN_LOOP
+			SET PC, __MEMCPY_END_LOOP
+		STI [J], [I]
+		SET PC, __MEMCPY_BEGIN_LOOP
+			:__MEMCPY_END_LOOP
 		SET J, POP
 	}
 }
