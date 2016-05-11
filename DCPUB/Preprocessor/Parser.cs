@@ -5,6 +5,28 @@ using System.Text;
 
 namespace DCPUB.Preprocessor
 {    
+    public class ResultBuilder
+    {
+        private StringBuilder Worker = new StringBuilder();
+        public int LinesWritten { get; private set; }
+
+        public ResultBuilder()
+        {
+            LinesWritten = 0;
+        }
+
+        public void Append(String S)
+        {
+            LinesWritten += S.Count(c => c == '\n');
+            Worker.Append(S);
+        }
+
+        public override string ToString()
+        {
+            return Worker.ToString();
+        }
+    }
+
     public class Parser
     {
         public static bool IsIdentifier(char c) 
@@ -39,7 +61,7 @@ namespace DCPUB.Preprocessor
             while (!state.AtEnd() && char.IsWhiteSpace(state.Next())) state.Advance();
         }
 
-        public static void SkipExcludedBlock(ParseState state)
+        public static int SkipExcludedBlock(ParseState state)
         {
             //Scan document for '#endif".
             int depth = 0;
@@ -57,20 +79,22 @@ namespace DCPUB.Preprocessor
                     if (endifLine.Trim() != "#endif")
                     {
                         state.Error("#endif should be alone on line.");
-                        return;
+                        return 0;
                     }
                     depth -= 1;
                     if (depth < 0)
                     {
                         // These lines are excised entirely from the finished file; we don't want their lines
                         // messing up our line counts.
-                        state.currentLine = startLine;
-                        return;
+                        //state.LineLocationTable.AddLocation(state.filename, startLine, state.currentLine);
+                        return state.currentLine - startLine;
                     }
                     else continue;
                 }
                 else state.Advance();
             }
+
+            return 0;
         }
 
         public static String ParseDirectiveName(ParseState state)
@@ -91,11 +115,13 @@ namespace DCPUB.Preprocessor
         public static String ParseDirective(ParseState state)
         {
             var directive = "";
+
             while (!state.AtEnd() && !char.IsWhiteSpace(state.Next()))
             {
                 directive += state.Next();
                 state.Advance();
             }
+
             var rest = ParseLine(state);
 
             if (directive == "#define")
@@ -149,13 +175,13 @@ namespace DCPUB.Preprocessor
             else if (directive == "#ifdef")
             {
                 if (!state.macros.ContainsKey(ParseDirectiveName(new ParseState(rest))))
-                    SkipExcludedBlock(state);
+                    return new String('\n', SkipExcludedBlock(state));
                 return "";
             }
             else if (directive == "#ifndef")
             {
                 if (state.macros.ContainsKey(ParseDirectiveName(new ParseState(rest))))
-                    SkipExcludedBlock(state);
+                    return new String('\n', SkipExcludedBlock(state));
                 return "";
             }
             else if (directive == "#endif") return "";
@@ -169,7 +195,7 @@ namespace DCPUB.Preprocessor
                 state.LineLocationTable.Merge(result.Item2.LineLocationTable, state.currentLine - 1);
                 state.LineLocationTable.AddLocation(state.filename, state.currentLine + result.Item2.currentLine, state.currentLine);
                 state.currentLine += result.Item2.currentLine;
-                return result.Item1;
+                return /*"//" + directive + rest + "\n" + */ result.Item1;
             }
             else
             {
@@ -220,11 +246,13 @@ namespace DCPUB.Preprocessor
         public static string ParseBlock(Func<char, bool> isTerminal, ParseState state)
         {
             string r = "";
+
             if (isTerminal != null)
             {
                 r += state.Next();
                 state.Advance();
             }
+
             while (!state.AtEnd())
             {
                 if (state.Next() == '#' && state.lastWasNewline)
@@ -261,12 +289,20 @@ namespace DCPUB.Preprocessor
         {
             var result = new StringBuilder();
             var state = new ParseState(file);
+
             while (!state.AtEnd())
             {
-                if (state.MatchNext("\\\n") || state.MatchNext("\\\r"))
+                if (state.MatchNext("\\\n") || state.MatchNext("\\\r\n"))
                 {
                     state.Advance();
                     SkipWhitespace(state);
+                }
+                else if (state.MatchNext("\r\n"))
+                {
+                    result.Append("\n");
+                    //result.Append(state.Next());
+                    state.Advance();
+                    state.Advance();
                 }
                 else
                 {
@@ -274,6 +310,7 @@ namespace DCPUB.Preprocessor
                     state.Advance();
                 }
             }
+
             return result.ToString();
         }
 

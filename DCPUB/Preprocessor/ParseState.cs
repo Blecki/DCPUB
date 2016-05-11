@@ -19,7 +19,7 @@ namespace DCPUB.Preprocessor
         public int start;
         public int end;
         public String source;
-        public int currentLine = 1;
+        public int currentLine = 0;
         public String filename;
         public bool lastWasNewline = false;
         public Dictionary<String, Macro> macros = new Dictionary<string, Macro>();
@@ -63,7 +63,7 @@ namespace DCPUB.Preprocessor
                 throw new PreprocessorAbort();
             }
 
-            if (!AtEnd() && Next() == '\n') 
+            if (!AtEnd() && Next() == '\n')
                 currentLine += 1;
         }
         

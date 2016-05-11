@@ -170,6 +170,10 @@ namespace DCPUCCL
                     context.LineLocationTable = preprocessorResult.Item2.LineLocationTable;
 
                     if (error_count != 0) throw new DCPUB.Preprocessor.PreprocessorAbort();
+
+                    //var writer = new System.IO.StreamWriter("debug-pre", false);
+                    //writer.Write(file);
+                    //writer.Close();
                 }
 
                 if (context.Parse(file, Console.WriteLine))
