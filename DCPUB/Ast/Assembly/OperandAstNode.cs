@@ -58,10 +58,12 @@ namespace DCPUB.Ast.Assembly
             else
             {
                 var reg = root.FindTokenAndGetText();
+
                 try
                 {
                     r.register = (OperandRegister)Enum.Parse(typeof(OperandRegister), reg);
-                } catch (Exception)
+                }
+                catch (Exception)
                 {
                     r.semantics |= OperandSemantics.Label;
                     r.label = new Intermediate.Label(reg);

@@ -19,7 +19,8 @@ namespace DCPUB.Preprocessor
         public int start;
         public int end;
         public String source;
-        public int currentLine = 0;
+        public int currentLineInFile = 0;
+        public int totalLinesInResult = 0;
         public String filename;
         public bool lastWasNewline = false;
         public Dictionary<String, Macro> macros = new Dictionary<string, Macro>();
@@ -29,7 +30,7 @@ namespace DCPUB.Preprocessor
 
         public void Error(String Message)
         {
-            var realLocation = LineLocationTable.FindRealLocation(currentLine);
+            var realLocation = LineLocationTable.FindRealLocation(totalLinesInResult);
             ReportErrors(String.Format("{0} {1}: {2}", realLocation.Item1, realLocation.Item2, Message));
         }
 
@@ -64,7 +65,10 @@ namespace DCPUB.Preprocessor
             }
 
             if (!AtEnd() && Next() == '\n')
-                currentLine += 1;
+            {
+                currentLineInFile += 1;
+                totalLinesInResult += 1;
+            }
         }
         
         public bool AtEnd() { return start == end; }

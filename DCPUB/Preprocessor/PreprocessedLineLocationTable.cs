@@ -26,6 +26,7 @@ namespace DCPUB.Preprocessor
         public Tuple<String, int> FindRealLocation(int line)
         {
             var loc = FindLocation(line);
+            if (loc == null) return Tuple.Create("Unknown", 0);
             return Tuple.Create(loc.FileName, (line - loc.StartLine) + loc.OffsetLine);
         }
 

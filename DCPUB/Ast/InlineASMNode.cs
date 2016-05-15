@@ -24,7 +24,15 @@ namespace DCPUB.Ast
 
         public override void  ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
-            targetRegister = (Model.Register)Enum.Parse(typeof(Model.Register), this.targetRegisterName);
+            try
+            {
+                targetRegister = (Model.Register)Enum.Parse(typeof(Model.Register), this.targetRegisterName);
+            }
+            catch (Exception)
+            {
+                targetRegister = Model.Register.A;
+                context.ReportError(this, "Invalid register name");
+            }
             rememberScope = enclosingScope;
             if (ChildNodes.Count > 0) Child(0).ResolveTypes(context, enclosingScope);
         }
@@ -73,7 +81,7 @@ namespace DCPUB.Ast
             if (ParsedAssembly.HasErrors())
             {
                 foreach (var error in ParsedAssembly.ParserMessages)
-                    context.ReportError(new Irony.Parsing.SourceSpan(error.Location, 20), error.Message);
+                    context.ReportError(new Irony.Parsing.SourceSpan(error.Location + this.Location, 20), error.Message);
                 return r;
             }
 

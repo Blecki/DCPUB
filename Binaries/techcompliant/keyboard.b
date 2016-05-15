@@ -52,25 +52,27 @@ Key numbers are:
 */
  
 static GENERIC_KEYBOARD_ID[2] = { 0x30cf, 0x7406 };
- 
-// Find the first attached keyboard.
-function kb_detect()
-{
-	return detect_hardware(GENERIC_KEYBOARD_ID);
-}
 
 // Get the last key pressed.
 // Returns 0 if no key data present.
 function kb_getkey(id)
 {
-	local r;
-	asm ( B = id; X = &r )
+	asm ( B = id )
 	{
 		SET A, 1
 		HWI B
-		SET [X], C
+		SET A, C
 	}
-	return r;
+}
+
+function kb_query(kb, key)
+{
+  asm ( B = key, C = kb )
+  {
+    SET A, 2
+    HWI C
+    SET A, C
+  }
 }
 
 #endif

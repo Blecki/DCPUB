@@ -14,8 +14,6 @@
 #ifndef _BITWISE_LIB_HARDWARE_
 #define _BITWISE_LIB_HARDWARE_
 
-#include number32.b
-
 /*
 	Find a piece of hardware with the supplied id.
 	Returns 0xFFFF if no matching hardware found.
@@ -40,7 +38,7 @@ function detect_hardware( id:num32 /* A pointer to a num32 struct */)
 			SET [I], B
 		}
 
-		if ( compare32(hardware_id, id) != 0 )
+		if ( (hardware_id[0] == id[0]) & (hardware_id[1] == id[1]) )
 			return n;
 
 		n += 1;

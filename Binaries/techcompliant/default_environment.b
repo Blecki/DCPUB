@@ -19,10 +19,11 @@
 #include console.b
 #include itoa.b
 #include keyboard.b
+#include hardware.b
 
 local allocatable_memory = __endofprogram;		//Reserve half of available memory as the heap. This means a larger
 initialize_memory_page(allocatable_memory, 0x8000);	//program makes for a smaller stack.
-local lem_device = lem_detect();
+local lem_device = detect_hardware(LEM_HARDWARE_ID);
 local video_memory = allocate_memory(LEM_VRAM_SIZE, allocatable_memory);
 lem_initialize(lem_device, video_memory);
 static console:Console[sizeof Console];
