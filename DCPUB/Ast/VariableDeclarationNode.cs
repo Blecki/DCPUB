@@ -116,11 +116,13 @@ namespace DCPUB.Ast
                         context.AddData(variable.staticLabel, (Child(0) as ArrayInitializationNode).RawData);
                     else
                     {
-                            var data = new List<Intermediate.Operand>();
-                            for (int i = 0; i < size; ++i) data.Add(Constant(0));
+                        var data = new List<Intermediate.Operand>();
+                        for (int i = 0; i < size; ++i) data.Add(Constant(0));
                         context.AddData(variable.staticLabel, data);
                     }
                 }
+                else if (hasInitialValue)
+                    context.ReportError(this, "Can't initialize local array.");
             }
             else if (declLabel == "static")
             {
