@@ -28,7 +28,7 @@ local video_memory = allocate_memory(LEM_VRAM_SIZE, allocatable_memory);
 lem_initialize(lem_device, video_memory);
 static console:Console[sizeof Console];
 console_initialize(console, video_memory);
-local keyboard = kb_detect();
+local keyboard = detect_hardware(GENERIC_KEYBOARD_ID);
 
 #define malloc(size) allocate_memory(size, allocatable_memory)
 #define free(block) free_memory(block, allocatable_memory)
