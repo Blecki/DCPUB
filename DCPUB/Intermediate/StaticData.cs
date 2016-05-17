@@ -18,7 +18,7 @@ namespace DCPUB.Intermediate
                 if (item.IsIntegralConstant()) str += string.Format("0x{0:X4}", item.constant);
                 else if (item.semantics == OperandSemantics.Label) str += item.label;
                 else throw new InternalError("Incorrect operand in mixed static data");
-                str += " ";
+                str += ", ";
             }
             stream.WriteLine(str);
         }

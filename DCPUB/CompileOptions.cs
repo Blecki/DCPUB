@@ -16,6 +16,7 @@ namespace DCPUB
         public bool preprocess = true;
         public bool emit_ir = false;
         public bool strip = false;
+        public bool tidy = false;
 
         public bool collapse_statements = false;
         public bool ssa = false;
