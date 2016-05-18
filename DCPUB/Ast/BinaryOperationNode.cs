@@ -4,14 +4,141 @@ using System.Linq;
 using System.Text;
 using Irony.Interpreter.Ast;
 using DCPUB.Intermediate;
+using DCPUB.Model;
 
 namespace DCPUB.Ast
 {
     public class BinaryOperator
     {
-        public Instructions instruction;
         public Func<ushort, ushort, ushort> fold;
+
+        public virtual IRNode Emit(CompileContext Context, Model.Scope Scope, Target Target, CompilableNode Lhs, CompilableNode Rhs)
+        {
+            throw new NotImplementedException();
+        }
     }
+
+    public class BasicBinaryOperator : BinaryOperator
+    {
+        public Instructions Instruction;
+
+        public override IRNode Emit(CompileContext Context, Scope Scope, Target Target, CompilableNode Lhs, CompilableNode Rhs)
+        {
+            Target firstTarget = Target;
+            Target secondTarget = null;
+
+            var r = new TransientNode();
+
+            var firstFetchToken = Lhs.GetFetchToken();
+            var secondFetchToken = Rhs.GetFetchToken();
+
+            if (secondFetchToken == null)
+            {
+                secondTarget = Target.Register(Context.AllocateRegister());
+                r.AddChild(Rhs.Emit(Context, Scope, secondTarget));
+                secondFetchToken = secondTarget.GetOperand(TargetUsage.Pop);
+            }
+
+            if (firstFetchToken == null)
+                r.AddChild(Lhs.Emit(Context, Scope, firstTarget));
+            else
+                r.AddInstruction(Instructions.SET, firstTarget.GetOperand(TargetUsage.Push), firstFetchToken);
+            firstFetchToken = firstTarget.GetOperand(TargetUsage.Peek);
+
+            r.AddInstruction(Instruction, Target.GetOperand(TargetUsage.Peek), secondFetchToken);
+            
+            return r;
+        }
+    }
+
+    public class ComparisonBinaryOperator : BinaryOperator
+    {
+        public Instructions Instruction;
+
+        public override IRNode Emit(CompileContext Context, Scope Scope, Target Target, CompilableNode Lhs, CompilableNode Rhs)
+        {
+            Target firstTarget = null;
+            Target secondTarget = null;
+
+            var r = new TransientNode();
+
+
+                r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Push), CompilableNode.Constant(0));
+                firstTarget = Target.Register(Context.AllocateRegister());
+
+            var firstFetchToken = Lhs.GetFetchToken();
+            var secondFetchToken = Rhs.GetFetchToken();
+
+            if (secondFetchToken == null)
+            {
+                secondTarget = Target.Register(Context.AllocateRegister());
+                r.AddChild(Rhs.Emit(Context, Scope, secondTarget));
+                secondFetchToken = secondTarget.GetOperand(TargetUsage.Pop);
+            }
+
+            if (firstFetchToken == null)
+                r.AddChild(Lhs.Emit(Context, Scope, firstTarget));
+            else
+                r.AddInstruction(Instructions.SET, firstTarget.GetOperand(TargetUsage.Push), firstFetchToken);
+
+            firstFetchToken = firstTarget.GetOperand(TargetUsage.Peek);
+
+            r.AddInstruction(Instruction, firstFetchToken, secondFetchToken);
+            r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
+
+            return r;
+        }
+    }
+
+    public class LogicalBinaryOperator : BinaryOperator
+    {
+        public Instructions Instruction;
+
+        public override IRNode Emit(CompileContext Context, Scope Scope, Target Target, CompilableNode Lhs, CompilableNode Rhs)
+        {
+            var r = new TransientNode();
+
+            var firstTarget = Target.Register(Context.AllocateRegister());
+            var firstFetchToken = Lhs.GetFetchToken();
+            if (firstFetchToken == null)
+            {
+                r.AddChild(Lhs.Emit(Context, Scope, firstTarget));
+                r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Push), CompilableNode.Constant(0));
+                r.AddInstruction(Instructions.IFN, Target.GetOperand(TargetUsage.Peek), firstTarget.GetOperand(TargetUsage.Peek));
+                r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
+            }
+            else
+            {
+                r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Push), CompilableNode.Constant(0));
+                r.AddInstruction(Instructions.IFN, Target.GetOperand(TargetUsage.Peek), firstFetchToken);
+                r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
+            }
+
+            var secondTarget = Target.Register(Context.AllocateRegister());
+            var intermediate = Target.Register(Context.AllocateRegister());
+            var secondFetchToken = Rhs.GetFetchToken();
+            if (secondFetchToken == null)
+            {
+                r.AddChild(Lhs.Emit(Context, Scope, secondTarget));
+                r.AddInstruction(Instructions.SET, intermediate.GetOperand(TargetUsage.Push), CompilableNode.Constant(0));
+                r.AddInstruction(Instructions.IFN, intermediate.GetOperand(TargetUsage.Peek), secondTarget.GetOperand(TargetUsage.Peek));
+                r.AddInstruction(Instructions.SET, intermediate.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
+            }
+            else
+            {
+                r.AddInstruction(Instructions.SET, intermediate.GetOperand(TargetUsage.Push), CompilableNode.Constant(0));
+                r.AddInstruction(Instructions.IFN, intermediate.GetOperand(TargetUsage.Peek), secondFetchToken);
+                r.AddInstruction(Instructions.SET, intermediate.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
+            }
+
+            r.AddInstruction(Instruction, Target.GetOperand(TargetUsage.Peek), intermediate.GetOperand(TargetUsage.Peek));
+            
+            return r;
+        }
+    }
+
+
+
 
     public class BinaryOperationNode : CompilableNode
     {
@@ -21,9 +148,27 @@ namespace DCPUB.Ast
 
         public static BinaryOperator MakeBinOp(Instructions ins, Func<ushort, ushort, ushort> fold)
         {
-            return new BinaryOperator
+            return new BasicBinaryOperator
             {
-                instruction = ins,
+                Instruction = ins,
+                fold = fold
+            };
+        }
+
+        public static ComparisonBinaryOperator MakeComparatorOp(Instructions ins, Func<ushort, ushort, ushort> fold)
+        {
+            return new ComparisonBinaryOperator
+            {
+                Instruction = ins,
+                fold = fold
+            };
+        }
+
+        public static LogicalBinaryOperator MakeLogicalOp(Instructions ins, Func<ushort, ushort, ushort> fold)
+        {
+            return new LogicalBinaryOperator
+            {
+                Instruction = ins,
                 fold = fold
             };
         }
@@ -47,12 +192,14 @@ namespace DCPUB.Ast
                 opcodes.Add("&", MakeBinOp(Instructions.AND, (a, b) => (ushort)((ushort)a & (ushort)b)));
                 opcodes.Add("|", MakeBinOp(Instructions.BOR, (a, b) => (ushort)((ushort)a | (ushort)b)));
                 opcodes.Add("^", MakeBinOp(Instructions.XOR, (a, b) => (ushort)((ushort)a ^ (ushort)b)));
-                opcodes.Add("==", MakeBinOp(Instructions.IFE, (a, b) => a == b ? (ushort)1 : (ushort)0));
-                opcodes.Add("!=", MakeBinOp(Instructions.IFN, (a, b) => a != b ? (ushort)1 : (ushort)0));
-                opcodes.Add(">", MakeBinOp(Instructions.IFG, (a, b) => a > b ? (ushort)1 : (ushort)0));
-                opcodes.Add("<", MakeBinOp(Instructions.IFL, (a, b) => a < b ? (ushort)1 : (ushort)0));
-                opcodes.Add("->", MakeBinOp(Instructions.IFA, (a, b) => (short)a > (short)b ? (ushort)1 : (ushort)0));
-                opcodes.Add("-<", MakeBinOp(Instructions.IFU, (a, b) => (short)a < (short)b ? (ushort)1 : (ushort)0));
+                opcodes.Add("==", MakeComparatorOp(Instructions.IFE, (a, b) => a == b ? (ushort)1 : (ushort)0));
+                opcodes.Add("!=", MakeComparatorOp(Instructions.IFN, (a, b) => a != b ? (ushort)1 : (ushort)0));
+                opcodes.Add(">", MakeComparatorOp(Instructions.IFG, (a, b) => a > b ? (ushort)1 : (ushort)0));
+                opcodes.Add("<", MakeComparatorOp(Instructions.IFL, (a, b) => a < b ? (ushort)1 : (ushort)0));
+                opcodes.Add("->", MakeComparatorOp(Instructions.IFA, (a, b) => (short)a > (short)b ? (ushort)1 : (ushort)0));
+                opcodes.Add("-<", MakeComparatorOp(Instructions.IFU, (a, b) => (short)a < (short)b ? (ushort)1 : (ushort)0));
+                opcodes.Add("&&", MakeLogicalOp(Instructions.AND, (a, b) => (ushort)((a != 0 && b != 0) ? 1 : 0)));
+                opcodes.Add("||", MakeLogicalOp(Instructions.BOR, (a, b) => (ushort)((a != 0 || b != 0) ? 1 : 0)));
             }
         }
 
@@ -91,53 +238,8 @@ namespace DCPUB.Ast
         public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
             initOps();
-            Target firstTarget = null;
-            Target secondTarget = null;
-            
-            var r = new TransientNode();
-
             var opcode = opcodes[AsString];
-            bool isComparison =
-                (opcode.instruction >= Instructions.IFB && opcode.instruction <= Instructions.IFU);
-
-            if (isComparison)
-            {
-                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Push), Constant(0));
-                firstTarget = Target.Register(context.AllocateRegister());
-            }
-            else
-                firstTarget = target;
-
-            var firstFetchToken = Child(0).GetFetchToken();
-            var secondFetchToken = Child(1).GetFetchToken();
-
-            if (secondFetchToken == null)
-            {
-                secondTarget = Target.Register(context.AllocateRegister());
-                r.AddChild(Child(1).Emit(context, scope, secondTarget));
-                secondFetchToken = secondTarget.GetOperand(TargetUsage.Pop);
-            }
-
-            if (firstFetchToken == null)
-                r.AddChild(Child(0).Emit(context, scope, firstTarget));
-            else
-                r.AddInstruction(Instructions.SET, firstTarget.GetOperand(TargetUsage.Push), firstFetchToken);
-            firstFetchToken = firstTarget.GetOperand(TargetUsage.Peek);
-
-            if (isComparison)
-            {
-                r.AddInstruction(opcode.instruction, firstFetchToken, secondFetchToken);
-                r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), Constant(1));
-            }
-            else
-            {
-                if (target != firstTarget)
-                    r.AddInstruction(Instructions.SET, target.GetOperand(TargetUsage.Peek), firstFetchToken);
-                r.AddInstruction(opcode.instruction, target.GetOperand(TargetUsage.Peek), secondFetchToken);
-            }
-
-
-            return r;
+            return opcode.Emit(context, scope, target, Child(0), Child(1));
         }
     }
 }

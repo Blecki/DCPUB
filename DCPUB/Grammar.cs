@@ -43,7 +43,7 @@ namespace DCPUB
             var unaryNegate = new NonTerminal("Unary Negate", typeof(Ast.NegateOperatorNode));
             var comparison = new NonTerminal("Comparison", typeof(Ast.ComparisonNode));
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "-*" | "-/" | "-%"
-                | "==" | "!=" | ">" | "->" | "<" | "-<";
+                | "==" | "!=" | ">" | "->" | "<" | "-<" | "&&" | "||";
             var comparisonOperator = ToTerm("==") | "!=" | ">" | "<" | "->" | "-<";
             var variableDeclaration = new NonTerminal("Variable Declaration", typeof(Ast.VariableDeclarationNode));
             var arrayInitialization = new NonTerminal("Array Initialization", typeof(Ast.ArrayInitializationNode));
@@ -142,6 +142,7 @@ namespace DCPUB
             this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?", "!");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
+            this.RegisterOperators(0, Associativity.Left, "&&", "||");
             this.RegisterOperators(1, Associativity.Right, "==", "!=", ">", "<", "->", "-<");
             this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=", "-*=", "-/=", "-%=");
             this.RegisterOperators(3, Associativity.Left, "+", "-");
