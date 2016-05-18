@@ -93,10 +93,14 @@ namespace DCPUB.Ast
     public class LogicalBinaryOperator : BinaryOperator
     {
         public Instructions Instruction;
+        public ushort ShortCircuitValue; // Short circuit the logic if the first value == this.
 
         public override IRNode Emit(CompileContext Context, Scope Scope, Target Target, CompilableNode Lhs, CompilableNode Rhs)
         {
             var r = new TransientNode();
+
+            var shortCircuitLabel = Intermediate.Label.Make("SHORTCIRCUIT");
+            var endLabel = Intermediate.Label.Make("ENDLOGICAL");
 
             var firstTarget = Target.Register(Context.AllocateRegister());
             var firstFetchToken = Lhs.GetFetchToken();
@@ -113,6 +117,9 @@ namespace DCPUB.Ast
                 r.AddInstruction(Instructions.IFN, Target.GetOperand(TargetUsage.Peek), firstFetchToken);
                 r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
             }
+
+            r.AddInstruction(Instructions.IFE, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(ShortCircuitValue));
+            r.AddInstruction(Instructions.SET, CompilableNode.Operand("PC"), CompilableNode.Label(shortCircuitLabel));
 
             var secondTarget = Target.Register(Context.AllocateRegister());
             var intermediate = Target.Register(Context.AllocateRegister());
@@ -132,6 +139,11 @@ namespace DCPUB.Ast
             }
 
             r.AddInstruction(Instruction, Target.GetOperand(TargetUsage.Peek), intermediate.GetOperand(TargetUsage.Peek));
+            r.AddInstruction(Instructions.SET, CompilableNode.Operand("PC"), CompilableNode.Label(endLabel));
+
+            r.AddLabel(shortCircuitLabel);
+            r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(ShortCircuitValue));
+            r.AddLabel(endLabel);
             
             return r;
         }
@@ -164,11 +176,14 @@ namespace DCPUB.Ast
             };
         }
 
-        public static LogicalBinaryOperator MakeLogicalOp(Instructions ins, Func<ushort, ushort, ushort> fold)
+        public static LogicalBinaryOperator MakeLogicalOp(Instructions ins, 
+            ushort ShortCircuitValue,
+            Func<ushort, ushort, ushort> fold)
         {
             return new LogicalBinaryOperator
             {
                 Instruction = ins,
+                ShortCircuitValue = ShortCircuitValue,
                 fold = fold
             };
         }
@@ -198,8 +213,8 @@ namespace DCPUB.Ast
                 opcodes.Add("<", MakeComparatorOp(Instructions.IFL, (a, b) => a < b ? (ushort)1 : (ushort)0));
                 opcodes.Add("->", MakeComparatorOp(Instructions.IFA, (a, b) => (short)a > (short)b ? (ushort)1 : (ushort)0));
                 opcodes.Add("-<", MakeComparatorOp(Instructions.IFU, (a, b) => (short)a < (short)b ? (ushort)1 : (ushort)0));
-                opcodes.Add("&&", MakeLogicalOp(Instructions.AND, (a, b) => (ushort)((a != 0 && b != 0) ? 1 : 0)));
-                opcodes.Add("||", MakeLogicalOp(Instructions.BOR, (a, b) => (ushort)((a != 0 || b != 0) ? 1 : 0)));
+                opcodes.Add("&&", MakeLogicalOp(Instructions.AND, 0, (a, b) => (ushort)((a != 0 && b != 0) ? 1 : 0)));
+                opcodes.Add("||", MakeLogicalOp(Instructions.BOR, 1, (a, b) => (ushort)((a != 0 || b != 0) ? 1 : 0)));
             }
         }
 

@@ -6,3 +6,8 @@ local z = x && y;
 local i = 5 == 9;
 local j = x || y;
 local k = x && y || i;
+
+if (x && y)
+{
+	// Test for short circuit.
+}

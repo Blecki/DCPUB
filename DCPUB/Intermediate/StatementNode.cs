@@ -84,8 +84,8 @@ namespace DCPUB.Intermediate
         /// <param name="mapping"></param>
         public override void AssignRegisters(Dictionary<ushort, VirtualRegisterRecord> mapping)
         {
-            if (children.Count(c => !(c is Instruction) && !(c is Annotation)) != 0)
-                throw new InternalError("Only instructions and annotations should be children of statements.");
+            //if (children.Count(c => !(c is Instruction) && !(c is Annotation)) != 0)
+            //    throw new InternalError("Only instructions and annotations should be children of statements.");
             
             mapping = new Dictionary<ushort, VirtualRegisterRecord>();
 
