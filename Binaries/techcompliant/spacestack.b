@@ -136,9 +136,9 @@ local falling_blocks:falling_block[sizeof falling_block * 4];
 // Map the blocks of the specified tetrimino to falling blocks.
 function map_new_tetrimino(dest:falling_block, tetrimino, type, offset_x, offset_y)
 {
-    local bit = 0;
+    local bit = 15;
     local block = 0;
-    while (bit < 16)
+    while (bit != 0xFFFF)
     {
         if (0x8000 & tetrimino)
         {
@@ -149,7 +149,7 @@ function map_new_tetrimino(dest:falling_block, tetrimino, type, offset_x, offset
         }
 
         tetrimino <<= 1;
-        bit += 1;
+        bit -= 1;
     }
 }
 
@@ -168,7 +168,16 @@ function check_bottom_row(board)
 }
 
 function scroll_board_down(board)
-{
+{    
+    // Unmark falling blocks.
+    local i = 0;
+    while (i < 4)
+    {
+        local block:falling_block = falling_blocks + (i * sizeof falling_block);
+        board[(falling_block.y * screen_width) + falling_block.x] = 0;
+        i += 1;
+    }
+
     local y = screen_height - 1;
     while (y != 0)
     {
@@ -176,14 +185,116 @@ function scroll_board_down(board)
         y -= 1;
     }
     memset(board, 0, screen_width);
+
+    // Remark falling blocks.
+    local i = 0;
+    while (i < 4)
+    {
+        local block:falling_block = falling_blocks + (i * sizeof falling_block);
+        board[(falling_block.y * screen_width) + falling_block.x] = falling_block.type + 4;
+        i += 1;
+    }
+
 }
 
 function choose_glyph(upper, lower)
 {
-    return (upper << 2) + lower;
+    return ((upper % 4) << 2) + (lower % 4);
+}
+
+function update_vram(board, game_x, game_y)
+{
+    local lem_y = game_y >> 1;
+    vram[(lem_y * 32) + game_x] = choose_glyph(
+        board[(lem_y * screen_width) + game_x], 
+        board[(lem_y * screen_width) + game_x + screen_width]);
+}
+
+function draw_whole_screen(board)
+{
+    local y = 0;
+    while (y != screen_width)
+    {
+        local x = 0;
+        local board_row = board + (y * screen_width * 2);
+        local lem_row = vram + (y * 32);
+        while (x < screen_width)
+        {
+            lem_row[x] = choose_glyph(board_row[x], board_row[x + screen_width]);
+            x += 1;
+        }
+        y += 1;
+    }
 }
     
+// Return 1 if any of the blocks are blocked from falling by a solid block below.
+function check_falling_blocks(board, falling_blocks)
+{
+    local i = 0;
+    while (i < 4)
+    {
+        local block:falling_block = falling_blocks + (i * sizeof falling_block);
+        if (falling_block.y == (screen_height - 1)) return 1;
+        local world_block = board[((falling_block.y + 1) * screen_width) + falling_block.x];
+        if (world_block > 0 && world_block < 4) return 1;
+        i += 1;
+    }
+    return 0;
+}
 
+// Move each falling block down by 1, updating the screen as needed.
+function move_falling_blocks(board, falling_blocks)
+{
+    local i = 0;
+    while (i < 4)
+    {
+        local block:falling_block = falling_blocks + (i * sizeof falling_block);
+        board[(falling_block.y * screen_width) + falling_block.x] = 0;
+        update_vram(board, falling_block.x, falling_block.y);
+        falling_block.y += 1;
+        board[(falling_block.y * screen_width) + falling_block.x] = falling_block.type + 4;
+        update_vram(board, falling_block.x, falling_block.y);
+        i += 1;
+    }
+}
 
+// Lock each falling block to the board.
+function lock_falling_blocks(board, falling_blocks)
+{
+    local i = 0;
+    while (i < 4)
+    {
+        local block:falling_block = falling_blocks + (i * sizeof falling_block);
+        board[(falling_block.y * screen_width) + falling_block.x] = falling_block.type;
+        i += 1;
+    }
+}
 
+function game_update(board, falling_blocks)
+{
+    if (check_falling_blocks(board, falling_blocks))  
+    {
+        lock_falling_blocks(board, falling_blocks);
+        map_new_tetrimino(falling_blocks, tetriminos[0], 1, 0, 0);
+    }
+    else
+    {
+        move_falling_blocks(board, falling_blocks);
+    }
+
+    if (check_bottom_row(board))
+    {
+        scroll_board_down(board);
+        draw_whole_screen(board);
+    }
+}
+
+map_new_tetrimino(falling_blocks, tetriminos[0], 1, 0, 0);
+while (true)
+{       
+    game_update(board, falling_blocks);
+    local i = 0;
+    while (i != 1000)
+        i += 1;
+}
 
