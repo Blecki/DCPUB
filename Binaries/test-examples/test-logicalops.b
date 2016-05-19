@@ -11,3 +11,8 @@ if (x && y)
 {
 	// Test for short circuit.
 }
+
+if ((x > 0) && (y < 4))
+{
+	x = 3;
+}

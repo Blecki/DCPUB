@@ -100,7 +100,6 @@ namespace DCPUB.Ast
             var r = new TransientNode();
 
             var shortCircuitLabel = Intermediate.Label.Make("SHORTCIRCUIT");
-            var endLabel = Intermediate.Label.Make("ENDLOGICAL");
 
             var firstTarget = Target.Register(Context.AllocateRegister());
             var firstFetchToken = Lhs.GetFetchToken();
@@ -126,7 +125,7 @@ namespace DCPUB.Ast
             var secondFetchToken = Rhs.GetFetchToken();
             if (secondFetchToken == null)
             {
-                r.AddChild(Lhs.Emit(Context, Scope, secondTarget));
+                r.AddChild(Rhs.Emit(Context, Scope, secondTarget));
                 r.AddInstruction(Instructions.SET, intermediate.GetOperand(TargetUsage.Push), CompilableNode.Constant(0));
                 r.AddInstruction(Instructions.IFN, intermediate.GetOperand(TargetUsage.Peek), secondTarget.GetOperand(TargetUsage.Peek));
                 r.AddInstruction(Instructions.SET, intermediate.GetOperand(TargetUsage.Peek), CompilableNode.Constant(1));
@@ -139,11 +138,8 @@ namespace DCPUB.Ast
             }
 
             r.AddInstruction(Instruction, Target.GetOperand(TargetUsage.Peek), intermediate.GetOperand(TargetUsage.Peek));
-            r.AddInstruction(Instructions.SET, CompilableNode.Operand("PC"), CompilableNode.Label(endLabel));
 
             r.AddLabel(shortCircuitLabel);
-            r.AddInstruction(Instructions.SET, Target.GetOperand(TargetUsage.Peek), CompilableNode.Constant(ShortCircuitValue));
-            r.AddLabel(endLabel);
             
             return r;
         }

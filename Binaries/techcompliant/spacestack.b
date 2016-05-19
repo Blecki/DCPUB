@@ -16,6 +16,8 @@
 #include hardware.b
 #include lem.b
 #include keyboard.b
+#include std.b
+#include itoa.b
 
 #define screen_width 12
 #define screen_height 24
@@ -133,30 +135,39 @@ struct falling_block
 
 local falling_blocks:falling_block[sizeof falling_block * 4];
 
+static debug_tet[12] = { 0, 0, 1, 1, 0, 1, 2, 0, 1, 3, 0, 1 };
+memcpy(falling_blocks, debug_tet, 12);
+    
 // Map the blocks of the specified tetrimino to falling blocks.
 function map_new_tetrimino(dest:falling_block, tetrimino, type, offset_x, offset_y)
 {
-    local bit = 15;
+    //memcpy(dest, debug_tet, 12);
+    //return;
+
+
+    local bit = 0x000F;
     local block = 0;
     while (bit != 0xFFFF)
     {
-        if (0x8000 & tetrimino)
+        if (0x0001 & tetrimino)
         {
-            dest[block * sizeof falling_block].x = (bit & 0x0003) + offset_x;
-            dest[block * sizeof falling_block].y = (bit >> 2) + offset_y;
-            dest[block * sizeof falling_block].type = type;
+            (dest + (block * sizeof falling_block)):falling_block.x = (bit % 4) + offset_x;
+            (dest + (block * sizeof falling_block)):falling_block.y = (bit / 4) + offset_y;
+            (dest + (block * sizeof falling_block)):falling_block.type = type;
             block += 1;
         }
 
-        tetrimino <<= 1;
+        tetrimino >>= 1;
         bit -= 1;
     }
 }
 
 local board[screen_size];
+memset(board, 0x0000, screen_size);
 
 function check_bottom_row(board)
 {
+    return 0;
     local x = 0;
     local r = 1;
     while (x < screen_width)
@@ -167,14 +178,14 @@ function check_bottom_row(board)
     return r;
 }
 
-function scroll_board_down(board)
+function scroll_board_down(board, falling_blocks)
 {    
     // Unmark falling blocks.
     local i = 0;
     while (i < 4)
     {
         local block:falling_block = falling_blocks + (i * sizeof falling_block);
-        board[(falling_block.y * screen_width) + falling_block.x] = 0;
+        board[(block.y * screen_width) + block.x] = 0;
         i += 1;
     }
 
@@ -191,7 +202,7 @@ function scroll_board_down(board)
     while (i < 4)
     {
         local block:falling_block = falling_blocks + (i * sizeof falling_block);
-        board[(falling_block.y * screen_width) + falling_block.x] = falling_block.type + 4;
+        board[(block.y * screen_width) + block.x] = block.type + 4;
         i += 1;
     }
 
@@ -204,23 +215,23 @@ function choose_glyph(upper, lower)
 
 function update_vram(board, game_x, game_y)
 {
-    local lem_y = game_y >> 1;
-    vram[(lem_y * 32) + game_x] = choose_glyph(
-        board[(lem_y * screen_width) + game_x], 
-        board[(lem_y * screen_width) + game_x + screen_width]);
+    local lem_y = game_y / 2;
+    vram[(lem_y * 32) + game_x] = 0xF000 | choose_glyph(
+        board[(lem_y * screen_width * 2) + game_x], 
+        board[(lem_y * screen_width * 2) + game_x + screen_width]);
 }
 
 function draw_whole_screen(board)
 {
     local y = 0;
-    while (y != screen_width)
+    while (y != screen_height)
     {
         local x = 0;
         local board_row = board + (y * screen_width * 2);
         local lem_row = vram + (y * 32);
         while (x < screen_width)
         {
-            lem_row[x] = choose_glyph(board_row[x], board_row[x + screen_width]);
+            lem_row[x] = 0xF000 | choose_glyph(board_row[x], board_row[x + screen_width]);
             x += 1;
         }
         y += 1;
@@ -234,9 +245,9 @@ function check_falling_blocks(board, falling_blocks)
     while (i < 4)
     {
         local block:falling_block = falling_blocks + (i * sizeof falling_block);
-        if (falling_block.y == (screen_height - 1)) return 1;
-        local world_block = board[((falling_block.y + 1) * screen_width) + falling_block.x];
-        if (world_block > 0 && world_block < 4) return 1;
+        if (block.y == (screen_height - 1)) return 1;
+        local world_block = board[((block.y + 1) * screen_width) + block.x];
+        if ((world_block > 0) && (world_block < 4)) return 1;
         i += 1;
     }
     return 0;
@@ -249,11 +260,11 @@ function move_falling_blocks(board, falling_blocks)
     while (i < 4)
     {
         local block:falling_block = falling_blocks + (i * sizeof falling_block);
-        board[(falling_block.y * screen_width) + falling_block.x] = 0;
-        update_vram(board, falling_block.x, falling_block.y);
-        falling_block.y += 1;
-        board[(falling_block.y * screen_width) + falling_block.x] = falling_block.type + 4;
-        update_vram(board, falling_block.x, falling_block.y);
+        board[(block.y * screen_width) + block.x] = 0;
+        update_vram(board, block.x, block.y);
+        block.y += 1;
+        board[(block.y * screen_width) + block.x] = block.type + 4;
+        update_vram(board, block.x, block.y);
         i += 1;
     }
 }
@@ -265,17 +276,17 @@ function lock_falling_blocks(board, falling_blocks)
     while (i < 4)
     {
         local block:falling_block = falling_blocks + (i * sizeof falling_block);
-        board[(falling_block.y * screen_width) + falling_block.x] = falling_block.type;
+        board[(block.y * screen_width) + block.x] = block.type;
         i += 1;
     }
 }
 
 function game_update(board, falling_blocks)
 {
-    if (check_falling_blocks(board, falling_blocks))  
+    if (check_falling_blocks(board, falling_blocks) == 1)  
     {
         lock_falling_blocks(board, falling_blocks);
-        map_new_tetrimino(falling_blocks, tetriminos[0], 1, 0, 0);
+        map_new_tetrimino(falling_blocks, tetriminos[0], 1, 0, 1);
     }
     else
     {
@@ -284,15 +295,25 @@ function game_update(board, falling_blocks)
 
     if (check_bottom_row(board))
     {
-        scroll_board_down(board);
+        scroll_board_down(board, falling_blocks);
         draw_whole_screen(board);
     }
 }
 
-map_new_tetrimino(falling_blocks, tetriminos[0], 1, 0, 0);
-while (true)
+map_new_tetrimino(falling_blocks, tetriminos[16], 2, 0, 1);
+while (1)
 {       
     game_update(board, falling_blocks);
+
+    itox(board[screen_width + 1], vram);
+    local x = 1;
+    while (x < 5)
+    {
+        vram[x] |= 0xF000;
+        x += 1;
+    }
+    vram[0] = 0;
+
     local i = 0;
     while (i != 1000)
         i += 1;
