@@ -16,19 +16,19 @@ namespace DCPUB.Ast
             base.Init(context, treeNode);
             if (treeNode.Term.Name == "IfElse")
             {
-                AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1].FirstChild);
+                AddChild("condition", treeNode.ChildNodes[0].ChildNodes[1]);
                 AddChild("then", treeNode.ChildNodes[0].ChildNodes[2]);
                 AddChild("else", treeNode.ChildNodes[2]);
                 headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
-                    treeNode.ChildNodes[0].ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
+                    treeNode.ChildNodes[0].ChildNodes[1].Span.EndPosition - this.Span.Location.Position);
             }
             else
             {
-                AddChild("Expression", treeNode.ChildNodes[1].FirstChild);
+                AddChild("Expression", treeNode.ChildNodes[1]);
                 AddChild("Block", treeNode.ChildNodes[2]);
                 if (treeNode.ChildNodes.Count == 5) AddChild("Else", treeNode.ChildNodes[4]);
                 headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
-                    treeNode.ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
+                    treeNode.ChildNodes[1].Span.EndPosition - this.Span.Location.Position);
             }
             this.AsString = "If";
 

@@ -219,6 +219,8 @@ namespace DCPUB.Ast
         {
             base.Init(context, treeNode);
             if (SkipInit) return;
+            //Console.WriteLine("{0} {1} {2}\n", treeNode.ChildNodes[0].ToString(), treeNode.ChildNodes[1].ToString(), treeNode.ChildNodes[2].ToString());
+
             AddChild("Parameter", treeNode.ChildNodes[0]);
             AddChild("Parameter", treeNode.ChildNodes[2]);
             this.AsString = treeNode.ChildNodes[1].FindTokenAndGetText();

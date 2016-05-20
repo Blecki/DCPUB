@@ -30,11 +30,6 @@ namespace DCPUB.Ast
         public override void  ResolveTypes(CompileContext context, Model.Scope enclosingScope)
         {
          	 base.ResolveTypes(context, enclosingScope);
-            if (Child(0) is ComparisonNode)
-            {
-                firstOperand = Child(0).Child(0);
-                secondOperand = Child(0).Child(1);
-            }
         }
 
         public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
@@ -47,20 +42,6 @@ namespace DCPUB.Ast
                     clauseOrder = ClauseOrder.ConstantFail;
                 else
                     clauseOrder = ClauseOrder.ConstantPass;
-            }
-            else if (Child(0) is ComparisonNode)
-            {
-                var @operator = Child(0).AsString;
-                firstOperand = Child(0).Child(0);
-                secondOperand = Child(0).Child(1);
-                if (@operator == "==") comparisonInstruction = Instructions.IFE;
-                if (@operator == "!=") comparisonInstruction = Instructions.IFN;
-                if (@operator == ">") comparisonInstruction = Instructions.IFG;
-                if (@operator == "<") comparisonInstruction = Instructions.IFL;
-                if (@operator == "->") comparisonInstruction = Instructions.IFA;
-                if (@operator == "-<") comparisonInstruction = Instructions.IFU;
-
-                clauseOrder = ClauseOrder.FailFirst;
             }
             else
             {

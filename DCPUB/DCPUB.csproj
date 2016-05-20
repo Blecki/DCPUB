@@ -136,7 +136,6 @@
     <Compile Include="Ast\CompilableNode.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Ast\ComparisonNode.cs" />
     <Compile Include="Ast\BranchStatementNode.cs" />
     <Compile Include="CompileContext.cs" />
     <Compile Include="Model\Function.cs" />

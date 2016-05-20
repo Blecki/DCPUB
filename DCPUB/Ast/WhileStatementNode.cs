@@ -14,11 +14,11 @@ namespace DCPUB.Ast
         public override void Init(Irony.Parsing.ParsingContext context, Irony.Parsing.ParseTreeNode treeNode)
         {
             base.Init(context, treeNode);
-            AddChild("Expression", treeNode.ChildNodes[1].FirstChild);
+            AddChild("Expression", treeNode.ChildNodes[1]);
             AddChild("Block", treeNode.ChildNodes[2]);
             this.AsString = "While";
             headerSpan = new Irony.Parsing.SourceSpan(this.Span.Location,
-                treeNode.ChildNodes[1].FirstChild.Span.EndPosition - this.Span.Location.Position);
+                treeNode.ChildNodes[1].Span.EndPosition - this.Span.Location.Position);
             ChildNodes[1] = BlockNode.Wrap(Child(1));
             (Child(1) as BlockNode).bypass = false;
         }

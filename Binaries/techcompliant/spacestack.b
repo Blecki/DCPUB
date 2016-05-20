@@ -18,6 +18,7 @@
 #include keyboard.b
 #include std.b
 #include itoa.b
+#include random.b
 
 #define screen_width 12
 #define screen_height 24
@@ -286,7 +287,7 @@ function game_update(board, falling_blocks)
     if (check_falling_blocks(board, falling_blocks) == 1)  
     {
         lock_falling_blocks(board, falling_blocks);
-        map_new_tetrimino(falling_blocks, tetriminos[0], 1, 0, 1);
+        map_new_tetrimino(falling_blocks, tetriminos[random() % 19], 1, 0, 1);
     }
     else
     {

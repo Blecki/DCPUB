@@ -41,7 +41,7 @@ namespace DCPUB
             var binaryOperation = new NonTerminal("Binary Operation", typeof(Ast.BinaryOperationNode));
             var unaryNot = new NonTerminal("Unary Not", typeof(Ast.NotOperatorNode));
             var unaryNegate = new NonTerminal("Unary Negate", typeof(Ast.NegateOperatorNode));
-            var comparison = new NonTerminal("Comparison", typeof(Ast.ComparisonNode));
+            //var comparison = new NonTerminal("Comparison", typeof(Ast.ComparisonNode));
             var @operator = ToTerm("+") | "-" | "*" | "/" | "%" | "&" | "|" | "^" | "<<" | ">>" | "-*" | "-/" | "-%"
                 | "==" | "!=" | ">" | "->" | "<" | "-<" | "&&" | "||";
             var comparisonOperator = ToTerm("==") | "!=" | ">" | "<" | "->" | "-<";
@@ -89,7 +89,7 @@ namespace DCPUB
             binaryOperation.Rule = expression + @operator + expression;
             unaryNot.Rule = ToTerm("!") + expression;
             unaryNegate.Rule = ToTerm("-") + expression;
-            comparison.Rule = expression + comparisonOperator + expression;
+            //comparison.Rule = expression + comparisonOperator + expression;
             parenExpression.Rule = ToTerm("(") + expression + ")";
             variableDeclaration.Rule =
                 (ToTerm("local") | "static" | "external") + identifier + (ToTerm(":") + identifier).Q()
@@ -116,9 +116,9 @@ namespace DCPUB
             registerBinding.Rule = identifier + (ToTerm("=") + expression).Q();
             registerBindingList.Rule = MakeStarRule(registerBindingList, (ToTerm(";") | ToTerm(",")), registerBinding);
             inlineASM.Rule = ToTerm("asm") + (ToTerm("(") + registerBindingList + ")").Q() + "{" + new FreeTextLiteral("inline asm", "}") + "}";
-            ifStatement.Rule = ToTerm("if") + "(" + (comparison | expression) + ")" + statement;
+            ifStatement.Rule = ToTerm("if") + "(" + expression + ")" + statement;
             ifElseStatement.Rule = ifStatement + this.PreferShiftHere() + "else" + statement;
-            whileStatement.Rule = ToTerm("while") + "(" + (comparison | expression) + ")" + statement;
+            whileStatement.Rule = ToTerm("while") + "(" + expression + ")" + statement;
             parameterList.Rule = MakeStarRule(parameterList, ToTerm(","), expression);
             functionCall.Rule = expression + "(" + parameterList + ")";
             parameterDeclaration.Rule = identifier + (ToTerm(":") + identifier).Q();
@@ -142,11 +142,11 @@ namespace DCPUB
             this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "?", "!");
             this.MarkTransient(expression, parenExpression, statement, block);//, parameterList);
 
-            this.RegisterOperators(0, Associativity.Left, "&&", "||");
-            this.RegisterOperators(1, Associativity.Right, "==", "!=", ">", "<", "->", "-<");
-            this.RegisterOperators(2, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=", "-*=", "-/=", "-%=");
-            this.RegisterOperators(3, Associativity.Left, "+", "-");
-            this.RegisterOperators(4, Associativity.Left, "*", "/", "%");
+            this.RegisterOperators(1, Associativity.Left, "&&", "||");
+            this.RegisterOperators(2, Associativity.Left, "==", "!=", ">", "<", "->", "-<");
+            this.RegisterOperators(3, Associativity.Right, "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "&=", "|=", "-*=", "-/=", "-%=");
+            this.RegisterOperators(4, Associativity.Left, "+", "-");
+            this.RegisterOperators(5, Associativity.Left, "*", "/", "%");
             this.RegisterOperators(5, Associativity.Left, "-*", "-/", "-%");
             this.RegisterOperators(6, Associativity.Left, "<<", ">>", "&", "|", "^", "!");
             this.RegisterOperators(7, Associativity.Left, ":");
