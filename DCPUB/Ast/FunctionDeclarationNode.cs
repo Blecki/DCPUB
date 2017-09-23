@@ -81,13 +81,17 @@ namespace DCPUB.Ast
 
         public override Intermediate.IRNode Emit(CompileContext context, Model.Scope scope, Target target)
         {
+            if (context.options.tidy) return null;
             return new Intermediate.Annotation("Declaration of function " + function.name);
         }
 
         public virtual Intermediate.IRNode CompileFunction(CompileContext context)
         {
             if (context.options.strip && !function.reached)
+            {
+                if (context.options.tidy) return null;
                 return new Intermediate.Annotation("Function " + function.name + " stripped.");
+            }
 
             context.nextVirtualRegister = 0;
             var body = new Intermediate.IRNode();

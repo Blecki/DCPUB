@@ -80,10 +80,11 @@ namespace DCPUB.Intermediate
 
         internal void CollapseTransientNodes()
         {
-            foreach (var child in children) child.CollapseTransientNodes();
+            foreach (var child in children) if (child != null) child.CollapseTransientNodes();
             children = children.SelectMany(n =>
             {
-                if (n is TransientNode) return (n as TransientNode).children;
+                if (n == null) return new List<IRNode>();
+                else if (n is TransientNode) return (n as TransientNode).children;
                 else return (new IRNode[] { n }).ToList();
             }).ToList();
         }

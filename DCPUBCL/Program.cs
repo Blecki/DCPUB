@@ -70,6 +70,7 @@ namespace DCPUCCL
                     else if (argument == "-tidy")
                     {
                         options.tidy_ir = true;
+                        options.tidy = true;
                         argumentIndex += 1;
                     }
                     else if (argument == "-e" || argument == "--externals")

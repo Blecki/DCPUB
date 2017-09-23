@@ -1,0 +1,997 @@
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+// Create a default environment to make writing basic programs easier.
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+// Functions for interfacing with Lem1802 devices.
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*       Hardware detection routine
+*/
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+struct num32
+{
+	high;
+	low;
+}
+
+function compare32(a:num32, b:num32)
+{
+	if (a.high != b.high) return 0;
+	if (a.low != b.low) return 0;
+	return 1;
+}
+
+function add32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		SET X, [A+1]
+		ADD X, [B+1]
+		SET [C+1], X
+		SET X, [A]
+		ADX X, [B]
+		SET [C], X
+	}
+}
+
+function sub32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		SET X, [A+1]
+		SUB X, [B+1]
+		SET [C+1], X
+		SET X, [A]
+		SBX X, [B]
+		SET [C], X
+	}
+}
+
+function mul32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		// The result of a 32 bit multiply is a 
+		//	64 bit number. But we only want the
+		//  lower 32 bits.
+		
+		// Calculate low word
+		SET X, [A+1]
+		MUL X, [B+1]
+		SET I, EX 		// Save overflow to add to high word.
+
+		// Calculate high word. We can safely 
+		//   ignore the overflow of each sub mul.
+		SET Y, [A]
+		MUL Y, [B+1]
+		SET Z, [A+1]
+		MUL Z, [B]
+		ADD Y, Z
+		ADD Y, I
+		SET [C], Y
+		SET [C+1], X
+
+	}
+}
+
+function div32(a:num32, b:num32, out:num32)
+{
+	asm (
+		A = a;
+		B = b;
+		C = out )
+	{
+		// We get 'close' by ignoring the low words entirely.
+		SET X, [A]
+		DIV X, [B]
+		SET [C], 0x0000
+		SET [C+1], X
+	}
+}
+
+
+
+
+/*
+	Find a piece of hardware with the supplied id.
+	Returns 0xFFFF if no matching hardware found.
+*/
+function detect_hardware( id:num32 /* A pointer to a num32 struct */)
+{
+	local num_hardware = 0;
+	asm ( B = &num_hardware )
+	{
+		HWN [B]
+	}
+
+	local n = 0;
+	while ( n < num_hardware )
+	{
+		local hardware_id[2];
+
+		asm ( A = n; I = hardware_id ) 
+		{
+			HWQ A
+			SET [I + 0x0001], A
+			SET [I], B
+		}
+
+		if ( compare32(hardware_id, id) != 0 )
+			return n;
+
+		n += 1;
+	}
+	
+	return 0xFFFF;
+} 
+
+
+
+
+
+static LEM_HARDWARE_ID[2] = { 0x7349, 0xf615 };
+
+
+// Find a Lem device. Returns 0xFFFF if no Lem device is connected.
+function lem_detect()
+{
+	return detect_hardware(LEM_HARDWARE_ID);
+}
+
+// Assign video memory to a Lem device. vram should be a pointer to
+// a memory block of size 384.
+// Disregard return value.
+function lem_initialize(id, vram)
+{
+	asm (A = 0; B = vram; C = id)
+	{
+		HWI C
+	}
+}
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+// An abstraction to treat a block of memory as a text console.
+// Initialize a console and a Lem device with the same memory.
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+function memset(
+	destination,
+	value,
+	count)
+{
+	asm (	A = destination;
+		B = value;
+		C = count)
+	{
+		ADD C, A
+			:__MEMSET_BEGIN_LOOP
+		IFL A, C
+			SET PC, __MEMSET_END_LOOP
+		SET [A], B
+		ADD A, 1
+		SET PC, __MEMSET_BEGIN_LOOP
+			:__MEMSET_END_LOOP
+	}
+}
+
+function memcpy(
+	destination,
+	source,
+	count)
+{
+	asm (
+		I = destination;
+		A = source;
+		C = count)
+	{
+		SET PUSH, J
+		SET J, A
+		ADD C, I
+			:__MEMCPY_BEGIN_LOOP
+		IFL I, C
+			SET PC, __MEMCPY_END_LOOP
+		STI [J], [I]
+		SET PC, __MEMCPY_BEGIN_LOOP
+			:__MEMCPY_END_LOOP
+		SET J, POP
+	}
+}
+
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+//Uses a simple free list to track available memory.
+
+struct free_block
+{
+	size;
+	next_free_block;
+}
+
+//Initialize a section of memory to be used as a page.	
+function initialize_memory_page(start, size)
+{
+	local free_list_head:free_block = start + 1;
+	*start = start + 1;
+	free_list_head.size = size - 1;
+	free_list_head.next_free_block = 0;
+}
+
+//Allocate memory from a page.
+function allocate_memory(size, page)
+{
+	if (size == 0) return 0;
+	local current_block:free_block = *page;
+	local previous_block:free_block = 0;
+	local final_size = size + 1;
+	while ((current_block != 0) & (current_block.size < final_size))
+	{
+		previous_block = current_block;
+		current_block = current_block.next_free_block;
+	}
+	if (current_block == 0) return 0; //No block big enough found.
+	if (current_block.size < (final_size + 2)) //Not enough space left to split the block - waste the last word.
+	{
+		if (previous_block == 0) *page = current_block.next_free_block;
+		else previous_block.next_free_block = current_block.next_free_block;
+		return current_block + 1;
+	}
+	local new_free_block:free_block = current_block + final_size; //Don't need to worry about overwriting the current block since final_size is always >= 2.
+	new_free_block.size = current_block.size - final_size;
+	new_free_block.next_free_block = current_block.next_free_block;
+	if (previous_block == 0) *page = new_free_block;
+	else previous_block.next_free_block = new_free_block;
+	current_block.size = final_size;
+	return current_block + 1;
+}
+
+//Free memory allocated from a page.
+function free_memory(block, page)
+{
+	//Assume the block has been returned to the correct page. If not - kaboom.
+	local memory_block:free_block = block - 1;
+	memory_block.next_free_block = *page;
+	*page = memory_block;
+}
+
+
+
+
+//Vecs have a one-word header with the available capacity and the used space stored in 8 bits each.
+
+struct vec
+{
+	header;
+	data;
+}
+
+function veclen(string:vec) 
+{ 
+	return string.header & 0x00FF;
+}
+
+function veccap(string:vec)
+{
+	return (string.header & 0xFF00) >> 8;
+}
+
+function veccpy(from:vec, to:vec)
+{
+	local i;
+	while (i < veccap(to) && i < veclen(from))
+	{
+		to[1 + i] = from[1 + i];
+		i += 1;
+	}
+	local to_cap = veccap(to);
+	if (veclen(from) > to_cap)
+		to.header = ((to_cap & 0x00FF) << 8) + (to_cap & 0x00FF);
+	else
+		to.header = ((to_cap & 0x00FF) << 8) + (veclen(from) & 0x00FF);
+}
+
+function veccat(from:vec, to:vec)
+{
+	local total_length = veclen(from) + veclen(to);
+	local i = 0;
+	while (i + veclen(to) < veccap(to) && i < veclen(from))
+	{
+		to[1 + veclen(to) + i] = from[1 + i];
+		i += 1;
+	}
+	local to_cap = veccap(to);
+	if (total_length > to_cap)
+		to.header = ((to_cap & 0x00FF) << 8) + (to_cap & 0x00FF);
+	else
+		to.header = ((to_cap & 0x00FF) << 8) + (total_length & 0x00FF);
+}
+	
+function vecalo(capacity, page)
+{
+	local mem_block:vec = allocate_memory(capacity + 1, page);
+	if (mem_block != 0)
+		mem_block.header = (capacity & 0x00FF) << 8;
+	return mem_block;
+}
+
+
+
+
+
+
+
+
+struct Console
+{
+	buffer;
+	cursor_position;
+	color;
+	backspace_point;
+}
+
+// Initialize a console object.
+function console_initialize(
+	console:Console /* A pointer to sizeof(Console) words of memory */, 
+	vram /* A pointer to 384 words of memory */)
+{
+	console.buffer = vram;
+	console.cursor_position = 0;
+	console.color = 0xF000; // Default color is white on black.
+	console.backspace_point = 0;
+}
+
+// Clear the console buffer
+function console_clear(console:Console)
+{
+	console.cursor_position = 0;
+	console.backspace_point = 0;
+	memset(console.buffer, 0x0000, 384);
+}
+
+// Change the cursor position. Must always be in range (0,384).
+function console_setcursor(console:Console, cursor_position)
+{
+	console.cursor_position = cursor_position;
+}
+
+// Scrolls the contents of video memory by a number of lines.
+function console_scroll(console:Console, lines)
+{
+	local chars = lines * 32;
+	if (chars > 384) chars = 384;
+	local copy_maximum = 384 - chars;
+	memcpy(console.buffer, console.buffer + chars, copy_maximum);
+	memset(console.buffer + copy_maximum, console.color, chars);
+	console.cursor_position -= chars;
+}
+
+// Print a single character to a console.
+function console_charout(console:Console, char)
+{
+	console.buffer[console.cursor_position] = console.color | char;
+	console.cursor_position += 1;
+	if (console.cursor_position > (384 - 1))
+		console_scroll(console, 1);
+}
+
+// Print a string to a console. 
+function console_stringout(console:Console, string /* A pointer to string data. */)
+{
+	// Strings are assumed to be in length-prefix format.
+	local strlen = (*string) & 0x00FF; // Masking with 0x00FF allows this function to work with vecs as well. See vec.dc
+	// Don't need to worry about strings filling the entire screen and then some - length is truncated to 256 words.
+	if ((console.cursor_position + strlen) > (384 - 1))
+		console_scroll(console, strlen / 32); // Make enough space on the screen for the string.
+	local place = 0;
+	while (place < strlen)
+	{
+		console.buffer[console.cursor_position] = console.color | string[place + 1];
+		console.cursor_position += 1;
+		place += 1;
+	}
+}
+
+// Move the cursor back one space, erasing contents of buffer.
+// Will not move back further than Console.backspace_point.
+function console_backspace(console:Console)
+{
+	if (console.cursor_position == console.backspace_point) return 0;
+	console.cursor_position -= 1;
+	console.buffer[console.cursor_position] = console.color;
+}
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+function __itoa(number, buffer)
+{
+	if (number > 9) __itoa(number / 10, buffer);
+	buffer[0] += 1;
+	buffer[buffer[0]] = '0' + (number % 10);
+}
+
+function itoa(number, buffer)
+{
+	buffer[0] = 0;
+	__itoa(number, buffer);
+}
+
+function itox(number, buffer)
+{
+	buffer[0] = 4;
+
+	if ((number % 16) < 10)
+		buffer[4] = '0' + (number % 16);
+	else
+		buffer[4] = 'A' + ((number % 16) - 10);
+
+	number /= 16;
+	if ((number % 16) < 10)
+		buffer[3] = '0' + (number % 16);
+	else
+		buffer[3] = 'A' + ((number % 16) - 10);
+
+	number /= 16;
+	if ((number % 16) < 10)
+		buffer[2] = '0' + (number % 16);
+	else
+		buffer[2] = 'A' + ((number % 16) - 10);
+
+	number /= 16;
+	if ((number % 16) < 10)
+		buffer[1] = '0' + (number % 16);
+	else
+		buffer[1] = 'A' + ((number % 16) - 10);
+
+}
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+// Functions for interfacing with generic keyboard devices.
+ 
+
+
+ 
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*       Hardware detection routine
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+Name: Generic Keyboard (compatible)
+ID: 0x30cf7406
+Version: 1
+
+Interrupts do different things depending on contents of the A register:
+
+ A | BEHAVIOR
+---+----------------------------------------------------------------------------
+ 0 | Clear keyboard buffer
+ 1 | Store next key typed in C register, or 0 if the buffer is empty
+ 2 | Set C register to 1 if the key specified by the B register is pressed, or
+   | 0 if it's not pressed
+ 3 | If register B is non-zero, turn on interrupts with message B. If B is zero,
+   | disable interrupts
+---+----------------------------------------------------------------------------
+
+When interrupts are enabled, the keyboard will trigger an interrupt when one or
+more keys have been pressed, released, or typed.
+
+Key numbers are:
+  0x10: Backspace
+  0x11: Return
+  0x12: Insert
+  0x13: Delete
+  0x20-0x7f: ASCII characters
+  0x80: Arrow up
+  0x81: Arrow down
+  0x82: Arrow left
+  0x83: Arrow right
+  0x90: Shift
+  0x91: Control
+*/
+ 
+static GENERIC_KEYBOARD_ID[2] = { 0x30cf, 0x7406 };
+ 
+// Find the first attached keyboard.
+function kb_detect()
+{
+	return detect_hardware(GENERIC_KEYBOARD_ID);
+}
+
+// Get the last key pressed.
+// Returns 0 if no key data present.
+function kb_getkey(id)
+{
+	local r;
+	asm ( B = id; X = &r )
+	{
+		SET A, 1
+		HWI B
+		SET [X], C
+	}
+	return r;
+}
+
+
+
+local allocatable_memory = __endofprogram;		//Reserve half of available memory as the heap. This means a larger
+initialize_memory_page(allocatable_memory, 0x8000);	//program makes for a smaller stack.
+local lem_device = lem_detect();
+local video_memory = allocate_memory(384, allocatable_memory);
+lem_initialize(lem_device, video_memory);
+static console:Console[sizeof Console];
+console_initialize(console, video_memory);
+local keyboard = kb_detect();
+
+
+
+
+
+function clear()
+{
+	console_clear(console);
+}
+
+static printf = &__printf;
+	// Alias printf. DCPUB checks argument counts for directly referenced functions but can't check
+	// them for aliased ones. This is a hack to support varidic arguments to printf.
+
+// Prints a string to the console, replacing each instance of '%' with a successive argument.
+function __printf(string /* Followed by some number of arguments */)
+{
+	local index = 0;
+	local strlen = *string;
+	local parameter_index = 3; //The first parameter is at J + 2; We want parameter 3 and onwards.
+	local number_buffer[32];
+	while (index < strlen)
+	{
+		if (string[index + 1] == '%') //Found a key code.
+		{
+			local parameter = 0;
+			asm (A = parameter_index; B = & parameter; C = 0) { SET C, J; ADD C, A; SET [B], [C] };
+			parameter_index += 1;
+			
+			index += 1;
+
+			if (string[index + 1] == 'N')
+				itoa(parameter, number_buffer);
+			else if (string[index + 1] == 'X')
+				itox(parameter, number_buffer);
+
+			console_stringout(console, number_buffer);
+		}
+		else
+		{
+			if (string[index + 1] == '\n')
+			{
+				while ((console.cursor_position % 32) != 0) console_charout(console, ' ');
+			}
+			else
+				console_charout(console, string[index + 1]);
+		}
+		index += 1;
+	}
+}
+
+
+
+
+static pass = 0;
+static fail = 0;
+
+clear();
+printf("TESTING FRAMEWORK LOADED\n");
+
+function EQUAL(msg, a, b)
+{
+	printf(msg);
+
+	if (a == b)
+	{
+		printf(" YES\n");
+		pass += 1;
+	}
+	else
+	{
+		printf(" NO %X\n", b);
+		fail += 1;
+	}
+}
+
+function EQUAL2(msg, a, b, c, d)
+{
+	printf(msg);
+
+	if ((a == b) & (c == d))
+	{
+		printf(" YES\n");
+		pass += 1;
+	}
+	else 
+	{
+		printf(" NO\n");
+		fail += 1;
+	}
+}
+
+function STATS()
+{
+	printf("PASS %N, FAIL %N", pass, fail);
+}
+
+
+
+/*
+*    _________.________________.      __.___  ____________________
+*    \______   \   \__    ___/  \    /  \   |/   _____/\_   _____/
+*     |    |  _/   | |    |  \   \/\/   /   |\_____  \  |    __)_ 
+*     |    |   \   | |    |   \        /|   |/        \ |        \ 
+*     |______  /___| |____|    \__/\  / |___/_______  //_______  /
+*            \/                     \/              \/         \/ 
+*
+*       (c) BITWISE SCIENCES 1984 - 2108
+*
+*/
+
+
+
+
+// I couldn't resist the name. Deal with it - AC
+
+// Set all bits over SIZE bits to 0.
+function bp_trim(size, value)
+{
+	asm ( A = value, B = size )
+	{
+		SET C, 0x0010
+		SUB C, B
+		SET B, 0xFFFF
+
+		:BP_TRIM_TOP
+		IFE C, 0x0000
+		SET PC, BP_TRIM_END
+
+		SHR B, 0x0001
+		AND A, B
+		SUB C, 0x0001
+
+		SET PC, BP_TRIM_TOP
+
+		:BP_TRIM_END
+
+		// Leave return value in A
+	}
+}
+
+
+
+
+
+// Pack the value into the destination buffer, begining at bit offset
+//  and using bits size.
+// Destination should already be zeroed.
+// Value should be 'trimmed' to size. Use bp_trim.
+function bp_dpack(size, offset, value, destination)
+{
+	local value_interior_offset = 16 - size; // Assume value is in last size bits.
+	local words_deep = offset / 16;
+	local first_offset = offset % 16;
+
+	// We need to align the value_interior_offset bit of value with the first_offset bit. Offset by difference does it.
+	if (first_offset > value_interior_offset) // >>
+	{
+		destination[words_deep] |= (value >> (first_offset - value_interior_offset));
+	}
+	else // <<
+	{ 
+		destination[words_deep] |= (value << (value_interior_offset - first_offset));
+	}
+
+	if ((first_offset + size) > 15) // need to write post-value
+	{
+		local post_value = value << (16 - (size - (16 - first_offset)));
+		destination[words_deep + 1] |= post_value;
+	}
+}
+
+function bp_upack(size, offset, buffer)
+{
+	local value_interior_offset = 16 - size;
+	local words_deep = offset / 16;
+	local first_offset = offset % 16;
+
+	local result = 0;
+	if (first_offset > value_interior_offset)
+	{
+		result |= (buffer[words_deep] << (first_offset - value_interior_offset));
+	}
+	else
+	{
+		result |= (buffer[words_deep] >> (value_interior_offset - first_offset));
+	}
+	
+	if ((first_offset + size) > 15)
+	{
+		result |= (buffer[words_deep + 1] >> (16 - (size - (16 - first_offset))));
+	}
+
+	return result;
+}
+
+
+// Clear the bits that would be occupied to zero.
+function bp_dclear(size, offset, destination) 
+{ 
+ 	local words_deep = offset / 16; 
+ 	local first_offset = offset % 16; 
+
+       local mask = 0xFFFF >> (16 - size);
+
+       if (first_offset > (16 - size)) 
+          destination[words_deep] |= !(mask >> (16 - (size - first_offset)));
+      else
+         destination[words_deep] |= !(mask << (16 - (size - first_offset)));
+
+      if ((first_offset + size) > 15)
+         destination[words_deep + 1] |= !(dmask << (16 - (size - (16 - first_offset))));
+} 
+
+
+
+
+printf("TESTING BITWISE.B\n");
+
+EQUAL("FFFF TRIM 8 = 00FF", 0x00FF, bp_trim(8, 0xFFFF));
+EQUAL("FFFF TRIM 4 = 000F", 0x000F, bp_trim(4, 0xFFFF));
+
+static a[2];
+a[0] = 0;
+a[1] = 0;
+
+function cleara()
+{
+	a[0] = 0;
+	a[1] = 0;
+}
+
+bp_dpack(16, 4, 0xFFFF, a);
+EQUAL2("FFFF PACKED 8 = 0FFF:F000", 0x0FFF, a[0], 0xF000, a[1]);
+EQUAL("UNPACKED = FFFF", 0xFFFF, bp_upack(16, 4, a));
+
+cleara();
+
+bp_dpack(8, 12, 0x00FF, a);
+EQUAL2("00FF PACKED 12 = 000F:F000", 0x000F, a[0], 0xF000, a[1]);
+
+STATS();
+

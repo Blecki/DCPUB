@@ -1,0 +1,5 @@
+TO compile:
+bin\b "your file" -b
+
+To test:
+lettuce\lettuce --nowait --little-endian "yourfile.bin"
